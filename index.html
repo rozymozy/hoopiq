@@ -6,244 +6,89 @@
   <title>HoopIQ — Player Projections</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --green: #1D9E75;
-      --green-light: #e8f7f2;
-      --orange: #E8621A;
-      --bg: #f4f4f6;
-      --card: #ffffff;
-      --border: #e8e8ec;
-      --text: #111827;
-      --muted: #6b7280;
-      --subtle: #9ca3af;
+      --green: #1D9E75; --green-light: #e8f7f2;
+      --orange: #E8621A; --bg: #f4f4f6; --card: #ffffff;
+      --border: #e8e8ec; --text: #111827; --muted: #6b7280; --subtle: #9ca3af;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ── NAV ── */
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 0 16px;
-    }
-    .nav-inner {
-      max-width: 720px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 52px;
-    }
-    .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .nav { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid var(--border); padding: 0 16px; }
+    .nav-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 52px; gap: 10px; }
+    .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; flex-shrink: 0; }
     .logo span { color: var(--green); }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
     .status { font-size: 11px; color: var(--subtle); }
     .status.ok { color: var(--green); }
     .status.err { color: var(--orange); }
-
-    /* ── LEAGUE TOGGLE ── */
-    .league-toggle {
-      display: flex;
-      background: var(--bg);
-      border-radius: 10px;
-      padding: 3px;
-      gap: 2px;
-    }
-    .league-btn {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 14px;
-      border-radius: 7px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .league-btn.active {
-      background: white;
-      color: var(--text);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+    .draft-btn-nav { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: var(--green); color: white; border: none; cursor: pointer; text-decoration: none; display: inline-block; white-space: nowrap; }
+    .draft-btn-nav:hover { opacity: .9; }
+    .league-toggle { display: flex; background: var(--bg); border-radius: 10px; padding: 3px; gap: 2px; }
+    .league-btn { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 7px; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .league-btn.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .league-btn.active.nba { color: var(--green); }
     .league-btn.active.el  { color: var(--orange); }
-
-    /* ── MAIN CONTAINER ── */
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    /* ── SEARCH + FILTERS ── */
+    .container { max-width: 720px; margin: 0 auto; padding: 16px; }
     .search-wrap { position: relative; margin-bottom: 10px; }
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--subtle);
-      font-size: 14px;
-      pointer-events: none;
-    }
-    .search {
-      width: 100%;
-      padding: 9px 12px 9px 34px;
-      font-size: 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: white;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s;
-    }
+    .search { width: 100%; padding: 9px 12px 9px 34px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--text); outline: none; transition: border-color 0.15s; }
     .search:focus { border-color: var(--green); }
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--subtle); font-size: 14px; pointer-events: none; }
+    .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .count { font-size: 12px; color: var(--muted); }
-    .sort-select {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 4px 8px;
-      background: white;
-      cursor: pointer;
-      outline: none;
-    }
-
-    /* ── PLAYER CARD ── */
-    .player-card {
-      background: white;
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 8px;
-      border: 1.5px solid var(--border);
-      cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
+    .sort-select { font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; background: white; cursor: pointer; outline: none; }
+    .player-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; border: 1.5px solid var(--border); cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
     .player-card:hover { border-color: var(--green); box-shadow: 0 2px 8px rgba(29,158,117,0.08); }
     .player-card.expanded { border-color: var(--green); }
     .player-card.el-card:hover { border-color: var(--orange); box-shadow: 0 2px 8px rgba(232,98,26,0.08); }
     .player-card.el-card.expanded { border-color: var(--orange); }
-
-    /* card top row */
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
     .card-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
     .rank { font-size: 11px; font-weight: 700; color: var(--subtle); min-width: 22px; }
-    .player-name {
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .player-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .player-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .trend { font-size: 11px; margin-top: 3px; font-weight: 500; }
-    .trend.up { color: var(--green); }
-    .trend.down { color: var(--orange); }
-    .trend.flat { color: var(--subtle); }
-
+    .trend.up { color: var(--green); } .trend.down { color: var(--orange); } .trend.flat { color: var(--subtle); }
     .proj-block { text-align: right; flex-shrink: 0; }
     .proj-val { font-size: 22px; font-weight: 700; color: var(--green); line-height: 1; }
     .proj-val.el { color: var(--orange); }
     .proj-label { font-size: 10px; color: var(--subtle); margin-top: 2px; }
-
-    /* progress bar */
     .avg-bar { margin-top: 10px; }
-    .avg-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--subtle);
-      margin-bottom: 4px;
-    }
+    .avg-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--subtle); margin-bottom: 4px; }
     .bar-track { height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.4s ease; }
+    .bar-fill { height: 100%; border-radius: 2px; background: var(--green); }
     .bar-fill.el { background: var(--orange); }
-
-    /* season stats row */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #f3f3f5;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f3f3f5; }
     .stat-box { background: #f8f8fa; border-radius: 7px; padding: 7px 6px; text-align: center; }
     .stat-val { font-size: 14px; font-weight: 600; }
     .stat-label { font-size: 10px; color: var(--subtle); margin-top: 1px; }
-
-    /* expanded detail */
     .detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f3f3f5; }
     .detail.open { display: block; }
-    .detail-section { margin-bottom: 10px; }
     .detail-heading { font-size: 10px; font-weight: 600; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .detail-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
     .detail-box { background: #f8f8fa; border-radius: 7px; padding: 6px 4px; text-align: center; }
     .detail-val { font-size: 13px; font-weight: 600; }
     .detail-label { font-size: 10px; color: var(--subtle); margin-top: 1px; }
-
-    /* projected stats highlighted */
     .proj-detail-box { background: var(--green-light); border-radius: 7px; padding: 6px 4px; text-align: center; }
     .proj-detail-box.el { background: #fdf0e8; }
     .proj-detail-val { font-size: 13px; font-weight: 700; color: var(--green); }
     .proj-detail-val.el { color: var(--orange); }
     .proj-detail-label { font-size: 10px; color: var(--muted); margin-top: 1px; }
-
-    /* loading / error */
     .loading { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 14px; }
     .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .error-msg { text-align: center; padding: 48px 20px; color: var(--orange); font-size: 14px; }
-
-    /* league badge */
-    .league-badge {
-      display: inline-block;
-      font-size: 9px;
-      font-weight: 700;
-      padding: 2px 5px;
-      border-radius: 4px;
-      margin-left: 6px;
-      vertical-align: middle;
-      letter-spacing: 0.3px;
-    }
+    .league-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 4px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.3px; }
     .league-badge.nba { background: var(--green-light); color: var(--green); }
     .league-badge.el  { background: #fdf0e8; color: var(--orange); }
-
-    /* ── MOBILE ── */
     @media (max-width: 480px) {
       .nav-inner { height: 48px; }
       .container { padding: 12px; }
       .proj-val { font-size: 19px; }
-      .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-      .stat-val { font-size: 13px; }
-      .detail-row { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+      .stats-grid, .detail-row { grid-template-columns: repeat(4, 1fr); gap: 4px; }
     }
   </style>
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav">
   <div class="nav-inner">
     <div class="logo">Hoop<span>IQ</span></div>
@@ -251,11 +96,13 @@
       <button class="league-btn nba active" onclick="switchLeague('nba', this)">NBA</button>
       <button class="league-btn el" onclick="switchLeague('el', this)">Euroleague</button>
     </div>
-    <div class="status" id="status">Connecting...</div>
+    <div class="nav-right">
+      <div class="status" id="status">Connecting...</div>
+      <a class="draft-btn-nav" href="lobby.html">Draft</a>
+    </div>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="container">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
@@ -276,17 +123,14 @@
 
 <script>
 const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
-let allPlayers   = [];
-let currentLeague = 'nba';
-let sortField     = 'proj_dk';
+let allPlayers = [], currentLeague = 'nba', sortField = 'proj_dk';
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
   try {
-    const h      = await fetch(`${API}/health`);
+    const h = await fetch(`${API}/health`);
     const health = await h.json();
-    const nbaCount = health.nba ? health.nba.players : health.players;
-    document.getElementById('status').textContent = `✓ ${nbaCount} players`;
+    const n = health.nba ? health.nba.players : health.players;
+    document.getElementById('status').textContent = `✓ ${n} players`;
     document.getElementById('status').className = 'status ok';
   } catch(e) {
     document.getElementById('status').textContent = '✗ Offline';
@@ -295,80 +139,48 @@ async function init() {
   loadLeague('nba');
 }
 
-// ── LEAGUE SWITCH ─────────────────────────────────────────────────────────────
 async function switchLeague(league, btn) {
   if (league === currentLeague) return;
   currentLeague = league;
   document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('search').value = '';
-  document.getElementById('player-list').innerHTML =
-    '<div class="loading"><div class="spinner"></div>Loading...</div>';
+  document.getElementById('player-list').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
   loadLeague(league);
 }
 
 async function loadLeague(league) {
   try {
-    const endpoint = league === 'el'
-      ? `${API}/euroleague/top?limit=200`
-      : `${API}/top?limit=200`;
-    const r = await fetch(endpoint);
+    const r = await fetch(league === 'el' ? `${API}/euroleague/top?limit=200` : `${API}/top?limit=200`);
     allPlayers = await r.json();
-
-    // Normalise: NBA uses proj_dk already; EL uses proj_dk too (we set it in api.py)
-    // NBA season avgs use field names pts/reb/ast; EL too — same shape. ✓
-
     renderPlayers(allPlayers);
-    document.getElementById('count').textContent =
-      `${allPlayers.length} players · sorted by projected DK pts`;
+    document.getElementById('count').textContent = `${allPlayers.length} players · sorted by projected DK pts`;
   } catch(e) {
-    document.getElementById('player-list').innerHTML =
-      `<div class="error-msg">Failed to load ${league === 'el' ? 'Euroleague' : 'NBA'} data.</div>`;
+    document.getElementById('player-list').innerHTML = `<div class="error-msg">Failed to load data.</div>`;
   }
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
 function renderPlayers(players) {
   const isEL  = currentLeague === 'el';
   const maxDk = Math.max(...players.map(p => p.dk_avg || 0), 1);
-
-  if (!players.length) {
-    document.getElementById('player-list').innerHTML =
-      '<div class="loading">No players found.</div>';
-    return;
-  }
-
+  if (!players.length) { document.getElementById('player-list').innerHTML = '<div class="loading">No players found.</div>'; return; }
   document.getElementById('player-list').innerHTML = players.map((p, i) => {
-    const projDk  = p.proj_dk  ?? p.PREDICTED ?? 0;
-    const dkAvg   = p.dk_avg   ?? 0;
-    const diff    = projDk - dkAvg;
-    const diffStr = diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
-    const trendText  = Math.abs(diff) > 2
-      ? `${diff > 0 ? '↑' : '↓'} ${diffStr} vs season avg`
-      : '— on track';
+    const projDk = p.proj_dk ?? p.PREDICTED ?? 0;
+    const dkAvg  = p.dk_avg ?? 0;
+    const diff   = projDk - dkAvg;
+    const trendText  = Math.abs(diff) > 2 ? `${diff > 0 ? '↑' : '↓'} ${diff > 0 ? '+' : ''}${diff.toFixed(1)} vs season avg` : '— on track';
     const trendClass = diff > 2 ? 'up' : diff < -2 ? 'down' : 'flat';
-    const barWidth   = Math.round(((dkAvg) / maxDk) * 100);
-
-    // Team / opponent info
-    const teamOpp = isEL
-      ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}`
-      : `vs ${p.opp ?? '—'}`;
-    const gamesMin = `${p.games ?? '—'} games · ${p.min_avg ?? '—'} min avg`;
-
-    // Projected stats (EL has proj_pts etc.; NBA predictions file has PREDICTED only)
+    const barWidth   = Math.round((dkAvg / maxDk) * 100);
+    const teamOpp    = isEL ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}` : `vs ${p.opp ?? '—'}`;
     const hasProjStats = p.proj_pts !== undefined;
-
     return `
     <div class="player-card${isEL ? ' el-card' : ''}" id="card-${i}" onclick="toggleDetail(${i})">
       <div class="card-top">
         <div class="card-left">
           <div class="rank">#${i+1}</div>
           <div style="min-width:0">
-            <div class="player-name">
-              ${p.name}
-              <span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span>
-            </div>
-            <div class="player-meta">${teamOpp} · ${gamesMin}</div>
+            <div class="player-name">${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span></div>
+            <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min_avg ?? '—'} min</div>
             <div class="trend ${trendClass}">${trendText}</div>
           </div>
         </div>
@@ -377,88 +189,65 @@ function renderPlayers(players) {
           <div class="proj-label">proj DK</div>
         </div>
       </div>
-
       <div class="avg-bar">
-        <div class="avg-label">
-          <span>Season DK avg: ${dkAvg.toFixed(1)}</span>
-          <span>Best: ${maxDk.toFixed(1)}</span>
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill${isEL ? ' el' : ''}" style="width:${barWidth}%"></div>
-        </div>
+        <div class="avg-label"><span>Season DK avg: ${dkAvg.toFixed(1)}</span><span>Best: ${maxDk.toFixed(1)}</span></div>
+        <div class="bar-track"><div class="bar-fill${isEL ? ' el' : ''}" style="width:${barWidth}%"></div></div>
       </div>
-
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-val">${fmt(p.pts)}</div><div class="stat-label">PTS</div></div>
         <div class="stat-box"><div class="stat-val">${fmt(p.reb)}</div><div class="stat-label">REB</div></div>
         <div class="stat-box"><div class="stat-val">${fmt(p.ast)}</div><div class="stat-label">AST</div></div>
         <div class="stat-box"><div class="stat-val">${fmt(p.stl)}</div><div class="stat-label">STL</div></div>
       </div>
-
       <div class="detail" id="detail-${i}">
         ${hasProjStats ? `
-        <div class="detail-section">
-          <div class="detail-heading">Projected Stats</div>
-          <div class="detail-row">
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_pts)}</div><div class="proj-detail-label">PTS</div></div>
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_reb)}</div><div class="proj-detail-label">REB</div></div>
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_ast)}</div><div class="proj-detail-label">AST</div></div>
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_stl)}</div><div class="proj-detail-label">STL</div></div>
-          </div>
-          <div class="detail-row">
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_blk)}</div><div class="proj-detail-label">BLK</div></div>
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_tov)}</div><div class="proj-detail-label">TOV</div></div>
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_fg3m)}</div><div class="proj-detail-label">3PM</div></div>
-            <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmtPct(p.proj_fgm, p.proj_fga)}</div><div class="proj-detail-label">FG%</div></div>
-          </div>
-        </div>` : ''}
-
-        <div class="detail-section">
-          <div class="detail-heading">Season Averages</div>
-          <div class="detail-row">
-            <div class="detail-box"><div class="detail-val">${fmt(p.blk)}</div><div class="detail-label">BLK</div></div>
-            <div class="detail-box"><div class="detail-val">${pct(p.fg_pct)}</div><div class="detail-label">FG%</div></div>
-            <div class="detail-box"><div class="detail-val">${pct(p.ft_pct)}</div><div class="detail-label">FT%</div></div>
-            <div class="detail-box"><div class="detail-val">${fmt(p.fg3m)}</div><div class="detail-label">3PM</div></div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-box"><div class="detail-val">${fmt(p.tov)}</div><div class="detail-label">TOV</div></div>
-            <div class="detail-box"><div class="detail-val">${dkAvg.toFixed(1)}</div><div class="detail-label">DK avg</div></div>
-            <div class="detail-box"><div class="detail-val">${fmt(p.dk_std)}</div><div class="detail-label">DK std</div></div>
-            <div class="detail-box"><div class="detail-val">${p.opp ?? '—'}</div><div class="detail-label">Opp</div></div>
-          </div>
-          ${isEL && p.pir_avg ? `
-          <div class="detail-row">
-            <div class="detail-box"><div class="detail-val">${fmt(p.pir_avg)}</div><div class="detail-label">PIR avg</div></div>
-          </div>` : ''}
+        <div class="detail-heading">Projected stats</div>
+        <div class="detail-row">
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_pts)}</div><div class="proj-detail-label">PTS</div></div>
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_reb)}</div><div class="proj-detail-label">REB</div></div>
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_ast)}</div><div class="proj-detail-label">AST</div></div>
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_stl)}</div><div class="proj-detail-label">STL</div></div>
         </div>
+        <div class="detail-row">
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_blk)}</div><div class="proj-detail-label">BLK</div></div>
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_tov)}</div><div class="proj-detail-label">TOV</div></div>
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_fg3m)}</div><div class="proj-detail-label">3PM</div></div>
+          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmtPct(p.proj_fgm,p.proj_fga)}</div><div class="proj-detail-label">FG%</div></div>
+        </div>` : ''}
+        <div class="detail-heading" style="margin-top:${hasProjStats?'10px':'0'}">Season averages</div>
+        <div class="detail-row">
+          <div class="detail-box"><div class="detail-val">${fmt(p.blk)}</div><div class="detail-label">BLK</div></div>
+          <div class="detail-box"><div class="detail-val">${pct(p.fg_pct)}</div><div class="detail-label">FG%</div></div>
+          <div class="detail-box"><div class="detail-val">${pct(p.ft_pct)}</div><div class="detail-label">FT%</div></div>
+          <div class="detail-box"><div class="detail-val">${fmt(p.fg3m)}</div><div class="detail-label">3PM</div></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-box"><div class="detail-val">${fmt(p.tov)}</div><div class="detail-label">TOV</div></div>
+          <div class="detail-box"><div class="detail-val">${dkAvg.toFixed(1)}</div><div class="detail-label">DK avg</div></div>
+          <div class="detail-box"><div class="detail-val">${fmt(p.dk_std)}</div><div class="detail-label">DK std</div></div>
+          <div class="detail-box"><div class="detail-val">${p.opp ?? '—'}</div><div class="detail-label">Opp</div></div>
+        </div>
+        ${isEL && p.pir_avg ? `<div class="detail-row"><div class="detail-box"><div class="detail-val">${fmt(p.pir_avg)}</div><div class="detail-label">PIR avg</div></div></div>` : ''}
       </div>
     </div>`;
   }).join('');
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-const fmt    = v => v !== undefined && v !== null ? Number(v).toFixed(1) : '—';
-const pct    = v => v !== undefined && v !== null ? `${(v * 100).toFixed(1)}%` : '—';
-const fmtPct = (m, a) => a && a > 0 ? `${((m/a)*100).toFixed(1)}%` : '—';
+const fmt    = v => v != null ? Number(v).toFixed(1) : '—';
+const pct    = v => v != null ? `${(v*100).toFixed(1)}%` : '—';
+const fmtPct = (m,a) => a && a > 0 ? `${((m/a)*100).toFixed(1)}%` : '—';
 
 function toggleDetail(i) {
   document.getElementById(`card-${i}`).classList.toggle('expanded');
   document.getElementById(`detail-${i}`).classList.toggle('open');
 }
-
 function filterPlayers() {
-  const q        = document.getElementById('search').value.toLowerCase();
-  const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(q));
-  renderPlayers(filtered);
-  document.getElementById('count').textContent =
-    `${filtered.length} player${filtered.length !== 1 ? 's' : ''} found`;
+  const q = document.getElementById('search').value.toLowerCase();
+  renderPlayers(allPlayers.filter(p => p.name.toLowerCase().includes(q)));
 }
-
 function sortPlayers() {
   sortField = document.getElementById('sort').value;
-  const sorted = [...allPlayers].sort((a, b) => (b[sortField] ?? 0) - (a[sortField] ?? 0));
-  renderPlayers(sorted);
+  renderPlayers([...allPlayers].sort((a,b) => (b[sortField]??0)-(a[sortField]??0)));
 }
 
 init();
