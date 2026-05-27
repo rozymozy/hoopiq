@@ -7,35 +7,39 @@
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    :root{--green:#1D9E75;--green-light:#E1F5EE;--orange:#D85A30;--bg:#f4f4f6;--card:#fff;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af}
+    :root{--green:#1D9E75;--green-light:#E1F5EE;--orange:#D85A30;--bg:#f4f4f6;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px}
     .nav-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px}
     .logo{font-size:17px;font-weight:700}.logo span{color:var(--green)}
-    .nav-back{font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:4px}
+    .nav-back{font-size:13px;color:var(--muted);text-decoration:none}
     .nav-back:hover{color:var(--text)}
     .container{max-width:640px;margin:32px auto;padding:0 16px}
     .page-title{font-size:22px;font-weight:700;margin-bottom:4px}
     .page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
     .card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:24px;margin-bottom:16px}
-    .card-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--green-light);color:#0F6E56}
-    .badge.pub{background:#fff7ed;color:#92400e}
+    .card-title{font-size:15px;font-weight:600;margin-bottom:16px}
     label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px;margin-top:14px}
     label:first-of-type{margin-top:0}
     input,select{width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;transition:border-color .15s}
     input:focus,select:focus{border-color:var(--green)}
     .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .btn{width:100%;padding:11px;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;margin-top:18px;transition:opacity .15s}
     .btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:.9}
     .btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{background:var(--bg)}
     .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--subtle);font-size:12px}
     .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .league-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+    .league-opt{padding:8px;border-radius:8px;border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:all .15s}
+    .league-opt:hover{border-color:var(--green)}
+    .league-opt.selected{border-color:var(--green);background:var(--green-light)}
+    .league-opt-label{font-size:13px;font-weight:600;display:block}
+    .league-opt-sub{font-size:10px;color:var(--muted)}
     .waiting-room{display:none}
     .waiting-room.show{display:block}
-    .setup-cards{display:block}
     .setup-cards.hide{display:none}
-    .room-code-display{font-size:36px;font-weight:700;letter-spacing:8px;color:var(--green);text-align:center;padding:16px;background:var(--green-light);border-radius:10px;margin:12px 0;cursor:pointer;user-select:all}
+    .room-code-display{font-size:36px;font-weight:700;letter-spacing:8px;color:var(--green);text-align:center;padding:16px;background:var(--green-light);border-radius:10px;margin:12px 0;cursor:pointer}
     .room-code-hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px}
     .team-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
     .team-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:14px}
@@ -47,15 +51,8 @@
     .countdown-num{font-size:56px;font-weight:700;color:var(--green);line-height:1}
     .countdown-label{font-size:14px;color:var(--muted);margin-top:6px}
     .start-early-btn{margin-top:12px;font-size:13px;padding:8px 20px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--muted)}
-    .start-early-btn:hover{color:var(--text)}
-    .public-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-    .public-room-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:13px;cursor:pointer;transition:background .15s}
-    .public-room-row:hover{background:#e8e8ec}
-    .pr-code{font-weight:700;color:var(--green)}
-    .pr-info{color:var(--muted)}
-    .pr-join{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--green);color:var(--green);background:#fff;cursor:pointer}
     .error-msg{font-size:13px;color:var(--orange);margin-top:10px;min-height:20px}
-    .connected-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px}
+    .room-info-pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:10px;background:var(--bg);color:var(--muted);margin-right:6px;margin-bottom:8px}
   </style>
 </head>
 <body>
@@ -63,28 +60,44 @@
 <div class="nav">
   <div class="nav-inner">
     <div class="logo">Hoop<span>IQ</span></div>
-    <a class="nav-back" href="index.html">&#8592; Back to projections</a>
+    <a class="nav-back" href="index.html">&#8592; Projections</a>
   </div>
 </div>
 
 <div class="container">
 
-  <!-- SETUP CARDS -->
+  <!-- SETUP -->
   <div class="setup-cards" id="setup-cards">
     <div class="page-title">Draft Lobby</div>
-    <div class="page-sub">Create a private room or join an existing one</div>
+    <div class="page-sub">Create a private room or join with a code</div>
 
     <!-- CREATE -->
     <div class="card">
-      <div class="card-title">Create a room <span class="badge">Private</span></div>
+      <div class="card-title">Create a room</div>
 
       <label>Your name</label>
-      <input type="text" id="create-manager" placeholder="e.g. Alex" value="">
+      <input type="text" id="create-manager" placeholder="e.g. Alex">
 
       <label>Team name</label>
-      <input type="text" id="create-team" placeholder="e.g. Brooklyn Ballers" value="">
+      <input type="text" id="create-team" placeholder="e.g. Brooklyn Ballers">
 
-      <div class="row2">
+      <label>League</label>
+      <div class="league-picker">
+        <div class="league-opt selected" data-league="nba" onclick="selectLeague(this)">
+          <span class="league-opt-label">NBA</span>
+          <span class="league-opt-sub">160 players</span>
+        </div>
+        <div class="league-opt" data-league="el" onclick="selectLeague(this)">
+          <span class="league-opt-label">Euroleague</span>
+          <span class="league-opt-sub">587 players</span>
+        </div>
+        <div class="league-opt" data-league="both" onclick="selectLeague(this)">
+          <span class="league-opt-label">Both</span>
+          <span class="league-opt-sub">747 players</span>
+        </div>
+      </div>
+
+      <div class="row2" style="margin-top:14px">
         <div>
           <label>Max teams</label>
           <select id="create-max">
@@ -112,49 +125,38 @@
 
       <div id="create-error" class="error-msg"></div>
       <button class="btn btn-green" onclick="createRoom()">Create private room</button>
-
       <div class="divider">or</div>
-
       <button class="btn btn-outline" onclick="joinPublicLobby()">Join a public room</button>
     </div>
 
-    <!-- JOIN WITH CODE -->
+    <!-- JOIN -->
     <div class="card">
       <div class="card-title">Join with a code</div>
-
       <label>Your name</label>
-      <input type="text" id="join-manager" placeholder="e.g. Jordan" value="">
-
+      <input type="text" id="join-manager" placeholder="e.g. Jordan">
       <label>Team name</label>
-      <input type="text" id="join-team" placeholder="e.g. Chicago Bulls Fan" value="">
-
+      <input type="text" id="join-team" placeholder="e.g. Chicago Bulls Fan">
       <label>Room code</label>
       <input type="text" id="join-code" placeholder="e.g. ABCDE" maxlength="5"
              style="letter-spacing:4px;font-weight:700;text-transform:uppercase"
              oninput="this.value=this.value.toUpperCase()">
-
       <div id="join-error" class="error-msg"></div>
       <button class="btn btn-green" onclick="joinRoom()">Join room</button>
-    </div>
-
-    <!-- PUBLIC ROOMS -->
-    <div class="card" id="public-card" style="display:none">
-      <div class="card-title">Open public rooms <span class="badge pub">Public</span></div>
-      <div class="public-list" id="public-list"></div>
     </div>
   </div>
 
   <!-- WAITING ROOM -->
   <div class="waiting-room" id="waiting-room">
     <div class="page-title" id="wr-title">Waiting for players...</div>
-    <div class="page-sub" id="wr-sub">Share the code below so others can join</div>
+    <div class="page-sub" id="wr-sub">Share the code so others can join</div>
 
     <div class="card">
-      <div class="room-code-display" id="wr-code" title="Click to copy">XXXXX</div>
-      <div class="room-code-hint">Click code to copy &bull; Share with friends</div>
+      <div class="room-code-display" id="wr-code" onclick="copyCode()">XXXXX</div>
+      <div class="room-code-hint" id="copy-hint">Tap code to copy &bull; Share with friends</div>
 
+      <div id="wr-pills"></div>
       <div class="slots-bar">
-        <span id="wr-slots">1 / 8 teams joined</span>
+        <span id="wr-slots">1 / 8 teams</span>
         <span id="wr-rounds"></span>
       </div>
 
@@ -163,63 +165,58 @@
       <div class="countdown-display" id="countdown-block">
         <div class="countdown-num" id="countdown-num">30</div>
         <div class="countdown-label">Draft starts in...</div>
-        <button class="start-early-btn" id="start-early-btn" onclick="startNow()" style="display:none">
-          Start now (creator only)
-        </button>
       </div>
+
+      <button class="start-early-btn" id="start-early-btn" onclick="startNow()" style="display:none;width:100%;margin-top:8px">
+        Start now &#9654;
+      </button>
     </div>
   </div>
 
 </div>
 
 <script>
-const API  = 'https://hoopiq-api-production-d3a4.up.railway.app';
-const socket = io(API, {transports:['polling']});
+const API    = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const socket = io(API, {transports:['polling','websocket']});
 
-let myCode   = null;
-let mySid    = null;
+let myCode    = null;
+let mySid     = null;
 let amCreator = false;
-let roomData  = null;
+let selectedLeague = 'nba';
 
-socket.on('connect', () => { mySid = socket.id; });
-socket.on('connected', d => { mySid = d.sid; });
+socket.on('connect',   ()  => { mySid = socket.id; });
+socket.on('connected', d   => { mySid = d.sid; });
 
 socket.on('room_created', d => {
   myCode    = d.code;
   mySid     = d.your_sid;
-  roomData  = d.room;
   amCreator = true;
   showWaitingRoom(d.room);
+  // Save league pref for the projections page
+  localStorage.setItem('hoopiq_league', d.room.league);
 });
 
 socket.on('joined_ok', d => {
-  roomData = d.room;
-  mySid    = d.your_sid;
+  mySid = d.your_sid;
   showWaitingRoom(d.room);
+  localStorage.setItem('hoopiq_league', d.room.league);
 });
 
-socket.on('team_joined', d => {
-  roomData = d.room;
-  updateWaitingRoom(d.room);
-});
+socket.on('team_joined',  d => updateWaitingRoom(d.room));
 
 socket.on('countdown', d => {
   document.getElementById('countdown-block').classList.add('show');
   document.getElementById('countdown-num').textContent = d.seconds;
-  if (amCreator) document.getElementById('start-early-btn').style.display = 'none';
 });
 
 socket.on('draft_started', d => {
-  const params = new URLSearchParams({
+  const p = new URLSearchParams({
     code:   myCode,
     sid:    mySid,
     rounds: d.rounds,
+    league: d.league,
   });
-  window.location.href = `draft.html?${params.toString()}`;
-});
-
-socket.on('public_rooms', d => {
-  renderPublicRooms(d.rooms);
+  window.location.href = `draft.html?${p.toString()}`;
 });
 
 socket.on('error', d => {
@@ -227,14 +224,23 @@ socket.on('error', d => {
   document.getElementById('join-error').textContent   = d.msg;
 });
 
+function selectLeague(el) {
+  document.querySelectorAll('.league-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedLeague = el.dataset.league;
+}
+
 function createRoom() {
   const manager = document.getElementById('create-manager').value.trim() || 'Manager';
   const team    = document.getElementById('create-team').value.trim()    || 'Team 1';
   const max     = parseInt(document.getElementById('create-max').value);
   const rounds  = parseInt(document.getElementById('create-rounds').value);
   document.getElementById('create-error').textContent = '';
-  socket.emit('create_room', {manager_name:manager, team_name:team,
-                               max_teams:max, rounds:rounds, is_public:false});
+  socket.emit('create_room', {
+    manager_name: manager, team_name: team,
+    max_teams: max, rounds: rounds,
+    league: selectedLeague, is_public: false,
+  });
 }
 
 function joinRoom() {
@@ -242,54 +248,64 @@ function joinRoom() {
   const team    = document.getElementById('join-team').value.trim()    || 'Team';
   const code    = document.getElementById('join-code').value.trim().toUpperCase();
   if (!code || code.length < 5) {
-    document.getElementById('join-error').textContent = 'Enter a 5-letter room code.';
+    document.getElementById('join-error').textContent = 'Enter the 5-letter room code.';
     return;
   }
-  document.getElementById('join-error').textContent = '';
   myCode = code;
-  socket.emit('join_room_draft', {code, manager_name:manager, team_name:team});
+  document.getElementById('join-error').textContent = '';
+  socket.emit('join_room_draft', {code, manager_name: manager, team_name: team});
 }
 
 function joinPublicLobby() {
   const manager = document.getElementById('create-manager').value.trim() || 'Manager';
   const team    = document.getElementById('create-team').value.trim()    || 'Team';
-  socket.emit('join_public_lobby', {manager_name:manager, team_name:team});
-  socket.emit('list_public_rooms', {});
-}
-
-function joinSpecificPublic(code) {
-  const manager = document.getElementById('create-manager').value.trim() || 'Manager';
-  const team    = document.getElementById('create-team').value.trim()    || 'Team';
-  myCode = code;
-  socket.emit('join_room_draft', {code, manager_name:manager, team_name:team});
+  socket.emit('join_public_lobby', {
+    manager_name: manager, team_name: team,
+    league: selectedLeague, is_public: true,
+    max_teams: parseInt(document.getElementById('create-max').value),
+    rounds:    parseInt(document.getElementById('create-rounds').value),
+  });
 }
 
 function startNow() {
   socket.emit('start_now', {code: myCode});
 }
 
+function copyCode() {
+  if (!myCode) return;
+  navigator.clipboard.writeText(myCode).then(() => {
+    document.getElementById('copy-hint').textContent = '✓ Copied to clipboard!';
+    setTimeout(() => {
+      document.getElementById('copy-hint').textContent = 'Tap code to copy · Share with friends';
+    }, 2000);
+  });
+}
+
 function showWaitingRoom(room) {
   document.getElementById('setup-cards').classList.add('hide');
   document.getElementById('waiting-room').classList.add('show');
   myCode = room.code;
-  document.getElementById('wr-code').textContent = room.code;
   if (amCreator) {
     document.getElementById('wr-title').textContent = 'Your room is ready';
-    document.getElementById('start-early-btn').style.display = 'inline-block';
+    document.getElementById('start-early-btn').style.display = 'block';
   }
   updateWaitingRoom(room);
 }
 
 function updateWaitingRoom(room) {
-  document.getElementById('wr-code').textContent = room.code;
-  document.getElementById('wr-slots').textContent =
-    `${room.teams.length} / ${room.max_teams} teams joined`;
-  document.getElementById('wr-rounds').textContent =
-    `${room.rounds} rounds`;
+  document.getElementById('wr-code').textContent  = room.code;
+  document.getElementById('wr-slots').textContent = `${room.teams.length} / ${room.max_teams} teams`;
+  document.getElementById('wr-rounds').textContent = `${room.rounds} rounds`;
   document.getElementById('wr-sub').textContent =
     room.teams.length < room.max_teams
       ? `Waiting for ${room.max_teams - room.teams.length} more team(s)`
-      : 'Room is full — starting soon!';
+      : 'Room full — starting soon!';
+
+  const leagueLabel = {nba:'NBA only', el:'Euroleague only', both:'NBA + Euroleague'}[room.league] || room.league;
+  document.getElementById('wr-pills').innerHTML =
+    `<span class="room-info-pill">&#127944; ${leagueLabel}</span>
+     <span class="room-info-pill">&#128197; ${room.rounds} rounds</span>
+     <span class="room-info-pill">&#128101; Max ${room.max_teams} teams</span>`;
 
   document.getElementById('wr-teams').innerHTML = room.teams.map(t => `
     <div class="team-item">
@@ -297,36 +313,11 @@ function updateWaitingRoom(room) {
         <div class="team-name">${t.name}</div>
         <div class="team-manager">${t.manager}</div>
       </div>
-      ${t.sid === mySid ? '<span class="team-you">YOU</span>' : '<span style="color:var(--green);font-size:13px">&#10003;</span>'}
+      ${t.sid === mySid
+        ? '<span class="team-you">YOU</span>'
+        : '<span style="color:var(--green)">&#10003;</span>'}
     </div>`).join('');
 }
-
-function renderPublicRooms(rooms) {
-  const card = document.getElementById('public-card');
-  const list = document.getElementById('public-list');
-  if (!rooms.length) {
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = 'block';
-  list.innerHTML = rooms.filter(r => r.status === 'waiting').map(r => `
-    <div class="public-room-row">
-      <div>
-        <span class="pr-code">${r.code}</span>
-        <span class="pr-info"> &bull; ${r.teams}/${r.max_teams} teams &bull; ${r.rounds} rounds</span>
-      </div>
-      <button class="pr-join" onclick="joinSpecificPublic('${r.code}')">Join</button>
-    </div>`).join('') || '<div style="color:var(--muted);font-size:13px">No open rooms right now.</div>';
-}
-
-document.getElementById('wr-code').addEventListener('click', () => {
-  navigator.clipboard.writeText(myCode).then(() => {
-    document.getElementById('room-code-hint') &&
-      (document.getElementById('room-code-hint').textContent = 'Copied!');
-  });
-});
-
-socket.emit('list_public_rooms', {});
 </script>
 </body>
 </html>
