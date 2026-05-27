@@ -160,7 +160,7 @@ const CODE   = params.get('code');
 const MY_SID_PARAM = params.get('sid');
 const ROUNDS = parseInt(params.get('rounds') || '10');
 
-const socket = io(API, {transports:['websocket','polling']});
+const socket = io(API, {transports:['polling']});
 
 let mySid      = MY_SID_PARAM;
 let myTeamName = null;
