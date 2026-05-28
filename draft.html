@@ -151,8 +151,18 @@ document.getElementById('nav-label').textContent =
 const socket = io(API, {transports:['polling','websocket']});
 
 socket.on('connect', () => {
-  // Server gives us a new SID on every connect — request room state with it
-  socket.emit('get_room_state', {code: CODE});
+  // Send identity so server can match and update our SID
+  const manager = params.get('manager') || '';
+  const team    = params.get('team')    || '';
+  if (manager && team) {
+    socket.emit('join_room_draft', {
+      code:         CODE,
+      manager_name: manager,
+      team_name:    team,
+    });
+  } else {
+    socket.emit('get_room_state', {code: CODE});
+  }
 });
 
 socket.on('connected', d => {
