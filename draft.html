@@ -10,17 +10,18 @@
     :root{
       --green:#1D9E75;--green-light:#E1F5EE;
       --orange:#D85A30;--orange-light:#FAECE7;
+      --purple:#7C3AED;
       --bg:#f4f4f6;--border:#e8e8ec;
       --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
     }
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-    /* ── NAV ── */
+    /* NAV */
     .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;flex-shrink:0}
     .nav-inner{display:flex;align-items:center;justify-content:space-between;height:44px;gap:12px}
     .logo{font-size:15px;font-weight:700;flex-shrink:0}.logo span{color:var(--green)}
 
-    /* ── ROUND BANNER ── */
+    /* ROUND BANNER */
     .round-banner{background:#fff;border-bottom:2px solid var(--border);padding:0 16px;flex-shrink:0;display:flex;align-items:center;gap:16px;height:40px}
     .round-banner.your-turn{border-bottom-color:var(--green);background:var(--green-light)}
     .rb-round{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
@@ -34,41 +35,49 @@
     .rb-status.others{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
     .rb-status.done{background:#f0f0f0;color:var(--muted)}
 
-    /* ── MAIN LAYOUT ── */
+    /* MAIN LAYOUT */
     .draft-body{display:grid;grid-template-columns:1fr 200px 200px;flex:1;overflow:hidden}
 
-    /* ── PLAYER POOL ── */
+    /* POOL */
     .pool{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
-    .pool-top{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
-    .pool-search{flex:1;padding:6px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none}
+    .pool-top{padding:6px 10px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
+    .pool-search{flex:1;padding:5px 9px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);outline:none}
     .pool-search:focus{border-color:var(--green)}
-    .sort-sel{font-size:11px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer;outline:none}
-    .pos-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+    .pos-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
     .pos-tabs::-webkit-scrollbar{display:none}
-    .ptab{font-size:11px;font-weight:700;padding:7px 10px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
+    .ptab{font-size:11px;font-weight:700;padding:6px 9px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
     .ptab.active{color:var(--green);border-bottom-color:var(--green)}
 
-    /* ── PLAYER LIST ── */
-    .player-list{overflow-y:auto;flex:1}
-    .player-row{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);transition:background .1s}
-    .player-row.can-pick{cursor:pointer}.player-row.can-pick:hover{background:#f0faf6}
-    .player-row.drafted{opacity:.22;pointer-events:none}
-    .p-rank{font-size:10px;color:var(--subtle);text-align:right}
-    .p-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .p-team{font-size:10px;color:var(--muted)}
-    .p-stats{display:flex;gap:6px;margin-top:1px}
-    .p-stat{font-size:10px;color:var(--muted)}
-    .p-stat span{font-weight:600;color:var(--text)}
-    .p-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
-    .p-proj{font-size:13px;font-weight:800;color:var(--green);line-height:1}
-    .p-proj.el{color:var(--orange)}
-    .p-proj-label{font-size:9px;color:var(--subtle)}
-    .rank-star{font-size:13px;cursor:pointer;color:var(--subtle);border:none;background:none;padding:0;line-height:1}
+    /* POOL TABLE */
+    .player-list{overflow-y:auto;overflow-x:auto;flex:1}
+    .pool-tbl{width:100%;border-collapse:collapse;min-width:820px}
+    .pool-tbl thead tr{background:var(--bg);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:2}
+    .pool-tbl th{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:6px 5px;text-align:right;white-space:nowrap;cursor:pointer;user-select:none}
+    .pool-tbl th:first-child{text-align:left;cursor:default;padding-left:8px;min-width:140px}
+    .pool-tbl th:last-child{text-align:center;cursor:default;min-width:80px}
+    .pool-tbl th.sorted{color:var(--green)}
+    .pool-tbl th:not(:first-child):not(:last-child):hover{color:var(--text)}
+    .pool-tbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+    .pool-tbl tbody tr:last-child{border-bottom:none}
+    .pool-tbl tbody tr.can-pick{cursor:pointer}
+    .pool-tbl tbody tr.can-pick:hover{background:#f0faf6}
+    .pool-tbl tbody tr.drafted{opacity:.2;pointer-events:none}
+    .pool-tbl td{font-size:11px;padding:5px 5px;text-align:right;white-space:nowrap}
+    .pool-tbl td:first-child{text-align:left;padding-left:8px}
+    .pool-tbl td:last-child{text-align:center}
+    .td-g{color:var(--green);font-weight:700}
+    .td-m{color:var(--muted)}
+    .td-r{color:var(--subtle);font-weight:700;font-size:10px}
+    .pname{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:135px}
+    .pmeta{font-size:9px;color:var(--muted)}
+    .pos-b{display:inline-block;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;background:#f0f0f0;color:var(--muted);margin-right:2px}
+    .rank-star{font-size:12px;cursor:pointer;color:var(--subtle);border:none;background:none;padding:0;line-height:1}
     .rank-star.on{color:#f59e0b}
-    .draft-btn{font-size:11px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--green);color:var(--green);background:#fff;cursor:pointer;font-weight:700;white-space:nowrap;margin-top:1px}
+    .draft-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1.5px solid var(--green);color:var(--green);background:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
     .draft-btn:hover{background:var(--green-light)}
+    .act-cell{display:flex;align-items:center;justify-content:center;gap:4px}
 
-    /* ── MY ROSTER SIDEBAR ── */
+    /* MY ROSTER SIDEBAR */
     .sidebar{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
     .sb-header{padding:7px 10px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
     .roster-list{overflow-y:auto;flex:1}
@@ -82,7 +91,7 @@
     .ab-btn:hover{background:var(--bg)}
     .ab-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}.ab-btn.primary:hover{opacity:.9}
 
-    /* ── ALL TEAMS PANEL ── */
+    /* ALL TEAMS PANEL */
     .teams-panel{display:flex;flex-direction:column;overflow:hidden}
     .teams-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
     .ttab{flex:1;font-size:10px;font-weight:700;padding:6px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center;text-transform:uppercase;letter-spacing:.4px}
@@ -94,7 +103,6 @@
     .tbh-name{font-size:11px;font-weight:700;color:var(--text)}
     .tbh-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:4px}
     .tbh-count{font-size:10px;color:var(--muted)}
-    .tbh-next{font-size:9px;color:var(--green);font-weight:600}
     .team-block-picks{padding:4px 0}
     .team-block-picks.hidden{display:none}
     .tbp-row{display:flex;align-items:center;gap:6px;padding:3px 10px;font-size:11px}
@@ -102,8 +110,6 @@
     .tbp-player{flex:1;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .tbp-proj{color:var(--green);font-weight:600;font-size:10px}
     .tbp-empty{color:var(--subtle);font-style:italic}
-
-    /* ── LOG at bottom of teams panel ── */
     .log-section{flex-shrink:0;border-top:1px solid var(--border);max-height:160px;display:flex;flex-direction:column}
     .log-list{overflow-y:auto;flex:1}
     .log-entry{display:flex;align-items:center;gap:5px;padding:4px 10px;border-bottom:1px solid var(--border);font-size:10px}
@@ -112,11 +118,11 @@
     .le-team.you{color:var(--green)}
     .le-player{color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-    /* ── TOAST ── */
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:10px;opacity:0;transition:all .3s ease;z-index:300;white-space:nowrap;pointer-events:none}
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:10px;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;pointer-events:none}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-    /* ── COMPLETE OVERLAY ── */
+    /* COMPLETE OVERLAY */
     .complete-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;z-index:200}
     .complete-overlay.show{display:flex}
     .complete-card{background:#fff;border-radius:16px;padding:28px;max-width:420px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
@@ -129,15 +135,8 @@
     .close-btn{padding:10px 24px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
     .close-btn:hover{opacity:.9}
 
-    @media(max-width:700px){
-      .draft-body{grid-template-columns:1fr 180px}
-      .teams-panel{display:none}
-    }
-    @media(max-width:480px){
-      .draft-body{grid-template-columns:1fr}
-      .sidebar{display:none}
-      .teams-panel{display:none}
-    }
+    @media(max-width:700px){.draft-body{grid-template-columns:1fr 180px}.teams-panel{display:none}}
+    @media(max-width:480px){.draft-body{grid-template-columns:1fr}.sidebar{display:none}.teams-panel{display:none}}
   </style>
 </head>
 <body>
@@ -165,16 +164,8 @@
   <div class="pool">
     <div class="pool-top">
       <input class="pool-search" type="text" placeholder="Search players..." id="search" oninput="renderPool()">
-      <select class="sort-sel" id="pool-sort" onchange="renderPool()">
-        <option value="proj_dk">Proj DK</option>
-        <option value="pts">PTS</option>
-        <option value="reb">REB</option>
-        <option value="ast">AST</option>
-        <option value="stl">STL</option>
-        <option value="blk">BLK</option>
-      </select>
     </div>
-    <div class="pos-tabs" id="pos-tabs">
+    <div class="pos-tabs">
       <button class="ptab active" onclick="setPos(this,'ALL')">ALL</button>
       <button class="ptab" onclick="setPos(this,'PG')">PG</button>
       <button class="ptab" onclick="setPos(this,'SG')">SG</button>
@@ -226,7 +217,7 @@
     <div class="complete-roster" id="complete-roster"></div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <button class="close-btn" onclick="window.location.href='index.html'">Projections</button>
-      <button class="close-btn" style="background:var(--purple,#7C3AED)"
+      <button class="close-btn" style="background:var(--purple)"
               onclick="window.location.href=`waivers.html?code=${CODE}&team=${encodeURIComponent(MY_TEAM)}`">
         Go to Waivers
       </button>
@@ -249,8 +240,8 @@ let log            = [];
 let allPlayers     = [];
 let draftedIds     = new Set();
 let ranked         = [];
-let draftTeams     = [];   // [{name, manager, sid, roster_count}]
-let teamRosters    = {};   // sid -> [player, ...]
+let draftTeams     = [];
+let teamRosters    = {};
 let currentPickNum = 0;
 let myTurn         = false;
 let isDone         = false;
@@ -258,50 +249,49 @@ let sidConfirmed   = false;
 let timerInt       = null;
 let timerSecs      = 90;
 let posFilter      = 'ALL';
+let sortKey        = 'proj_dk';
+let sortAsc        = false;
 let teamsTab       = 'rosters';
 let expandedTeams  = new Set();
 
-// Position inference from player stats (heuristic until API provides it)
-function inferPos(p) {
-  if (p.ast >= 5.0 && p.pts >= 10)     return 'PG';
-  if (p.fg3m >= 1.5 && p.pts >= 12)    return 'SG';
-  if (p.reb >= 5 && p.blk >= 0.5)      return 'PF';
-  if (p.reb >= 7)                        return 'C';
-  if (p.pts >= 15 && p.reb >= 4)        return 'SF';
-  return 'SF';
-}
+// cols where lower = better
+const ASC_COLS = new Set(['proj_rank','league_rank','tov']);
 
 document.getElementById('nav-label').textContent =
   LEAGUE === 'nba' ? 'NBA Draft' : LEAGUE === 'el' ? 'Euroleague Draft' : 'Draft';
+
+function inferPos(p) {
+  if (p.ast >= 5.0 && p.pts >= 10)   return 'PG';
+  if (p.fg3m >= 1.5 && p.pts >= 12)  return 'SG';
+  if (p.blk >= 1.0 && p.reb >= 7)    return 'C';
+  if (p.reb >= 6  && p.blk >= 0.5)   return 'PF';
+  return 'SF';
+}
 
 // ── SOCKET ──────────────────────────────────────────────────────────────────
 const socket = io(API, {transports:['polling','websocket']});
 
 socket.on('connect', () => {
   if (MY_MANAGER && MY_TEAM) {
-    socket.emit('join_room_draft', {code: CODE, manager_name: MY_MANAGER, team_name: MY_TEAM});
+    socket.emit('join_room_draft', {code:CODE, manager_name:MY_MANAGER, team_name:MY_TEAM});
   } else {
-    socket.emit('get_room_state', {code: CODE});
+    socket.emit('get_room_state', {code:CODE});
   }
 });
 
 socket.on('connected', d => {
-  mySid        = d.sid;
-  sidConfirmed = true;
+  mySid = d.sid; sidConfirmed = true;
   rebuildRoster([...log].reverse());
-  renderRoster();
-  checkMyTurn();
-  renderPool();
+  renderRoster(); checkMyTurn(); renderPool();
 });
 
 socket.on('joined_ok', d => {
-  mySid          = d.your_sid;
-  sidConfirmed   = true;
-  draftTeams     = d.room.teams || [];
+  mySid = d.your_sid; sidConfirmed = true;
+  draftTeams = d.room.teams || [];
   currentPickNum = d.room.pick_num || 0;
-  const fullLog  = d.room.log || [];
-  log            = [...fullLog].reverse();
-  draftedIds     = new Set(fullLog.map(e => e.player.id));
+  const fullLog = d.room.log || [];
+  log = [...fullLog].reverse();
+  draftedIds = new Set(fullLog.map(e => e.player.id));
   rebuildTeamRosters(fullLog);
   rebuildRoster(fullLog);
   renderAll();
@@ -309,11 +299,11 @@ socket.on('joined_ok', d => {
 });
 
 socket.on('room_state', d => {
-  draftTeams     = d.teams || [];
+  draftTeams = d.teams || [];
   currentPickNum = d.pick_num || 0;
-  const fullLog  = d.log || [];
-  log            = [...fullLog].reverse();
-  draftedIds     = new Set(fullLog.map(e => e.player.id));
+  const fullLog = d.log || [];
+  log = [...fullLog].reverse();
+  draftedIds = new Set(fullLog.map(e => e.player.id));
   rebuildTeamRosters(fullLog);
   rebuildRoster(fullLog);
   renderAll();
@@ -321,11 +311,8 @@ socket.on('room_state', d => {
 });
 
 socket.on('draft_started', d => {
-  draftTeams     = d.teams;
-  currentPickNum = 0;
-  checkMyTurn();
-  renderTeams();
-  updateBanner();
+  draftTeams = d.teams; currentPickNum = 0;
+  checkMyTurn(); renderTeams(); updateBanner();
 });
 
 socket.on('pick_made', d => {
@@ -333,11 +320,9 @@ socket.on('pick_made', d => {
   draftedIds.add(entry.player.id);
   log.unshift(entry);
   currentPickNum = d.pick_num;
-  // Add to team rosters
   const tsid = entry.team_sid;
   if (!teamRosters[tsid]) teamRosters[tsid] = [];
   teamRosters[tsid].push(entry.player);
-  // Add to my roster
   if (isMyEntry(entry)) myRoster.push(entry.player);
   showToast(`${entry.team} drafted ${entry.player.name}`);
   myTurn = (d.next_sid === mySid);
@@ -348,32 +333,27 @@ socket.on('pick_made', d => {
 
 socket.on('team_rejoined', d => {
   draftTeams = d.room.teams || draftTeams;
-  checkMyTurn();
-  renderTeams();
+  checkMyTurn(); renderTeams();
 });
 
 socket.on('draft_complete', () => {
-  isDone = true;
-  stopTimer();
-  updateBanner('', false, '');
-  showComplete();
+  isDone = true; stopTimer();
+  updateBanner('','',false); showComplete();
 });
 
 socket.on('error', d => console.warn('Draft error:', d.msg));
 
-// ── LOAD POOL ────────────────────────────────────────────────────────────────
+// ── LOAD POOL ──────────────────────────────────────────────────────────────
 fetch(`${API}/draft/pool?league=${LEAGUE}`)
   .then(r => r.json())
   .then(data => {
-    // Infer positions
-    allPlayers = data.map(p => ({...p, pos: inferPos(p)}));
+    // Ensure pos field — API now provides it, but fallback for safety
+    allPlayers = data.map(p => ({...p, pos: p.pos || inferPos(p)}));
     renderPool();
   });
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function isMyEntry(entry) {
-  return entry.team_sid === mySid || entry.team === MY_TEAM;
-}
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+function isMyEntry(e) { return e.team_sid===mySid || e.team===MY_TEAM; }
 
 function rebuildRoster(fullLog) {
   myRoster = fullLog.filter(e => isMyEntry(e)).map(e => e.player);
@@ -382,17 +362,14 @@ function rebuildRoster(fullLog) {
 function rebuildTeamRosters(fullLog) {
   teamRosters = {};
   fullLog.forEach(e => {
-    const sid = e.team_sid;
-    if (!teamRosters[sid]) teamRosters[sid] = [];
-    teamRosters[sid].push(e.player);
+    if (!teamRosters[e.team_sid]) teamRosters[e.team_sid] = [];
+    teamRosters[e.team_sid].push(e.player);
   });
 }
 
 // ── TIMER ───────────────────────────────────────────────────────────────────
 function startTimer() {
-  stopTimer();
-  timerSecs = 90;
-  updateTimerUI();
+  stopTimer(); timerSecs = 90; updateTimerUI();
   timerInt = setInterval(() => {
     timerSecs--;
     updateTimerUI();
@@ -405,232 +382,228 @@ function stopTimer() {
   document.getElementById('rb-timer').className   = 'rb-timer';
 }
 function updateTimerUI() {
-  const m  = Math.floor(timerSecs / 60);
-  const s  = timerSecs % 60;
+  const m = Math.floor(timerSecs/60), s = timerSecs%60;
   const el = document.getElementById('rb-timer');
   el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
   el.className   = 'rb-timer' + (timerSecs <= 15 ? ' urgent' : '');
 }
 
-// ── BANNER ───────────────────────────────────────────────────────────────────
-function updateBanner(teamName, isMe, nextSid) {
-  const n      = draftTeams.length || 1;
-  const round  = Math.floor(currentPickNum / n) + 1;
-  const pick   = currentPickNum + 1;
-  const total  = n * ROUNDS;
+// ── BANNER ──────────────────────────────────────────────────────────────────
+function updateBanner(teamName, isMe) {
+  const n = draftTeams.length || 1;
+  const round = Math.min(Math.floor(currentPickNum/n)+1, ROUNDS);
+  const pick  = Math.min(currentPickNum+1, n*ROUNDS);
+  const total = n * ROUNDS;
   const banner = document.getElementById('round-banner');
-  const rbRound = document.getElementById('rb-round');
-  const rbPick  = document.getElementById('rb-pick');
-  const rbSt    = document.getElementById('rb-status');
-
-  rbRound.textContent = `Round ${Math.min(round, ROUNDS)} · Pick ${pick > total ? total : pick} of ${total}`;
-
+  document.getElementById('rb-round').textContent = `Round ${round} · Pick ${pick} of ${total}`;
+  const rbPick = document.getElementById('rb-pick');
+  const rbSt   = document.getElementById('rb-status');
   if (isDone) {
-    rbPick.textContent = 'Draft complete!';
-    rbPick.className   = 'rb-pick';
-    rbSt.textContent   = '✓ Done';
-    rbSt.className     = 'rb-status done';
-    banner.className   = 'round-banner';
+    rbPick.textContent='Draft complete!'; rbPick.className='rb-pick';
+    rbSt.textContent='✓ Done'; rbSt.className='rb-status done';
+    banner.className='round-banner';
   } else if (isMe) {
-    rbPick.textContent = '🏀 Your pick!';
-    rbPick.className   = 'rb-pick yours';
-    rbSt.textContent   = 'Pick now';
-    rbSt.className     = 'rb-status yours';
-    banner.className   = 'round-banner your-turn';
+    rbPick.textContent='🏀 Your pick!'; rbPick.className='rb-pick yours';
+    rbSt.textContent='Pick now'; rbSt.className='rb-status yours';
+    banner.className='round-banner your-turn';
   } else {
-    const name = teamName || '...';
-    rbPick.textContent = `${name} is picking`;
-    rbPick.className   = 'rb-pick';
-    rbSt.textContent   = 'Waiting';
-    rbSt.className     = 'rb-status others';
-    banner.className   = 'round-banner';
+    rbPick.textContent=`${teamName||'...'} is picking`; rbPick.className='rb-pick';
+    rbSt.textContent='Waiting'; rbSt.className='rb-status others';
+    banner.className='round-banner';
   }
 }
 
 function checkMyTurn() {
   if (!draftTeams.length || !mySid) return;
-  const n    = draftTeams.length;
-  const r    = Math.floor(currentPickNum / n);
-  const pos  = currentPickNum % n;
-  const tidx = r % 2 === 0 ? pos : (n-1-pos);
-  const team = draftTeams[tidx];
-  myTurn = !!(team && (team.sid === mySid || team.name === MY_TEAM));
-  updateBanner(team ? team.name : '', myTurn, team ? team.sid : '');
-  if (myTurn && sidConfirmed) startTimer();
+  const n=draftTeams.length;
+  const r=Math.floor(currentPickNum/n), pos=currentPickNum%n;
+  const tidx=r%2===0?pos:(n-1-pos);
+  const team=draftTeams[tidx];
+  myTurn=!!(team&&(team.sid===mySid||team.name===MY_TEAM));
+  updateBanner(team?team.name:'',myTurn);
+  if (myTurn&&sidConfirmed) startTimer();
 }
 
 // ── PICK ACTIONS ─────────────────────────────────────────────────────────────
 function draftPlayer(id) {
-  if (!myTurn || isDone) return;
-  socket.emit('make_pick', {code: CODE, player_id: id});
-  myTurn = false;
-  stopTimer();
-  updateBanner('Waiting...', false, '');
+  if (!myTurn||isDone) return;
+  socket.emit('make_pick',{code:CODE,player_id:id});
+  myTurn=false; stopTimer(); updateBanner('Waiting...',false);
 }
 
 function autoPick() {
-  if (!myTurn || isDone) return;
-  const fromRanked = ranked
-    .map(id => allPlayers.find(p => p.id === id))
-    .filter(p => p && !draftedIds.has(p.id));
-  const pick = fromRanked[0] || allPlayers.find(p => !draftedIds.has(p.id));
+  if (!myTurn||isDone) return;
+  const fromRanked=ranked.map(id=>allPlayers.find(p=>p.id===id)).filter(p=>p&&!draftedIds.has(p.id));
+  const pick=fromRanked[0]||allPlayers.find(p=>!draftedIds.has(p.id));
   if (pick) draftPlayer(pick.id);
 }
 
-function toggleRank(id, e) {
+function toggleRank(id,e) {
   e.stopPropagation();
-  ranked = ranked.includes(id) ? ranked.filter(r => r !== id) : [...ranked, id];
-  socket.emit('set_rankings', {code: CODE, rankings: ranked});
+  ranked=ranked.includes(id)?ranked.filter(r=>r!==id):[...ranked,id];
+  socket.emit('set_rankings',{code:CODE,rankings:ranked});
   renderPool();
 }
 
-// ── TOAST ───────────────────────────────────────────────────────────────────
-let toastTimer = null;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-// ── RENDER ALL ───────────────────────────────────────────────────────────────
-function renderAll() {
+// ── SORT ─────────────────────────────────────────────────────────────────────
+function sortPool(key) {
+  if (sortKey===key) sortAsc=!sortAsc;
+  else { sortKey=key; sortAsc=ASC_COLS.has(key); }
+  // Reset arrows
+  document.querySelectorAll('.pool-tbl th[id]').forEach(th => {
+    th.classList.remove('sorted');
+    const sp=th.querySelector('span');
+    if (sp) sp.textContent='';
+  });
+  const th=document.getElementById(`pth-${key}`);
+  if (th) {
+    th.classList.add('sorted');
+    const sp=th.querySelector('span');
+    if (sp) sp.textContent=sortAsc?'↑':'↓';
+  }
   renderPool();
-  renderRoster();
-  renderTeams();
-  renderLog();
 }
 
 // ── POS FILTER ───────────────────────────────────────────────────────────────
-function setPos(btn, pos) {
-  posFilter = pos;
-  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+function setPos(btn,pos) {
+  posFilter=pos;
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderPool();
 }
+
+// ── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll() { renderPool(); renderRoster(); renderTeams(); renderLog(); }
 
 // ── POOL ─────────────────────────────────────────────────────────────────────
 function renderPool() {
   const q       = document.getElementById('search').value.toLowerCase();
-  const sortKey = document.getElementById('pool-sort').value;
   const canPick = myTurn && !isDone && sidConfirmed;
 
   let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
-  if (posFilter === 'ranked') {
-    list = list.filter(p => ranked.includes(p.id));
-  } else if (posFilter !== 'ALL') {
-    list = list.filter(p => p.pos === posFilter);
-  }
-  list = [...list].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
+  if (posFilter==='ranked') list=list.filter(p=>ranked.includes(p.id));
+  else if (posFilter!=='ALL') list=list.filter(p=>p.pos===posFilter);
+  list=[...list].sort((a,b)=>{
+    const av=a[sortKey]??0, bv=b[sortKey]??0;
+    return sortAsc?av-bv:bv-av;
+  });
 
-  document.getElementById('player-list').innerHTML = list.map((p, i) => {
+  const rows = list.map(p => {
     const isDrafted = draftedIds.has(p.id);
     const isRanked  = ranked.includes(p.id);
-    const isEl      = p.league === 'EL';
-    return `
-    <div class="player-row${isDrafted ? ' drafted' : canPick ? ' can-pick' : ''}"
-         ${canPick && !isDrafted ? `onclick="draftPlayer('${p.id}')"` : ''}>
-      <div class="p-rank">${i+1}</div>
-      <div style="min-width:0">
-        <div class="p-name">${p.name}</div>
-        <div class="p-team">${p.pos} · ${p.team} · vs ${p.opp}</div>
-        <div class="p-stats">
-          <span class="p-stat"><span>${p.pts}</span>pts</span>
-          <span class="p-stat"><span>${p.reb}</span>reb</span>
-          <span class="p-stat"><span>${p.ast}</span>ast</span>
-          <span class="p-stat"><span>${p.stl}</span>stl</span>
-          <span class="p-stat"><span>${p.blk}</span>blk</span>
-        </div>
-      </div>
-      <div class="p-right">
-        <div class="p-proj${isEl?' el':''}">${p.proj_dk.toFixed(1)}</div>
-        <div class="p-proj-label">proj DK</div>
-        <button class="rank-star${isRanked?' on':''}" onclick="toggleRank('${p.id}',event)">
-          ${isRanked ? '★' : '☆'}
-        </button>
-        ${canPick && !isDrafted
-          ? `<button class="draft-btn" onclick="event.stopPropagation();draftPlayer('${p.id}')">Draft</button>`
-          : ''}
-      </div>
-    </div>`;
-  }).join('') || `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No players found</div>`;
+    const isEl      = p.league==='EL';
+    return `<tr class="${isDrafted?'drafted':canPick?'can-pick':''}"
+                ${canPick&&!isDrafted?`onclick="draftPlayer('${p.id}')"`:''}">
+      <td>
+        <div class="pname"><span class="pos-b">${p.pos||'—'}</span>${p.name}</div>
+        <div class="pmeta">${p.league}·${p.team}·vs ${p.opp}</div>
+      </td>
+      <td class="td-r">#${p.proj_rank??'—'}</td>
+      <td class="td-r">#${p.league_rank??'—'}</td>
+      <td class="${isEl?'':'td-g'}" style="${isEl?'color:var(--orange);font-weight:700':''}">${p.proj_dk.toFixed(1)}</td>
+      <td class="td-m">${p.dk_avg.toFixed(1)}</td>
+      <td>${p.pts.toFixed(1)}</td>
+      <td>${p.reb.toFixed(1)}</td>
+      <td>${p.ast.toFixed(1)}</td>
+      <td>${p.stl.toFixed(1)}</td>
+      <td>${p.blk.toFixed(1)}</td>
+      <td>${p.tov.toFixed(1)}</td>
+      <td>${p.fg3m.toFixed(1)}</td>
+      <td>${((p.fg_pct||0)*100).toFixed(1)}%</td>
+      <td>${((p.ft_pct||0)*100).toFixed(1)}%</td>
+      <td><div class="act-cell">
+        <button class="rank-star${isRanked?' on':''}" onclick="toggleRank('${p.id}',event)">${isRanked?'★':'☆'}</button>
+        ${canPick&&!isDrafted?`<button class="draft-btn" onclick="event.stopPropagation();draftPlayer('${p.id}')">Draft</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('player-list').innerHTML = `
+    <table class="pool-tbl">
+      <thead><tr>
+        <th>Player</th>
+        <th id="pth-proj_rank"   onclick="sortPool('proj_rank')"  >Rank<span></span></th>
+        <th id="pth-league_rank" onclick="sortPool('league_rank')">Lg Rank<span></span></th>
+        <th id="pth-proj_dk"     onclick="sortPool('proj_dk')"    class="sorted">Proj DK<span>↓</span></th>
+        <th id="pth-dk_avg"      onclick="sortPool('dk_avg')"     >DK Avg<span></span></th>
+        <th id="pth-pts"         onclick="sortPool('pts')"        >PTS<span></span></th>
+        <th id="pth-reb"         onclick="sortPool('reb')"        >REB<span></span></th>
+        <th id="pth-ast"         onclick="sortPool('ast')"        >AST<span></span></th>
+        <th id="pth-stl"         onclick="sortPool('stl')"        >STL<span></span></th>
+        <th id="pth-blk"         onclick="sortPool('blk')"        >BLK<span></span></th>
+        <th id="pth-tov"         onclick="sortPool('tov')"        >TO<span></span></th>
+        <th id="pth-fg3m"        onclick="sortPool('fg3m')"       >3PM<span></span></th>
+        <th id="pth-fg_pct"      onclick="sortPool('fg_pct')"     >FG%<span></span></th>
+        <th id="pth-ft_pct"      onclick="sortPool('ft_pct')"     >FT%<span></span></th>
+        <th></th>
+      </tr></thead>
+      <tbody>${rows||`<tr><td colspan="15" style="padding:20px;text-align:center;color:var(--muted)">No players found</td></tr>`}</tbody>
+    </table>`;
 }
 
 // ── MY ROSTER ────────────────────────────────────────────────────────────────
 function renderRoster() {
-  document.getElementById('roster-count').textContent = `${myRoster.length}/${ROUNDS}`;
-  document.getElementById('roster-list').innerHTML = Array.from({length: ROUNDS}).map((_, i) => {
-    const p = myRoster[i];
+  document.getElementById('roster-count').textContent=`${myRoster.length}/${ROUNDS}`;
+  document.getElementById('roster-list').innerHTML=Array.from({length:ROUNDS}).map((_,i)=>{
+    const p=myRoster[i];
     return `<div class="roster-slot">
       <div class="rs-num">${i+1}</div>
-      ${p
-        ? `<div class="rs-name">${p.name}</div><div class="rs-proj">${p.proj_dk.toFixed(1)}</div>`
-        : `<div class="rs-empty">empty</div>`}
+      ${p?`<div class="rs-name">${p.name}</div><div class="rs-proj">${p.proj_dk.toFixed(1)}</div>`
+         :`<div class="rs-empty">empty</div>`}
     </div>`;
   }).join('');
 }
 
-// ── ALL TEAMS ────────────────────────────────────────────────────────────────
-function setTeamsTab(btn, t) {
-  teamsTab = t;
-  document.querySelectorAll('.ttab').forEach(b => b.classList.remove('active'));
+// ── TEAMS PANEL ──────────────────────────────────────────────────────────────
+function setTeamsTab(btn,t) {
+  teamsTab=t;
+  document.querySelectorAll('.ttab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('teams-scroll').style.display  = t === 'rosters' ? 'block' : 'none';
-  document.getElementById('log-section').style.display   = t === 'log'     ? 'flex'  : 'none';
-  if (t === 'rosters') renderTeams();
-  else renderLog();
+  document.getElementById('teams-scroll').style.display =t==='rosters'?'block':'none';
+  document.getElementById('log-section').style.display  =t==='log'?'flex':'none';
+  if (t==='rosters') renderTeams(); else renderLog();
 }
 
 function renderTeams() {
-  if (teamsTab !== 'rosters') return;
-  const n = draftTeams.length;
-  document.getElementById('teams-scroll').innerHTML = draftTeams.map((t, tidx) => {
-    const isMe     = t.sid === mySid || t.name === MY_TEAM;
-    const picks    = teamRosters[t.sid] || [];
-    const isOpen   = expandedTeams.has(t.sid) || isMe;
-    // Is this team on the clock?
-    const r        = Math.floor(currentPickNum / (n||1));
-    const pos      = currentPickNum % (n||1);
-    const onClock  = !isDone && (r%2===0 ? pos===tidx : (n-1-pos)===tidx);
-    return `
-    <div class="team-block">
+  if (teamsTab!=='rosters') return;
+  const n=draftTeams.length;
+  document.getElementById('teams-scroll').innerHTML=draftTeams.map((t,tidx)=>{
+    const isMe=t.sid===mySid||t.name===MY_TEAM;
+    const picks=teamRosters[t.sid]||[];
+    const isOpen=expandedTeams.has(t.sid)||isMe;
+    const r=Math.floor(currentPickNum/(n||1)), pos=currentPickNum%(n||1);
+    const onClock=!isDone&&(r%2===0?pos===tidx:(n-1-pos)===tidx);
+    return `<div class="team-block">
       <div class="team-block-header" onclick="toggleTeam('${t.sid}')">
         <div>
           <span class="tbh-name">${t.name}</span>
-          ${isMe ? '<span class="tbh-you">YOU</span>' : ''}
-          ${onClock ? '<span style="font-size:9px;color:var(--orange);font-weight:700;margin-left:4px">ON CLOCK</span>' : ''}
+          ${isMe?'<span class="tbh-you">YOU</span>':''}
+          ${onClock?'<span style="font-size:9px;color:var(--orange);font-weight:700;margin-left:4px">ON CLOCK</span>':''}
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <span class="tbh-count">${picks.length}/${ROUNDS}</span>
           <span style="font-size:10px;color:var(--subtle)">${isOpen?'▲':'▼'}</span>
         </div>
       </div>
-      <div class="team-block-picks${isOpen ? '' : ' hidden'}" id="tpicks-${t.sid}">
+      <div class="team-block-picks${isOpen?'':' hidden'}">
         ${picks.length
-          ? picks.map((p, i) => `
-            <div class="tbp-row">
-              <div class="tbp-num">${i+1}</div>
-              <div class="tbp-player">${p.name}</div>
-              <div class="tbp-proj">${p.proj_dk.toFixed(1)}</div>
-            </div>`).join('')
-          : `<div class="tbp-row"><span class="tbp-empty">No picks yet</span></div>`}
+          ?picks.map((p,i)=>`<div class="tbp-row"><div class="tbp-num">${i+1}</div><div class="tbp-player">${p.name}</div><div class="tbp-proj">${p.proj_dk.toFixed(1)}</div></div>`).join('')
+          :`<div class="tbp-row"><span class="tbp-empty">No picks yet</span></div>`}
       </div>
     </div>`;
-  }).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Waiting for teams...</div>';
+  }).join('')||'<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Waiting for teams...</div>';
 }
 
 function toggleTeam(sid) {
-  if (expandedTeams.has(sid)) expandedTeams.delete(sid);
-  else expandedTeams.add(sid);
+  expandedTeams.has(sid)?expandedTeams.delete(sid):expandedTeams.add(sid);
   renderTeams();
 }
 
 // ── LOG ──────────────────────────────────────────────────────────────────────
 function renderLog() {
-  if (teamsTab !== 'log') return;
-  document.getElementById('log-count').textContent = `${log.length} picks`;
-  document.getElementById('log-list').innerHTML = log.map(e => `
+  if (teamsTab!=='log') return;
+  document.getElementById('log-count').textContent=`${log.length} picks`;
+  document.getElementById('log-list').innerHTML=log.map(e=>`
     <div class="log-entry">
       <div class="le-pick">#${e.pick}</div>
       <div class="le-team${isMyEntry(e)?' you':''}">${e.team}</div>
@@ -641,13 +614,18 @@ function renderLog() {
 // ── COMPLETE ─────────────────────────────────────────────────────────────────
 function showComplete() {
   document.getElementById('complete-overlay').classList.add('show');
-  document.getElementById('complete-roster').innerHTML = myRoster.length
-    ? myRoster.map(p => `
-        <div class="cr-row">
-          <span class="cr-name">${p.name} <span style="font-size:10px;color:var(--muted)">${p.team}</span></span>
-          <span class="cr-proj">${p.proj_dk.toFixed(1)} DK</span>
-        </div>`).join('')
-    : '<div class="cr-row" style="color:var(--muted)">No players drafted</div>';
+  document.getElementById('complete-roster').innerHTML=myRoster.length
+    ?myRoster.map(p=>`<div class="cr-row"><span class="cr-name">${p.name} <span style="font-size:10px;color:var(--muted)">${p.team}</span></span><span class="cr-proj">${p.proj_dk.toFixed(1)} DK</span></div>`).join('')
+    :'<div class="cr-row" style="color:var(--muted)">No players drafted</div>';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer=null;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
 </script>
 </body>
