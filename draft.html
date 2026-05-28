@@ -224,7 +224,13 @@
     <div class="complete-title">🎉 Draft complete!</div>
     <div class="complete-sub">Your final roster</div>
     <div class="complete-roster" id="complete-roster"></div>
-    <button class="close-btn" onclick="window.location.href='index.html'">Back to HoopIQ</button>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="close-btn" onclick="window.location.href='index.html'">Projections</button>
+      <button class="close-btn" style="background:var(--purple,#7C3AED)"
+              onclick="window.location.href=`waivers.html?code=${CODE}&team=${encodeURIComponent(MY_TEAM)}`">
+        Go to Waivers
+      </button>
+    </div>
   </div>
 </div>
 

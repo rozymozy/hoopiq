@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoopIQ — Waiver Wire</title>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--green:#1D9E75;--green-light:#E1F5EE;--orange:#D85A30;--orange-light:#FAECE7;--purple:#7C3AED;--purple-light:#EDE9FE;--bg:#f4f4f6;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:0;z-index:100}
+    .nav-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px;gap:12px}
+    .logo{font-size:17px;font-weight:700}.logo span{color:var(--green)}
+    .nav-back{font-size:13px;color:var(--muted);text-decoration:none}.nav-back:hover{color:var(--text)}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .faab-badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--purple-light);color:var(--purple)}
+    .container{max-width:900px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+    @media(max-width:700px){.container{grid-template-columns:1fr}}
+
+    /* TABS */
+    .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+    .tab{font-size:13px;font-weight:600;padding:10px 16px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+    .tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+    /* SECTION HEADER */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .section-title{font-size:15px;font-weight:700}
+    .section-sub{font-size:12px;color:var(--muted)}
+
+    /* SEARCH */
+    .search-bar{width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;background:#fff;outline:none;margin-bottom:12px}
+    .search-bar:focus{border-color:var(--green)}
+
+    /* PLAYER CARD */
+    .player-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:14px;margin-bottom:8px}
+    .player-card.on-waiver{border-left:3px solid var(--orange)}
+    .player-card.free-agent{border-left:3px solid var(--green)}
+    .player-card.my-player{border-left:3px solid var(--purple)}
+    .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .pc-info{flex:1;min-width:0}
+    .pc-name{font-size:14px;font-weight:600}
+    .pc-meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .pc-stats{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+    .pc-stat{font-size:11px;color:var(--muted)}
+    .pc-stat span{font-weight:600;color:var(--text)}
+    .pc-proj{text-align:right;flex-shrink:0}
+    .pc-proj-val{font-size:18px;font-weight:800;color:var(--green)}
+    .pc-proj-label{font-size:10px;color:var(--subtle)}
+
+    /* WAIVER COUNTDOWN */
+    .waiver-countdown{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0}
+    .wc-clock{font-size:11px;font-weight:600;color:var(--orange)}
+    .wc-bar-track{flex:1;height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden}
+    .wc-bar-fill{height:100%;background:var(--orange);border-radius:2px;transition:width 1s linear}
+    .wc-bids{font-size:11px;color:var(--muted)}
+
+    /* BID FORM */
+    .bid-form{display:flex;gap:6px;margin-top:10px;align-items:center}
+    .bid-input{width:80px;padding:6px 8px;font-size:13px;font-weight:700;border:1px solid var(--border);border-radius:6px;outline:none;text-align:center}
+    .bid-input:focus{border-color:var(--purple)}
+    .bid-btn{padding:6px 14px;font-size:12px;font-weight:700;border-radius:6px;border:none;background:var(--purple);color:#fff;cursor:pointer;white-space:nowrap}
+    .bid-btn:hover{opacity:.9}
+    .bid-submitted{font-size:11px;color:var(--purple);font-weight:600}
+
+    /* CLAIM / DROP BUTTONS */
+    .action-row{display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap}
+    .claim-btn{padding:6px 14px;font-size:12px;font-weight:700;border-radius:6px;border:none;background:var(--green);color:#fff;cursor:pointer}
+    .claim-btn:hover{opacity:.9}
+    .drop-btn{padding:6px 12px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--orange);cursor:pointer}
+    .drop-btn:hover{background:var(--orange-light)}
+    .drop-select{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text);outline:none;max-width:160px}
+
+    /* SIDEBAR */
+    .sidebar-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px;margin-bottom:12px}
+    .sidebar-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)}
+    .priority-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f4f4f6;font-size:13px}
+    .priority-row:last-child{border-bottom:none}
+    .pri-num{font-size:11px;font-weight:700;color:var(--subtle);min-width:18px}
+    .pri-name{flex:1;font-weight:500}
+    .pri-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700}
+    .pri-faab{font-size:12px;font-weight:700;color:var(--purple)}
+    .waiver-log-entry{font-size:12px;padding:7px 0;border-bottom:1px solid #f4f4f6;color:var(--muted)}
+    .waiver-log-entry:last-child{border-bottom:none}
+    .wle-player{font-weight:600;color:var(--text)}
+    .wle-winner{color:var(--green);font-weight:600}
+
+    /* STATUS BADGES */
+    .badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle}
+    .badge.waiver{background:var(--orange-light);color:var(--orange)}
+    .badge.fa{background:var(--green-light);color:#0F6E56}
+    .badge.mine{background:var(--purple-light);color:var(--purple)}
+
+    /* EMPTY STATES */
+    .empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+    .loading{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:10px;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;pointer-events:none}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <div class="logo">Hoop<span>IQ</span></div>
+    <div class="nav-right">
+      <div class="faab-badge" id="faab-display">💰 $100 FAAB</div>
+      <a class="nav-back" href="index.html">← Projections</a>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:900px;margin:20px auto;padding:0 16px">
+  <!-- room connect bar -->
+  <div id="connect-bar" style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px;margin-bottom:16px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:10px">Enter your room code to access waivers</div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="room-code-input" placeholder="Room code (e.g. ABCDE)" maxlength="5"
+             style="flex:1;padding:8px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;outline:none;letter-spacing:3px;font-weight:700;text-transform:uppercase"
+             oninput="this.value=this.value.toUpperCase()">
+      <input type="text" id="team-name-input" placeholder="Your team name"
+             style="flex:1;padding:8px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;outline:none">
+      <button onclick="connectRoom()"
+              style="padding:8px 20px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">
+        Connect
+      </button>
+    </div>
+    <div id="connect-error" style="font-size:12px;color:var(--orange);margin-top:6px"></div>
+  </div>
+</div>
+
+<div class="container" id="main-content" style="display:none">
+
+  <!-- LEFT: PLAYER POOL -->
+  <div>
+    <div class="tabs">
+      <button class="tab active" onclick="setTab(this,'waivers')">
+        Waivers <span id="waiver-count" style="font-size:10px;background:var(--orange-light);color:var(--orange);padding:1px 5px;border-radius:8px;margin-left:4px">0</span>
+      </button>
+      <button class="tab" onclick="setTab(this,'free_agents')">Free Agents</button>
+      <button class="tab" onclick="setTab(this,'my_roster')">My Roster</button>
+    </div>
+
+    <input class="search-bar" type="text" id="search" placeholder="Search players..." oninput="renderTab()">
+
+    <div id="tab-content"><div class="loading">Connecting...</div></div>
+  </div>
+
+  <!-- RIGHT: SIDEBAR -->
+  <div>
+    <div class="sidebar-card">
+      <div class="sidebar-title">Waiver Priority & FAAB</div>
+      <div id="priority-list"><div class="loading" style="padding:8px">Loading...</div></div>
+    </div>
+    <div class="sidebar-card">
+      <div class="sidebar-title">Recent Transactions</div>
+      <div id="waiver-log"><div style="font-size:12px;color:var(--muted)">No transactions yet</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const socket = io(API, {transports:['polling','websocket']});
+
+let myCode    = '';
+let myTeam    = '';
+let mySid     = null;
+let waiverData = null;   // full state from server
+let myBids    = {};      // player_id -> amount (local tracking)
+let activeTab = 'waivers';
+let timerInts = {};      // countdown intervals per player
+
+// Try to restore from URL params or localStorage
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('code')) {
+  document.getElementById('room-code-input').value = urlParams.get('code').toUpperCase();
+  if (urlParams.get('team')) document.getElementById('team-name-input').value = urlParams.get('team');
+}
+
+socket.on('connect', () => { mySid = socket.id; });
+socket.on('connected', d => { mySid = d.sid; });
+
+socket.on('waiver_state', d => {
+  waiverData = d;
+  renderAll();
+  document.getElementById('connect-bar').style.display = 'none';
+  document.getElementById('main-content').style.display = 'grid';
+  updateFaabDisplay();
+});
+
+socket.on('player_dropped', d => {
+  showToast(`${d.dropped_by} dropped ${d.player.name} — on waivers for 48hrs`);
+  refreshState();
+});
+
+socket.on('waiver_resolved', d => {
+  if (d.winner) {
+    showToast(`${d.winner} won ${d.player.name} off waivers (bid: $${d.bid})`);
+  } else {
+    showToast(`${d.player.name} cleared waivers — now a free agent`);
+  }
+  refreshState();
+});
+
+socket.on('free_agent_claimed', d => {
+  showToast(`${d.by_team} claimed ${d.player.name} from free agency`);
+  refreshState();
+});
+
+socket.on('bid_submitted', d => {
+  myBids[d.player_id] = d.amount;
+  renderTab();
+});
+
+socket.on('drop_ok', d => {
+  showToast(`${d.player.name} sent to waivers`);
+  refreshState();
+});
+
+socket.on('claim_ok', d => {
+  showToast(`${d.player.name} added to your roster!`);
+  refreshState();
+});
+
+socket.on('error', d => {
+  showToast('Error: ' + d.msg);
+  document.getElementById('connect-error').textContent = d.msg;
+});
+
+function connectRoom() {
+  myCode = document.getElementById('room-code-input').value.trim().toUpperCase();
+  myTeam = document.getElementById('team-name-input').value.trim();
+  if (!myCode || myCode.length < 5) {
+    document.getElementById('connect-error').textContent = 'Enter a 5-letter room code.';
+    return;
+  }
+  document.getElementById('connect-error').textContent = '';
+  socket.emit('join_waiver_room', {code: myCode, team_name: myTeam});
+}
+
+function refreshState() {
+  socket.emit('join_waiver_room', {code: myCode, team_name: myTeam});
+}
+
+function setTab(btn, tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTab();
+}
+
+function renderAll() {
+  renderTab();
+  renderSidebar();
+}
+
+function updateFaabDisplay() {
+  if (!waiverData) return;
+  const me = waiverData.teams.find(t => t.name === myTeam);
+  if (me) document.getElementById('faab-display').textContent = `💰 $${me.faab} FAAB`;
+}
+
+// ── RENDER TAB ──────────────────────────────────────────────────────────────
+function renderTab() {
+  if (!waiverData) return;
+  const q = document.getElementById('search').value.toLowerCase();
+  const el = document.getElementById('tab-content');
+
+  if (activeTab === 'waivers') renderWaivers(el, q);
+  else if (activeTab === 'free_agents') renderFreeAgents(el, q);
+  else if (activeTab === 'my_roster') renderMyRoster(el, q);
+}
+
+function renderWaivers(el, q) {
+  const list = (waiverData.waivers || [])
+    .filter(w => w.player.name.toLowerCase().includes(q))
+    .sort((a,b) => a.expires_at - b.expires_at);
+  document.getElementById('waiver-count').textContent = list.length;
+  if (!list.length) { el.innerHTML = '<div class="empty">No players on waivers</div>'; return; }
+  const me = waiverData.teams.find(t => t.name === myTeam);
+  const myFaab = me ? me.faab : 100;
+
+  el.innerHTML = list.map(w => {
+    const p         = w.player;
+    const myBid     = myBids[p.id] !== undefined ? myBids[p.id] : '';
+    const hrs       = Math.floor(w.remaining_secs / 3600);
+    const mins      = Math.floor((w.remaining_secs % 3600) / 60);
+    const pct       = Math.min(100, (w.remaining_secs / (48*3600)) * 100);
+    return `
+    <div class="player-card on-waiver" id="wcard-${p.id}">
+      <div class="pc-top">
+        <div class="pc-info">
+          <div class="pc-name">${p.name} <span class="badge waiver">WAIVER</span></div>
+          <div class="pc-meta">${p.league} · ${p.team} · dropped by ${w.dropped_by}</div>
+          <div class="pc-stats">
+            <span class="pc-stat"><span>${p.pts}</span>pts</span>
+            <span class="pc-stat"><span>${p.reb}</span>reb</span>
+            <span class="pc-stat"><span>${p.ast}</span>ast</span>
+            <span class="pc-stat"><span>${p.stl}</span>stl</span>
+            <span class="pc-stat"><span>${p.blk}</span>blk</span>
+          </div>
+        </div>
+        <div class="pc-proj">
+          <div class="pc-proj-val">${p.proj_dk.toFixed(1)}</div>
+          <div class="pc-proj-label">proj DK</div>
+        </div>
+      </div>
+      <div class="waiver-countdown">
+        <span class="wc-clock">⏱ ${hrs}h ${mins}m left</span>
+        <div class="wc-bar-track"><div class="wc-bar-fill" style="width:${pct}%"></div></div>
+        <span class="wc-bids">${w.bid_count} bid${w.bid_count!==1?'s':''}</span>
+      </div>
+      <div class="bid-form">
+        <span style="font-size:12px;color:var(--muted)">Your bid: $</span>
+        <input type="number" class="bid-input" id="bid-${p.id}"
+               min="0" max="${myFaab}" value="${myBid}"
+               placeholder="0">
+        <button class="bid-btn" onclick="submitBid('${p.id}')">Place Bid</button>
+        ${myBid !== '' ? `<span class="bid-submitted">✓ $${myBid} submitted</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFreeAgents(el, q) {
+  const list = (waiverData.free_agents || [])
+    .filter(p => p.name.toLowerCase().includes(q))
+    .sort((a,b) => b.proj_dk - a.proj_dk);
+  if (!list.length) { el.innerHTML = '<div class="empty">No free agents available</div>'; return; }
+  const me = waiverData.teams.find(t => t.name === myTeam);
+  const myRoster = me ? me.roster : [];
+
+  el.innerHTML = list.map(p => `
+    <div class="player-card free-agent">
+      <div class="pc-top">
+        <div class="pc-info">
+          <div class="pc-name">${p.name} <span class="badge fa">FREE AGENT</span></div>
+          <div class="pc-meta">${p.league} · ${p.team} · vs ${p.opp}</div>
+          <div class="pc-stats">
+            <span class="pc-stat"><span>${p.pts}</span>pts</span>
+            <span class="pc-stat"><span>${p.reb}</span>reb</span>
+            <span class="pc-stat"><span>${p.ast}</span>ast</span>
+            <span class="pc-stat"><span>${p.stl}</span>stl</span>
+            <span class="pc-stat"><span>${p.blk}</span>blk</span>
+          </div>
+        </div>
+        <div class="pc-proj">
+          <div class="pc-proj-val">${p.proj_dk.toFixed(1)}</div>
+          <div class="pc-proj-label">proj DK</div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="claim-btn" onclick="claimFreeAgent('${p.id}', document.getElementById('drop-sel-${p.id}').value)">
+          + Add
+        </button>
+        <select class="drop-select" id="drop-sel-${p.id}">
+          <option value="">— drop player (optional)</option>
+          ${myRoster.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}
+        </select>
+      </div>
+    </div>`).join('');
+}
+
+function renderMyRoster(el, q) {
+  const me = waiverData.teams.find(t => t.name === myTeam);
+  if (!me) { el.innerHTML = '<div class="empty">Team not found — check your team name above</div>'; return; }
+  const list = (me.roster || []).filter(p => p.name.toLowerCase().includes(q));
+  if (!list.length) { el.innerHTML = '<div class="empty">Your roster is empty</div>'; return; }
+
+  el.innerHTML = list.map(p => `
+    <div class="player-card my-player">
+      <div class="pc-top">
+        <div class="pc-info">
+          <div class="pc-name">${p.name} <span class="badge mine">MY ROSTER</span></div>
+          <div class="pc-meta">${p.league} · ${p.team}</div>
+          <div class="pc-stats">
+            <span class="pc-stat"><span>${p.pts}</span>pts</span>
+            <span class="pc-stat"><span>${p.reb}</span>reb</span>
+            <span class="pc-stat"><span>${p.ast}</span>ast</span>
+            <span class="pc-stat"><span>${p.stl}</span>stl</span>
+            <span class="pc-stat"><span>${p.blk}</span>blk</span>
+          </div>
+        </div>
+        <div class="pc-proj">
+          <div class="pc-proj-val">${p.proj_dk.toFixed(1)}</div>
+          <div class="pc-proj-label">proj DK</div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="drop-btn" onclick="dropPlayer('${p.id}')">Drop Player</button>
+        <span style="font-size:11px;color:var(--muted)">Goes to 48hr waivers</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  if (!waiverData) return;
+  const teams = waiverData.teams || [];
+  document.getElementById('priority-list').innerHTML = teams.map(t => `
+    <div class="priority-row">
+      <div class="pri-num">${t.priority}</div>
+      <div class="pri-name">${t.name} ${t.name===myTeam?'<span class="pri-you">YOU</span>':''}</div>
+      <div class="pri-faab">$${t.faab}</div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px">No teams yet</div>';
+
+  const log = (waiverData.waiver_log || []).slice().reverse().slice(0,10);
+  document.getElementById('waiver-log').innerHTML = log.length
+    ? log.map(e => `
+        <div class="waiver-log-entry">
+          <span class="wle-winner">${e.winner}</span> ${e.type==='free_agent'?'claimed':'won'}
+          <span class="wle-player">${e.player.name}</span>
+          ${e.bid > 0 ? `for $${e.bid}` : '(free)'}
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--muted)">No transactions yet</div>';
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+function submitBid(playerId) {
+  const input = document.getElementById(`bid-${playerId}`);
+  const amount = parseInt(input.value) || 0;
+  socket.emit('submit_waiver_bid', {code: myCode, player_id: playerId, amount});
+}
+
+function dropPlayer(playerId) {
+  if (!confirm('Drop this player? They will go to waivers for 48 hours.')) return;
+  socket.emit('drop_player', {code: myCode, player_id: playerId});
+}
+
+function claimFreeAgent(playerId, dropId) {
+  socket.emit('claim_free_agent', {
+    code:           myCode,
+    player_id:      playerId,
+    drop_player_id: dropId || null,
+  });
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Auto-connect if URL params present
+if (urlParams.get('code') && urlParams.get('team')) {
+  myCode = urlParams.get('code').toUpperCase();
+  myTeam = urlParams.get('team');
+  socket.on('connect', () => {
+    setTimeout(() => connectRoom(), 500);
+  });
+}
+</script>
+</body>
+</html>
