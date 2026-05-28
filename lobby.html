@@ -204,13 +204,19 @@ socket.on('countdown', d => {
 });
 
 socket.on('draft_started', d => {
-  const p = new URLSearchParams({
-    code:    myCode,
-    sid:     mySid,
-    rounds:  d.rounds,
-    league:  d.league,
-  });
-  window.location.href = `draft.html?${p.toString()}`;
+const manager = document.getElementById('create-manager').value.trim()
+             || document.getElementById('join-manager').value.trim()
+             || 'Manager';
+const team    = document.getElementById('create-team').value.trim()
+             || document.getElementById('join-team').value.trim()
+             || 'Team';
+const p = new URLSearchParams({
+  code:    myCode,
+  sid:     mySid,
+  rounds:  d.rounds,
+  league:  d.league,
+  manager: manager,
+  team:    team,
 });
 
 socket.on('error', d => {
