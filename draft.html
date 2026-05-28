@@ -7,111 +7,218 @@
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    :root{--green:#1D9E75;--green-light:#E1F5EE;--orange:#D85A30;--orange-light:#FAECE7;--bg:#f4f4f6;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af}
+    :root{
+      --green:#1D9E75;--green-light:#E1F5EE;
+      --orange:#D85A30;--orange-light:#FAECE7;
+      --bg:#f4f4f6;--border:#e8e8ec;
+      --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+    }
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    /* ── NAV ── */
     .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;flex-shrink:0}
-    .nav-inner{display:flex;align-items:center;justify-content:space-between;height:48px;gap:12px}
-    .logo{font-size:16px;font-weight:700;flex-shrink:0}.logo span{color:var(--green)}
-    .nav-sub{font-size:11px;font-weight:400;color:var(--muted)}
-    .pick-status{font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
-    .pick-status.yours{background:var(--green-light);color:#0F6E56}
-    .pick-status.others{background:var(--bg);color:var(--muted)}
-    .pick-status.done{background:#f0f0f0;color:var(--muted)}
-    .timer-display{font-size:15px;font-weight:700;min-width:44px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
-    .timer-display.urgent{color:var(--orange)}
-    .draft-body{display:grid;grid-template-columns:1fr 260px;flex:1;overflow:hidden}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;height:44px;gap:12px}
+    .logo{font-size:15px;font-weight:700;flex-shrink:0}.logo span{color:var(--green)}
+
+    /* ── ROUND BANNER ── */
+    .round-banner{background:#fff;border-bottom:2px solid var(--border);padding:0 16px;flex-shrink:0;display:flex;align-items:center;gap:16px;height:40px}
+    .round-banner.your-turn{border-bottom-color:var(--green);background:var(--green-light)}
+    .rb-round{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+    .rb-pick{font-size:13px;font-weight:700;color:var(--text);flex:1}
+    .rb-pick.yours{color:#0F6E56}
+    .rb-timer{font-size:18px;font-weight:800;min-width:50px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+    .rb-timer.urgent{color:var(--orange);animation:pulse .6s ease-in-out infinite alternate}
+    @keyframes pulse{from{opacity:1}to{opacity:.5}}
+    .rb-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0}
+    .rb-status.yours{background:var(--green);color:#fff}
+    .rb-status.others{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+    .rb-status.done{background:#f0f0f0;color:var(--muted)}
+
+    /* ── MAIN LAYOUT ── */
+    .draft-body{display:grid;grid-template-columns:1fr 200px 200px;flex:1;overflow:hidden}
+
+    /* ── PLAYER POOL ── */
     .pool{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
-    .pool-top{padding:8px 12px;border-bottom:1px solid var(--border)}
-    .pool-search{width:100%;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none}
+    .pool-top{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
+    .pool-search{flex:1;padding:6px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none}
     .pool-search:focus{border-color:var(--green)}
-    .pool-tabs{display:flex;border-bottom:1px solid var(--border)}
-    .ptab{flex:1;font-size:11px;font-weight:600;padding:8px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
+    .sort-sel{font-size:11px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer;outline:none}
+    .pos-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+    .pos-tabs::-webkit-scrollbar{display:none}
+    .ptab{font-size:11px;font-weight:700;padding:7px 10px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
     .ptab.active{color:var(--green);border-bottom-color:var(--green)}
+
+    /* ── PLAYER LIST ── */
     .player-list{overflow-y:auto;flex:1}
-    .player-row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);transition:background .1s}
+    .player-row{display:grid;grid-template-columns:20px 1fr auto;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);transition:background .1s}
     .player-row.can-pick{cursor:pointer}.player-row.can-pick:hover{background:#f0faf6}
-    .player-row.drafted{opacity:.28;pointer-events:none}
-    .p-rank{font-size:11px;color:var(--subtle);text-align:right}
-    .p-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .p-meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .p-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
-    .p-proj{font-size:13px;font-weight:700;color:var(--green)}
+    .player-row.drafted{opacity:.22;pointer-events:none}
+    .p-rank{font-size:10px;color:var(--subtle);text-align:right}
+    .p-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .p-team{font-size:10px;color:var(--muted)}
+    .p-stats{display:flex;gap:6px;margin-top:1px}
+    .p-stat{font-size:10px;color:var(--muted)}
+    .p-stat span{font-weight:600;color:var(--text)}
+    .p-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+    .p-proj{font-size:13px;font-weight:800;color:var(--green);line-height:1}
     .p-proj.el{color:var(--orange)}
-    .rank-star{font-size:14px;cursor:pointer;color:var(--subtle);border:none;background:none;padding:0;line-height:1}
+    .p-proj-label{font-size:9px;color:var(--subtle)}
+    .rank-star{font-size:13px;cursor:pointer;color:var(--subtle);border:none;background:none;padding:0;line-height:1}
     .rank-star.on{color:#f59e0b}
-    .draft-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1.5px solid var(--green);color:var(--green);background:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
+    .draft-btn{font-size:11px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--green);color:var(--green);background:#fff;cursor:pointer;font-weight:700;white-space:nowrap;margin-top:1px}
     .draft-btn:hover{background:var(--green-light)}
-    .sidebar{display:flex;flex-direction:column;overflow:hidden}
-    .sb-header{padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+
+    /* ── MY ROSTER SIDEBAR ── */
+    .sidebar{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+    .sb-header{padding:7px 10px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
     .roster-list{overflow-y:auto;flex:1}
-    .roster-slot{display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid var(--border)}
-    .rs-num{font-size:10px;font-weight:700;color:var(--subtle);min-width:18px}
-    .rs-name{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
-    .rs-proj{font-size:11px;color:var(--green);flex-shrink:0;font-weight:600}
-    .rs-empty{font-size:11px;color:var(--subtle);font-style:italic;flex:1}
-    .log-list{overflow-y:auto;max-height:190px}
-    .log-entry{display:flex;align-items:center;gap:6px;padding:5px 12px;border-bottom:1px solid var(--border);font-size:11px}
-    .le-pick{color:var(--subtle);min-width:24px;font-weight:700}
-    .le-team{font-weight:600;min-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
-    .le-team.you{color:var(--green)}
-    .le-player{color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .auto-bar{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0}
-    .ab-btn{flex:1;padding:7px 4px;font-size:12px;font-weight:600;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer}
+    .roster-slot{display:flex;align-items:center;gap:5px;padding:5px 10px;border-bottom:1px solid var(--border)}
+    .rs-num{font-size:10px;font-weight:700;color:var(--subtle);min-width:16px}
+    .rs-name{font-size:11px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+    .rs-proj{font-size:10px;color:var(--green);flex-shrink:0;font-weight:700}
+    .rs-empty{font-size:10px;color:var(--subtle);font-style:italic;flex:1}
+    .auto-bar{padding:7px 10px;border-top:1px solid var(--border);display:flex;gap:5px;flex-shrink:0}
+    .ab-btn{flex:1;padding:6px 4px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer}
     .ab-btn:hover{background:var(--bg)}
     .ab-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}.ab-btn.primary:hover{opacity:.9}
+
+    /* ── ALL TEAMS PANEL ── */
+    .teams-panel{display:flex;flex-direction:column;overflow:hidden}
+    .teams-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+    .ttab{flex:1;font-size:10px;font-weight:700;padding:6px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center;text-transform:uppercase;letter-spacing:.4px}
+    .ttab.active{color:var(--green);border-bottom-color:var(--green)}
+    .teams-scroll{overflow-y:auto;flex:1}
+    .team-block{border-bottom:1px solid var(--border)}
+    .team-block-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg);cursor:pointer;user-select:none}
+    .team-block-header:hover{background:#eeeef0}
+    .tbh-name{font-size:11px;font-weight:700;color:var(--text)}
+    .tbh-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:4px}
+    .tbh-count{font-size:10px;color:var(--muted)}
+    .tbh-next{font-size:9px;color:var(--green);font-weight:600}
+    .team-block-picks{padding:4px 0}
+    .team-block-picks.hidden{display:none}
+    .tbp-row{display:flex;align-items:center;gap:6px;padding:3px 10px;font-size:11px}
+    .tbp-num{color:var(--subtle);min-width:16px;font-size:10px}
+    .tbp-player{flex:1;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tbp-proj{color:var(--green);font-weight:600;font-size:10px}
+    .tbp-empty{color:var(--subtle);font-style:italic}
+
+    /* ── LOG at bottom of teams panel ── */
+    .log-section{flex-shrink:0;border-top:1px solid var(--border);max-height:160px;display:flex;flex-direction:column}
+    .log-list{overflow-y:auto;flex:1}
+    .log-entry{display:flex;align-items:center;gap:5px;padding:4px 10px;border-bottom:1px solid var(--border);font-size:10px}
+    .le-pick{color:var(--subtle);min-width:22px;font-weight:700}
+    .le-team{font-weight:600;min-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+    .le-team.you{color:var(--green)}
+    .le-player{color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:10px;opacity:0;transition:all .3s ease;z-index:300;white-space:nowrap;pointer-events:none}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* ── COMPLETE OVERLAY ── */
     .complete-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;z-index:200}
     .complete-overlay.show{display:flex}
-    .complete-card{background:#fff;border-radius:16px;padding:32px;max-width:420px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-    .complete-title{font-size:24px;font-weight:700;margin-bottom:6px}
-    .complete-sub{font-size:14px;color:var(--muted);margin-bottom:20px}
-    .complete-roster{text-align:left;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;max-height:320px;overflow-y:auto}
-    .cr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
+    .complete-card{background:#fff;border-radius:16px;padding:28px;max-width:420px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .complete-title{font-size:22px;font-weight:700;margin-bottom:4px}
+    .complete-sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+    .complete-roster{text-align:left;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;max-height:300px;overflow-y:auto}
+    .cr-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid var(--border);font-size:13px}
     .cr-row:last-child{border-bottom:none}
     .cr-name{font-weight:500}.cr-proj{color:var(--green);font-weight:700}
-    .close-btn{padding:11px 28px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+    .close-btn{padding:10px 24px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
     .close-btn:hover{opacity:.9}
-    @media(max-width:520px){.draft-body{grid-template-columns:1fr}.sidebar{display:none}}
+
+    @media(max-width:700px){
+      .draft-body{grid-template-columns:1fr 180px}
+      .teams-panel{display:none}
+    }
+    @media(max-width:480px){
+      .draft-body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .teams-panel{display:none}
+    }
   </style>
 </head>
 <body>
 
+<!-- NAV -->
 <div class="nav">
   <div class="nav-inner">
-    <div class="logo">Hoop<span>IQ</span> <span class="nav-sub" id="nav-label"></span></div>
-    <div class="pick-status others" id="pick-status">Connecting...</div>
-    <div class="timer-display" id="timer"></div>
+    <div class="logo">Hoop<span>IQ</span></div>
+    <div style="font-size:11px;color:var(--muted)" id="nav-label"></div>
   </div>
 </div>
 
+<!-- ROUND BANNER -->
+<div class="round-banner" id="round-banner">
+  <div class="rb-round" id="rb-round">Round — / —</div>
+  <div class="rb-pick" id="rb-pick">Connecting...</div>
+  <div class="rb-status others" id="rb-status">—</div>
+  <div class="rb-timer" id="rb-timer"></div>
+</div>
+
+<!-- MAIN -->
 <div class="draft-body">
+
+  <!-- PLAYER POOL -->
   <div class="pool">
     <div class="pool-top">
       <input class="pool-search" type="text" placeholder="Search players..." id="search" oninput="renderPool()">
+      <select class="sort-sel" id="pool-sort" onchange="renderPool()">
+        <option value="proj_dk">Proj DK</option>
+        <option value="pts">PTS</option>
+        <option value="reb">REB</option>
+        <option value="ast">AST</option>
+        <option value="stl">STL</option>
+        <option value="blk">BLK</option>
+      </select>
     </div>
-    <div class="pool-tabs">
-      <button class="ptab active" onclick="setTab(this,'ALL')">All</button>
-      <button class="ptab" onclick="setTab(this,'ranked')">⭐ Ranked</button>
+    <div class="pos-tabs" id="pos-tabs">
+      <button class="ptab active" onclick="setPos(this,'ALL')">ALL</button>
+      <button class="ptab" onclick="setPos(this,'PG')">PG</button>
+      <button class="ptab" onclick="setPos(this,'SG')">SG</button>
+      <button class="ptab" onclick="setPos(this,'SF')">SF</button>
+      <button class="ptab" onclick="setPos(this,'PF')">PF</button>
+      <button class="ptab" onclick="setPos(this,'C')">C</button>
+      <button class="ptab" onclick="setPos(this,'ranked')">⭐</button>
     </div>
     <div class="player-list" id="player-list">
       <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Loading players...</div>
     </div>
   </div>
+
+  <!-- MY ROSTER -->
   <div class="sidebar">
     <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-      <div class="sb-header"><span>Your roster</span><span id="roster-count">0 picks</span></div>
+      <div class="sb-header"><span>My roster</span><span id="roster-count">0 picks</span></div>
       <div class="roster-list" id="roster-list"></div>
-    </div>
-    <div style="flex-shrink:0">
-      <div class="sb-header"><span>Draft log</span><span id="log-count"></span></div>
-      <div class="log-list" id="log-list"></div>
     </div>
     <div class="auto-bar">
       <button class="ab-btn" onclick="autoPick()">Skip</button>
-      <button class="ab-btn primary" onclick="autoPick()">Auto-pick best</button>
+      <button class="ab-btn primary" onclick="autoPick()">Auto-pick</button>
     </div>
   </div>
+
+  <!-- ALL TEAMS + LOG -->
+  <div class="teams-panel">
+    <div class="teams-tabs">
+      <button class="ttab active" onclick="setTeamsTab(this,'rosters')">Rosters</button>
+      <button class="ttab" onclick="setTeamsTab(this,'log')">Log</button>
+    </div>
+    <div class="teams-scroll" id="teams-scroll"></div>
+    <div class="log-section" id="log-section" style="display:none">
+      <div class="sb-header"><span>Draft log</span><span id="log-count"></span></div>
+      <div class="log-list" id="log-list"></div>
+    </div>
+  </div>
+
 </div>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- COMPLETE OVERLAY -->
 <div class="complete-overlay" id="complete-overlay">
   <div class="complete-card">
     <div class="complete-title">🎉 Draft complete!</div>
@@ -122,11 +229,11 @@
 </div>
 
 <script>
-const API     = 'https://hoopiq-api-production-d3a4.up.railway.app';
-const params  = new URLSearchParams(window.location.search);
-const CODE    = params.get('code');
-const ROUNDS  = parseInt(params.get('rounds') || '10');
-const LEAGUE  = (params.get('league') || 'nba').toLowerCase();
+const API        = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const params     = new URLSearchParams(window.location.search);
+const CODE       = params.get('code');
+const ROUNDS     = parseInt(params.get('rounds') || '10');
+const LEAGUE     = (params.get('league') || 'nba').toLowerCase();
 const MY_MANAGER = params.get('manager') || '';
 const MY_TEAM    = params.get('team')    || '';
 
@@ -136,29 +243,37 @@ let log            = [];
 let allPlayers     = [];
 let draftedIds     = new Set();
 let ranked         = [];
-let draftTeams     = [];
+let draftTeams     = [];   // [{name, manager, sid, roster_count}]
+let teamRosters    = {};   // sid -> [player, ...]
 let currentPickNum = 0;
 let myTurn         = false;
 let isDone         = false;
 let sidConfirmed   = false;
 let timerInt       = null;
 let timerSecs      = 90;
-let tab            = 'ALL';
+let posFilter      = 'ALL';
+let teamsTab       = 'rosters';
+let expandedTeams  = new Set();
+
+// Position inference from player stats (heuristic until API provides it)
+function inferPos(p) {
+  if (p.ast >= 5.0 && p.pts >= 10)     return 'PG';
+  if (p.fg3m >= 1.5 && p.pts >= 12)    return 'SG';
+  if (p.reb >= 5 && p.blk >= 0.5)      return 'PF';
+  if (p.reb >= 7)                        return 'C';
+  if (p.pts >= 15 && p.reb >= 4)        return 'SF';
+  return 'SF';
+}
 
 document.getElementById('nav-label').textContent =
-  LEAGUE === 'nba' ? '· NBA Draft' : LEAGUE === 'el' ? '· Euroleague Draft' : '· Draft';
+  LEAGUE === 'nba' ? 'NBA Draft' : LEAGUE === 'el' ? 'Euroleague Draft' : 'Draft';
 
 // ── SOCKET ──────────────────────────────────────────────────────────────────
 const socket = io(API, {transports:['polling','websocket']});
 
 socket.on('connect', () => {
-  // Rejoin with our identity so server updates our SID
   if (MY_MANAGER && MY_TEAM) {
-    socket.emit('join_room_draft', {
-      code:         CODE,
-      manager_name: MY_MANAGER,
-      team_name:    MY_TEAM,
-    });
+    socket.emit('join_room_draft', {code: CODE, manager_name: MY_MANAGER, team_name: MY_TEAM});
   } else {
     socket.emit('get_room_state', {code: CODE});
   }
@@ -174,17 +289,16 @@ socket.on('connected', d => {
 });
 
 socket.on('joined_ok', d => {
-  mySid        = d.your_sid;
-  sidConfirmed = true;
-  draftTeams   = d.room.teams || [];
+  mySid          = d.your_sid;
+  sidConfirmed   = true;
+  draftTeams     = d.room.teams || [];
   currentPickNum = d.room.pick_num || 0;
-  const fullLog = d.room.log || [];
-  log = [...fullLog].reverse();
-  draftedIds = new Set(fullLog.map(e => e.player.id));
+  const fullLog  = d.room.log || [];
+  log            = [...fullLog].reverse();
+  draftedIds     = new Set(fullLog.map(e => e.player.id));
+  rebuildTeamRosters(fullLog);
   rebuildRoster(fullLog);
-  renderLog();
-  renderRoster();
-  checkMyTurn();
+  renderAll();
   if (d.room.status === 'complete') { isDone = true; showComplete(); }
 });
 
@@ -194,10 +308,9 @@ socket.on('room_state', d => {
   const fullLog  = d.log || [];
   log            = [...fullLog].reverse();
   draftedIds     = new Set(fullLog.map(e => e.player.id));
+  rebuildTeamRosters(fullLog);
   rebuildRoster(fullLog);
-  renderLog();
-  renderRoster();
-  checkMyTurn();
+  renderAll();
   if (d.status === 'complete') { isDone = true; showComplete(); }
 });
 
@@ -205,6 +318,8 @@ socket.on('draft_started', d => {
   draftTeams     = d.teams;
   currentPickNum = 0;
   checkMyTurn();
+  renderTeams();
+  updateBanner();
 });
 
 socket.on('pick_made', d => {
@@ -212,29 +327,29 @@ socket.on('pick_made', d => {
   draftedIds.add(entry.player.id);
   log.unshift(entry);
   currentPickNum = d.pick_num;
-  // Add to roster if it's ours (match by SID or team name)
-  if (entry.team_sid === mySid || entry.team === MY_TEAM) {
-    myRoster.push(entry.player);
-  }
-  renderLog();
-  renderPool();
-  renderRoster();
+  // Add to team rosters
+  const tsid = entry.team_sid;
+  if (!teamRosters[tsid]) teamRosters[tsid] = [];
+  teamRosters[tsid].push(entry.player);
+  // Add to my roster
+  if (isMyEntry(entry)) myRoster.push(entry.player);
+  showToast(`${entry.team} drafted ${entry.player.name}`);
   myTurn = (d.next_sid === mySid);
-  updateStatusBar(d.next_team, myTurn);
+  renderAll();
+  updateBanner(d.next_team, myTurn, d.next_sid);
   if (myTurn) startTimer(); else stopTimer();
 });
 
 socket.on('team_rejoined', d => {
-  // Update our SID in the team list
   draftTeams = d.room.teams || draftTeams;
   checkMyTurn();
+  renderTeams();
 });
 
 socket.on('draft_complete', () => {
   isDone = true;
   stopTimer();
-  document.getElementById('pick-status').textContent = 'Draft complete';
-  document.getElementById('pick-status').className   = 'pick-status done';
+  updateBanner('', false, '');
   showComplete();
 });
 
@@ -244,16 +359,27 @@ socket.on('error', d => console.warn('Draft error:', d.msg));
 fetch(`${API}/draft/pool?league=${LEAGUE}`)
   .then(r => r.json())
   .then(data => {
-    allPlayers = data;
+    // Infer positions
+    allPlayers = data.map(p => ({...p, pos: inferPos(p)}));
     renderPool();
   });
 
-// ── ROSTER REBUILD ───────────────────────────────────────────────────────────
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function isMyEntry(entry) {
+  return entry.team_sid === mySid || entry.team === MY_TEAM;
+}
+
 function rebuildRoster(fullLog) {
-  // Match by SID first, fall back to team name
-  myRoster = fullLog.filter(e =>
-    e.team_sid === mySid || e.team === MY_TEAM
-  ).map(e => e.player);
+  myRoster = fullLog.filter(e => isMyEntry(e)).map(e => e.player);
+}
+
+function rebuildTeamRosters(fullLog) {
+  teamRosters = {};
+  fullLog.forEach(e => {
+    const sid = e.team_sid;
+    if (!teamRosters[sid]) teamRosters[sid] = [];
+    teamRosters[sid].push(e.player);
+  });
 }
 
 // ── TIMER ───────────────────────────────────────────────────────────────────
@@ -269,15 +395,62 @@ function startTimer() {
 }
 function stopTimer() {
   clearInterval(timerInt);
-  document.getElementById('timer').textContent = '';
-  document.getElementById('timer').className   = 'timer-display';
+  document.getElementById('rb-timer').textContent = '';
+  document.getElementById('rb-timer').className   = 'rb-timer';
 }
 function updateTimerUI() {
   const m  = Math.floor(timerSecs / 60);
   const s  = timerSecs % 60;
-  const el = document.getElementById('timer');
+  const el = document.getElementById('rb-timer');
   el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-  el.className   = 'timer-display' + (timerSecs <= 15 ? ' urgent' : '');
+  el.className   = 'rb-timer' + (timerSecs <= 15 ? ' urgent' : '');
+}
+
+// ── BANNER ───────────────────────────────────────────────────────────────────
+function updateBanner(teamName, isMe, nextSid) {
+  const n      = draftTeams.length || 1;
+  const round  = Math.floor(currentPickNum / n) + 1;
+  const pick   = currentPickNum + 1;
+  const total  = n * ROUNDS;
+  const banner = document.getElementById('round-banner');
+  const rbRound = document.getElementById('rb-round');
+  const rbPick  = document.getElementById('rb-pick');
+  const rbSt    = document.getElementById('rb-status');
+
+  rbRound.textContent = `Round ${Math.min(round, ROUNDS)} · Pick ${pick > total ? total : pick} of ${total}`;
+
+  if (isDone) {
+    rbPick.textContent = 'Draft complete!';
+    rbPick.className   = 'rb-pick';
+    rbSt.textContent   = '✓ Done';
+    rbSt.className     = 'rb-status done';
+    banner.className   = 'round-banner';
+  } else if (isMe) {
+    rbPick.textContent = '🏀 Your pick!';
+    rbPick.className   = 'rb-pick yours';
+    rbSt.textContent   = 'Pick now';
+    rbSt.className     = 'rb-status yours';
+    banner.className   = 'round-banner your-turn';
+  } else {
+    const name = teamName || '...';
+    rbPick.textContent = `${name} is picking`;
+    rbPick.className   = 'rb-pick';
+    rbSt.textContent   = 'Waiting';
+    rbSt.className     = 'rb-status others';
+    banner.className   = 'round-banner';
+  }
+}
+
+function checkMyTurn() {
+  if (!draftTeams.length || !mySid) return;
+  const n    = draftTeams.length;
+  const r    = Math.floor(currentPickNum / n);
+  const pos  = currentPickNum % n;
+  const tidx = r % 2 === 0 ? pos : (n-1-pos);
+  const team = draftTeams[tidx];
+  myTurn = !!(team && (team.sid === mySid || team.name === MY_TEAM));
+  updateBanner(team ? team.name : '', myTurn, team ? team.sid : '');
+  if (myTurn && sidConfirmed) startTimer();
 }
 
 // ── PICK ACTIONS ─────────────────────────────────────────────────────────────
@@ -286,7 +459,7 @@ function draftPlayer(id) {
   socket.emit('make_pick', {code: CODE, player_id: id});
   myTurn = false;
   stopTimer();
-  updateStatusBar('Waiting...', false);
+  updateBanner('Waiting...', false, '');
 }
 
 function autoPick() {
@@ -305,19 +478,45 @@ function toggleRank(id, e) {
   renderPool();
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function setTab(btn, t) {
-  tab = t;
+// ── TOAST ───────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll() {
+  renderPool();
+  renderRoster();
+  renderTeams();
+  renderLog();
+}
+
+// ── POS FILTER ───────────────────────────────────────────────────────────────
+function setPos(btn, pos) {
+  posFilter = pos;
   document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderPool();
 }
 
+// ── POOL ─────────────────────────────────────────────────────────────────────
 function renderPool() {
-  const q        = document.getElementById('search').value.toLowerCase();
-  const canPick  = myTurn && !isDone && sidConfirmed;
-  let list       = allPlayers.filter(p => p.name.toLowerCase().includes(q));
-  if (tab === 'ranked') list = list.filter(p => ranked.includes(p.id));
+  const q       = document.getElementById('search').value.toLowerCase();
+  const sortKey = document.getElementById('pool-sort').value;
+  const canPick = myTurn && !isDone && sidConfirmed;
+
+  let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
+  if (posFilter === 'ranked') {
+    list = list.filter(p => ranked.includes(p.id));
+  } else if (posFilter !== 'ALL') {
+    list = list.filter(p => p.pos === posFilter);
+  }
+  list = [...list].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
 
   document.getElementById('player-list').innerHTML = list.map((p, i) => {
     const isDrafted = draftedIds.has(p.id);
@@ -329,10 +528,18 @@ function renderPool() {
       <div class="p-rank">${i+1}</div>
       <div style="min-width:0">
         <div class="p-name">${p.name}</div>
-        <div class="p-meta">${p.team} · vs ${p.opp} · ${p.pts}pt ${p.reb}rb ${p.ast}as</div>
+        <div class="p-team">${p.pos} · ${p.team} · vs ${p.opp}</div>
+        <div class="p-stats">
+          <span class="p-stat"><span>${p.pts}</span>pts</span>
+          <span class="p-stat"><span>${p.reb}</span>reb</span>
+          <span class="p-stat"><span>${p.ast}</span>ast</span>
+          <span class="p-stat"><span>${p.stl}</span>stl</span>
+          <span class="p-stat"><span>${p.blk}</span>blk</span>
+        </div>
       </div>
       <div class="p-right">
         <div class="p-proj${isEl?' el':''}">${p.proj_dk.toFixed(1)}</div>
+        <div class="p-proj-label">proj DK</div>
         <button class="rank-star${isRanked?' on':''}" onclick="toggleRank('${p.id}',event)">
           ${isRanked ? '★' : '☆'}
         </button>
@@ -344,8 +551,9 @@ function renderPool() {
   }).join('') || `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No players found</div>`;
 }
 
+// ── MY ROSTER ────────────────────────────────────────────────────────────────
 function renderRoster() {
-  document.getElementById('roster-count').textContent = `${myRoster.length} / ${ROUNDS}`;
+  document.getElementById('roster-count').textContent = `${myRoster.length}/${ROUNDS}`;
   document.getElementById('roster-list').innerHTML = Array.from({length: ROUNDS}).map((_, i) => {
     const p = myRoster[i];
     return `<div class="roster-slot">
@@ -357,41 +565,74 @@ function renderRoster() {
   }).join('');
 }
 
+// ── ALL TEAMS ────────────────────────────────────────────────────────────────
+function setTeamsTab(btn, t) {
+  teamsTab = t;
+  document.querySelectorAll('.ttab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('teams-scroll').style.display  = t === 'rosters' ? 'block' : 'none';
+  document.getElementById('log-section').style.display   = t === 'log'     ? 'flex'  : 'none';
+  if (t === 'rosters') renderTeams();
+  else renderLog();
+}
+
+function renderTeams() {
+  if (teamsTab !== 'rosters') return;
+  const n = draftTeams.length;
+  document.getElementById('teams-scroll').innerHTML = draftTeams.map((t, tidx) => {
+    const isMe     = t.sid === mySid || t.name === MY_TEAM;
+    const picks    = teamRosters[t.sid] || [];
+    const isOpen   = expandedTeams.has(t.sid) || isMe;
+    // Is this team on the clock?
+    const r        = Math.floor(currentPickNum / (n||1));
+    const pos      = currentPickNum % (n||1);
+    const onClock  = !isDone && (r%2===0 ? pos===tidx : (n-1-pos)===tidx);
+    return `
+    <div class="team-block">
+      <div class="team-block-header" onclick="toggleTeam('${t.sid}')">
+        <div>
+          <span class="tbh-name">${t.name}</span>
+          ${isMe ? '<span class="tbh-you">YOU</span>' : ''}
+          ${onClock ? '<span style="font-size:9px;color:var(--orange);font-weight:700;margin-left:4px">ON CLOCK</span>' : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="tbh-count">${picks.length}/${ROUNDS}</span>
+          <span style="font-size:10px;color:var(--subtle)">${isOpen?'▲':'▼'}</span>
+        </div>
+      </div>
+      <div class="team-block-picks${isOpen ? '' : ' hidden'}" id="tpicks-${t.sid}">
+        ${picks.length
+          ? picks.map((p, i) => `
+            <div class="tbp-row">
+              <div class="tbp-num">${i+1}</div>
+              <div class="tbp-player">${p.name}</div>
+              <div class="tbp-proj">${p.proj_dk.toFixed(1)}</div>
+            </div>`).join('')
+          : `<div class="tbp-row"><span class="tbp-empty">No picks yet</span></div>`}
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Waiting for teams...</div>';
+}
+
+function toggleTeam(sid) {
+  if (expandedTeams.has(sid)) expandedTeams.delete(sid);
+  else expandedTeams.add(sid);
+  renderTeams();
+}
+
+// ── LOG ──────────────────────────────────────────────────────────────────────
 function renderLog() {
+  if (teamsTab !== 'log') return;
   document.getElementById('log-count').textContent = `${log.length} picks`;
   document.getElementById('log-list').innerHTML = log.map(e => `
     <div class="log-entry">
       <div class="le-pick">#${e.pick}</div>
-      <div class="le-team${(e.team_sid===mySid||e.team===MY_TEAM)?' you':''}">${e.team}</div>
+      <div class="le-team${isMyEntry(e)?' you':''}">${e.team}</div>
       <div class="le-player">${e.player.name}</div>
     </div>`).join('');
 }
 
-function checkMyTurn() {
-  if (!draftTeams.length || !mySid) return;
-  const n    = draftTeams.length;
-  const r    = Math.floor(currentPickNum / n);
-  const pos  = currentPickNum % n;
-  const tidx = r % 2 === 0 ? pos : (n-1-pos);
-  const team = draftTeams[tidx];
-  // Match by SID or by team name as fallback
-  myTurn = !!(team && (team.sid === mySid || team.name === MY_TEAM));
-  updateStatusBar(team ? team.name : '', myTurn);
-  if (myTurn && sidConfirmed) startTimer();
-}
-
-function updateStatusBar(teamName, isMe) {
-  const el = document.getElementById('pick-status');
-  if (isDone) {
-    el.textContent = 'Draft complete'; el.className = 'pick-status done';
-  } else if (isMe) {
-    el.textContent = '🏀 Your pick!';  el.className = 'pick-status yours';
-  } else {
-    el.textContent = teamName ? `${teamName} picking...` : 'Waiting...';
-    el.className   = 'pick-status others';
-  }
-}
-
+// ── COMPLETE ─────────────────────────────────────────────────────────────────
 function showComplete() {
   document.getElementById('complete-overlay').classList.add('show');
   document.getElementById('complete-roster').innerHTML = myRoster.length
