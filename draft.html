@@ -25,7 +25,7 @@
     .pool-search{width:100%;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none}
     .pool-search:focus{border-color:var(--green)}
     .pool-tabs{display:flex;border-bottom:1px solid var(--border)}
-    .ptab{flex:1;font-size:11px;font-weight:600;padding:8px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center;transition:color .15s}
+    .ptab{flex:1;font-size:11px;font-weight:600;padding:8px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
     .ptab.active{color:var(--green);border-bottom-color:var(--green)}
     .player-list{overflow-y:auto;flex:1}
     .player-row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);transition:background .1s}
@@ -49,7 +49,7 @@
     .rs-name{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
     .rs-proj{font-size:11px;color:var(--green);flex-shrink:0;font-weight:600}
     .rs-empty{font-size:11px;color:var(--subtle);font-style:italic;flex:1}
-    .log-list{overflow-y:auto;max-height:180px}
+    .log-list{overflow-y:auto;max-height:190px}
     .log-entry{display:flex;align-items:center;gap:6px;padding:5px 12px;border-bottom:1px solid var(--border);font-size:11px}
     .le-pick{color:var(--subtle);min-width:24px;font-weight:700}
     .le-team{font-weight:600;min-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
@@ -122,27 +122,28 @@
 </div>
 
 <script>
-const API    = 'https://hoopiq-api-production-d3a4.up.railway.app';
-const params = new URLSearchParams(window.location.search);
-const CODE   = params.get('code');
-const ROUNDS = parseInt(params.get('rounds') || '10');
-const LEAGUE = (params.get('league') || 'nba').toLowerCase();
+const API     = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const params  = new URLSearchParams(window.location.search);
+const CODE    = params.get('code');
+const ROUNDS  = parseInt(params.get('rounds') || '10');
+const LEAGUE  = (params.get('league') || 'nba').toLowerCase();
+const MY_MANAGER = params.get('manager') || '';
+const MY_TEAM    = params.get('team')    || '';
 
-// SID from lobby URL — will be confirmed/overwritten by server
-let mySid      = params.get('sid') || null;
-let myRoster   = [];
-let log        = [];
-let allPlayers = [];
-let draftedIds = new Set();
-let ranked     = [];
-let draftTeams = [];
+let mySid          = params.get('sid') || null;
+let myRoster       = [];
+let log            = [];
+let allPlayers     = [];
+let draftedIds     = new Set();
+let ranked         = [];
+let draftTeams     = [];
 let currentPickNum = 0;
-let myTurn     = false;
-let isDone     = false;
-let timerInt   = null;
-let timerSecs  = 90;
-let tab        = 'ALL';
-let sidConfirmed = false;
+let myTurn         = false;
+let isDone         = false;
+let sidConfirmed   = false;
+let timerInt       = null;
+let timerSecs      = 90;
+let tab            = 'ALL';
 
 document.getElementById('nav-label').textContent =
   LEAGUE === 'nba' ? '· NBA Draft' : LEAGUE === 'el' ? '· Euroleague Draft' : '· Draft';
@@ -151,14 +152,12 @@ document.getElementById('nav-label').textContent =
 const socket = io(API, {transports:['polling','websocket']});
 
 socket.on('connect', () => {
-  // Send identity so server can match and update our SID
-  const manager = params.get('manager') || '';
-  const team    = params.get('team')    || '';
-  if (manager && team) {
+  // Rejoin with our identity so server updates our SID
+  if (MY_MANAGER && MY_TEAM) {
     socket.emit('join_room_draft', {
       code:         CODE,
-      manager_name: manager,
-      team_name:    team,
+      manager_name: MY_MANAGER,
+      team_name:    MY_TEAM,
     });
   } else {
     socket.emit('get_room_state', {code: CODE});
@@ -166,22 +165,36 @@ socket.on('connect', () => {
 });
 
 socket.on('connected', d => {
-  // This is our real SID for this session
-  mySid = d.sid;
+  mySid        = d.sid;
   sidConfirmed = true;
+  rebuildRoster([...log].reverse());
+  renderRoster();
   checkMyTurn();
   renderPool();
+});
+
+socket.on('joined_ok', d => {
+  mySid        = d.your_sid;
+  sidConfirmed = true;
+  draftTeams   = d.room.teams || [];
+  currentPickNum = d.room.pick_num || 0;
+  const fullLog = d.room.log || [];
+  log = [...fullLog].reverse();
+  draftedIds = new Set(fullLog.map(e => e.player.id));
+  rebuildRoster(fullLog);
   renderLog();
+  renderRoster();
+  checkMyTurn();
+  if (d.room.status === 'complete') { isDone = true; showComplete(); }
 });
 
 socket.on('room_state', d => {
   draftTeams     = d.teams || [];
   currentPickNum = d.pick_num || 0;
-  // Rebuild from log
-  const fullLog = d.log || [];
-  log = [...fullLog].reverse();
-  myRoster   = fullLog.filter(e => e.team_sid === mySid).map(e => e.player);
-  draftedIds = new Set(fullLog.map(e => e.player.id));
+  const fullLog  = d.log || [];
+  log            = [...fullLog].reverse();
+  draftedIds     = new Set(fullLog.map(e => e.player.id));
+  rebuildRoster(fullLog);
   renderLog();
   renderRoster();
   checkMyTurn();
@@ -199,7 +212,10 @@ socket.on('pick_made', d => {
   draftedIds.add(entry.player.id);
   log.unshift(entry);
   currentPickNum = d.pick_num;
-  if (entry.team_sid === mySid) myRoster.push(entry.player);
+  // Add to roster if it's ours (match by SID or team name)
+  if (entry.team_sid === mySid || entry.team === MY_TEAM) {
+    myRoster.push(entry.player);
+  }
   renderLog();
   renderPool();
   renderRoster();
@@ -208,18 +224,18 @@ socket.on('pick_made', d => {
   if (myTurn) startTimer(); else stopTimer();
 });
 
+socket.on('team_rejoined', d => {
+  // Update our SID in the team list
+  draftTeams = d.room.teams || draftTeams;
+  checkMyTurn();
+});
+
 socket.on('draft_complete', () => {
   isDone = true;
   stopTimer();
   document.getElementById('pick-status').textContent = 'Draft complete';
   document.getElementById('pick-status').className   = 'pick-status done';
   showComplete();
-});
-
-socket.on('team_rejoined', d => {
-  // Update SID in team list
-  draftTeams = (d.room.teams || draftTeams);
-  checkMyTurn();
 });
 
 socket.on('error', d => console.warn('Draft error:', d.msg));
@@ -231,6 +247,14 @@ fetch(`${API}/draft/pool?league=${LEAGUE}`)
     allPlayers = data;
     renderPool();
   });
+
+// ── ROSTER REBUILD ───────────────────────────────────────────────────────────
+function rebuildRoster(fullLog) {
+  // Match by SID first, fall back to team name
+  myRoster = fullLog.filter(e =>
+    e.team_sid === mySid || e.team === MY_TEAM
+  ).map(e => e.player);
+}
 
 // ── TIMER ───────────────────────────────────────────────────────────────────
 function startTimer() {
@@ -249,8 +273,8 @@ function stopTimer() {
   document.getElementById('timer').className   = 'timer-display';
 }
 function updateTimerUI() {
-  const m = Math.floor(timerSecs / 60);
-  const s = timerSecs % 60;
+  const m  = Math.floor(timerSecs / 60);
+  const s  = timerSecs % 60;
   const el = document.getElementById('timer');
   el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
   el.className   = 'timer-display' + (timerSecs <= 15 ? ' urgent' : '');
@@ -290,9 +314,9 @@ function setTab(btn, t) {
 }
 
 function renderPool() {
-  const q      = document.getElementById('search').value.toLowerCase();
-  const canPick = myTurn && !isDone && sidConfirmed;
-  let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
+  const q        = document.getElementById('search').value.toLowerCase();
+  const canPick  = myTurn && !isDone && sidConfirmed;
+  let list       = allPlayers.filter(p => p.name.toLowerCase().includes(q));
   if (tab === 'ranked') list = list.filter(p => ranked.includes(p.id));
 
   document.getElementById('player-list').innerHTML = list.map((p, i) => {
@@ -322,7 +346,7 @@ function renderPool() {
 
 function renderRoster() {
   document.getElementById('roster-count').textContent = `${myRoster.length} / ${ROUNDS}`;
-  document.getElementById('roster-list').innerHTML = Array.from({length:ROUNDS}).map((_,i) => {
+  document.getElementById('roster-list').innerHTML = Array.from({length: ROUNDS}).map((_, i) => {
     const p = myRoster[i];
     return `<div class="roster-slot">
       <div class="rs-num">${i+1}</div>
@@ -338,7 +362,7 @@ function renderLog() {
   document.getElementById('log-list').innerHTML = log.map(e => `
     <div class="log-entry">
       <div class="le-pick">#${e.pick}</div>
-      <div class="le-team${e.team_sid===mySid?' you':''}">${e.team}</div>
+      <div class="le-team${(e.team_sid===mySid||e.team===MY_TEAM)?' you':''}">${e.team}</div>
       <div class="le-player">${e.player.name}</div>
     </div>`).join('');
 }
@@ -350,7 +374,8 @@ function checkMyTurn() {
   const pos  = currentPickNum % n;
   const tidx = r % 2 === 0 ? pos : (n-1-pos);
   const team = draftTeams[tidx];
-  myTurn = !!(team && team.sid === mySid);
+  // Match by SID or by team name as fallback
+  myTurn = !!(team && (team.sid === mySid || team.name === MY_TEAM));
   updateStatusBar(team ? team.name : '', myTurn);
   if (myTurn && sidConfirmed) startTimer();
 }
@@ -370,7 +395,7 @@ function updateStatusBar(teamName, isMe) {
 function showComplete() {
   document.getElementById('complete-overlay').classList.add('show');
   document.getElementById('complete-roster').innerHTML = myRoster.length
-    ? myRoster.map(p=>`
+    ? myRoster.map(p => `
         <div class="cr-row">
           <span class="cr-name">${p.name} <span style="font-size:10px;color:var(--muted)">${p.team}</span></span>
           <span class="cr-proj">${p.proj_dk.toFixed(1)} DK</span>

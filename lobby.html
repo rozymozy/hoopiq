@@ -65,20 +65,16 @@
 
 <div class="container">
 
-  <!-- SETUP -->
   <div class="setup-cards" id="setup-cards">
     <div class="page-title">Draft Lobby</div>
     <div class="page-sub">Create a private room or join with a code</div>
 
     <div class="card">
       <div class="card-title">Create a room</div>
-
       <label>Your name</label>
       <input type="text" id="create-manager" placeholder="e.g. Alex">
-
       <label>Team name</label>
       <input type="text" id="create-team" placeholder="e.g. Brooklyn Ballers">
-
       <label>League</label>
       <div class="league-picker">
         <div class="league-opt selected" data-league="nba" onclick="selectLeague(this)">
@@ -90,7 +86,6 @@
           <span class="league-opt-sub">587 players</span>
         </div>
       </div>
-
       <div class="row2" style="margin-top:14px">
         <div>
           <label>Max teams</label>
@@ -116,7 +111,6 @@
           </select>
         </div>
       </div>
-
       <div id="create-error" class="error-msg"></div>
       <button class="btn btn-green" onclick="createRoom()">Create private room</button>
       <div class="divider">or</div>
@@ -138,31 +132,23 @@
     </div>
   </div>
 
-  <!-- WAITING ROOM -->
   <div class="waiting-room" id="waiting-room">
     <div class="page-title" id="wr-title">Waiting for players...</div>
     <div class="page-sub" id="wr-sub"></div>
-
     <div class="card">
       <div class="room-code-display" id="wr-code" onclick="copyCode()">—</div>
       <div class="room-code-hint" id="copy-hint">Tap code to copy · Share with friends</div>
-
       <div class="room-pills" id="wr-pills"></div>
       <div class="slots-bar">
         <span id="wr-slots"></span>
         <span id="wr-rounds"></span>
       </div>
-
       <div class="team-list" id="wr-teams"></div>
-
       <div class="countdown-block" id="countdown-block">
         <div class="countdown-num" id="countdown-num">30</div>
         <div class="countdown-label">Draft starts in...</div>
       </div>
-
-      <button class="start-btn" id="start-btn" onclick="startNow()">
-        Start draft now ▶
-      </button>
+      <button class="start-btn" id="start-btn" onclick="startNow()">Start draft now ▶</button>
     </div>
   </div>
 
@@ -174,6 +160,8 @@ const socket = io(API, {transports:['polling','websocket']});
 
 let myCode         = null;
 let mySid          = null;
+let myManager      = '';
+let myTeam         = '';
 let amCreator      = false;
 let selectedLeague = 'nba';
 
@@ -184,18 +172,16 @@ socket.on('room_created', d => {
   myCode    = d.code;
   mySid     = d.your_sid;
   amCreator = true;
-  saveIdentity(d.room);
   showWaitingRoom(d.room);
 });
 
 socket.on('joined_ok', d => {
   mySid = d.your_sid;
-  saveIdentity(d.room);
   showWaitingRoom(d.room);
 });
 
-socket.on('team_joined',    d => updateWaitingRoom(d.room));
-socket.on('team_rejoined',  d => updateWaitingRoom(d.room));
+socket.on('team_joined',   d => updateWaitingRoom(d.room));
+socket.on('team_rejoined', d => updateWaitingRoom(d.room));
 
 socket.on('countdown', d => {
   document.getElementById('countdown-block').classList.add('show');
@@ -204,19 +190,15 @@ socket.on('countdown', d => {
 });
 
 socket.on('draft_started', d => {
-const manager = document.getElementById('create-manager').value.trim()
-             || document.getElementById('join-manager').value.trim()
-             || 'Manager';
-const team    = document.getElementById('create-team').value.trim()
-             || document.getElementById('join-team').value.trim()
-             || 'Team';
-const p = new URLSearchParams({
-  code:    myCode,
-  sid:     mySid,
-  rounds:  d.rounds,
-  league:  d.league,
-  manager: manager,
-  team:    team,
+  const p = new URLSearchParams({
+    code:    myCode,
+    sid:     mySid,
+    rounds:  d.rounds,
+    league:  d.league,
+    manager: myManager,
+    team:    myTeam,
+  });
+  window.location.href = `draft.html?${p.toString()}`;
 });
 
 socket.on('error', d => {
@@ -224,26 +206,31 @@ socket.on('error', d => {
   document.getElementById('join-error').textContent   = d.msg;
 });
 
-function saveIdentity(room) {
-  // Store identity so user can rejoin after refresh
-  localStorage.setItem('hoopiq_draft', JSON.stringify({
-    code:    room.code,
-    league:  room.league,
-    rounds:  room.rounds,
-  }));
-}
-
 function selectLeague(el) {
   document.querySelectorAll('.league-opt').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
   selectedLeague = el.dataset.league;
 }
 
+function getCreateFields() {
+  return {
+    manager: document.getElementById('create-manager').value.trim() || 'Manager',
+    team:    document.getElementById('create-team').value.trim()    || 'Team 1',
+  };
+}
+
+function getJoinFields() {
+  return {
+    manager: document.getElementById('join-manager').value.trim() || 'Manager',
+    team:    document.getElementById('join-team').value.trim()    || 'Team',
+  };
+}
+
 function createRoom() {
-  const manager = document.getElementById('create-manager').value.trim() || 'Manager';
-  const team    = document.getElementById('create-team').value.trim()    || 'Team 1';
-  const max     = parseInt(document.getElementById('create-max').value);
-  const rounds  = parseInt(document.getElementById('create-rounds').value);
+  const {manager, team} = getCreateFields();
+  myManager = manager; myTeam = team;
+  const max    = parseInt(document.getElementById('create-max').value);
+  const rounds = parseInt(document.getElementById('create-rounds').value);
   document.getElementById('create-error').textContent = '';
   socket.emit('create_room', {
     manager_name: manager, team_name: team,
@@ -253,9 +240,9 @@ function createRoom() {
 }
 
 function joinRoom() {
-  const manager = document.getElementById('join-manager').value.trim() || 'Manager';
-  const team    = document.getElementById('join-team').value.trim()    || 'Team';
-  const code    = document.getElementById('join-code').value.trim().toUpperCase();
+  const {manager, team} = getJoinFields();
+  myManager = manager; myTeam = team;
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
   if (!code || code.length < 5) {
     document.getElementById('join-error').textContent = 'Enter the 5-letter room code.';
     return;
@@ -266,8 +253,8 @@ function joinRoom() {
 }
 
 function joinPublicLobby() {
-  const manager = document.getElementById('create-manager').value.trim() || 'Manager';
-  const team    = document.getElementById('create-team').value.trim()    || 'Team';
+  const {manager, team} = getCreateFields();
+  myManager = manager; myTeam = team;
   socket.emit('join_public_lobby', {
     manager_name: manager, team_name: team,
     league: selectedLeague, is_public: true,
@@ -276,9 +263,7 @@ function joinPublicLobby() {
   });
 }
 
-function startNow() {
-  socket.emit('start_now', {code: myCode});
-}
+function startNow() { socket.emit('start_now', {code: myCode}); }
 
 function copyCode() {
   if (!myCode) return;
@@ -324,16 +309,6 @@ function updateWaitingRoom(room) {
         ? '<span class="team-you">YOU</span>'
         : '<span style="color:var(--green);font-size:16px">✓</span>'}
     </div>`).join('');
-}
-
-// Auto-rejoin if user refreshed mid-draft
-const saved = JSON.parse(localStorage.getItem('hoopiq_draft') || 'null');
-if (saved && saved.code) {
-  const managerEl = document.getElementById('join-manager');
-  const teamEl    = document.getElementById('join-team');
-  const codeEl    = document.getElementById('join-code');
-  // Pre-fill join form with saved info — user can confirm or ignore
-  if (codeEl) codeEl.value = saved.code;
 }
 </script>
 </body>
