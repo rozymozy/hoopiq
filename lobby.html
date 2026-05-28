@@ -12,8 +12,7 @@
     .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px}
     .nav-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px}
     .logo{font-size:17px;font-weight:700}.logo span{color:var(--green)}
-    .nav-back{font-size:13px;color:var(--muted);text-decoration:none}
-    .nav-back:hover{color:var(--text)}
+    .nav-back{font-size:13px;color:var(--muted);text-decoration:none}.nav-back:hover{color:var(--text)}
     .container{max-width:640px;margin:32px auto;padding:0 16px}
     .page-title{font-size:22px;font-weight:700;margin-bottom:4px}
     .page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
@@ -24,35 +23,35 @@
     input,select{width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;transition:border-color .15s}
     input:focus,select:focus{border-color:var(--green)}
     .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .btn{width:100%;padding:11px;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;margin-top:18px;transition:opacity .15s}
     .btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:.9}
     .btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}.btn-outline:hover{background:var(--bg)}
     .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--subtle);font-size:12px}
     .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-    .league-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-    .league-opt{padding:8px;border-radius:8px;border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:all .15s}
+    .league-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+    .league-opt{padding:10px;border-radius:8px;border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:all .15s}
     .league-opt:hover{border-color:var(--green)}
     .league-opt.selected{border-color:var(--green);background:var(--green-light)}
-    .league-opt-label{font-size:13px;font-weight:600;display:block}
-    .league-opt-sub{font-size:10px;color:var(--muted)}
-    .waiting-room{display:none}
-    .waiting-room.show{display:block}
+    .league-opt-label{font-size:14px;font-weight:600;display:block}
+    .league-opt-sub{font-size:11px;color:var(--muted);margin-top:2px;display:block}
+    .waiting-room{display:none}.waiting-room.show{display:block}
     .setup-cards.hide{display:none}
-    .room-code-display{font-size:36px;font-weight:700;letter-spacing:8px;color:var(--green);text-align:center;padding:16px;background:var(--green-light);border-radius:10px;margin:12px 0;cursor:pointer}
+    .room-code-display{font-size:36px;font-weight:700;letter-spacing:8px;color:var(--green);text-align:center;padding:16px;background:var(--green-light);border-radius:10px;margin:12px 0;cursor:pointer;user-select:all}
     .room-code-hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px}
     .team-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
-    .team-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:14px}
-    .team-name{font-weight:500}.team-manager{font-size:12px;color:var(--muted)}
-    .team-you{font-size:10px;background:var(--green-light);color:#0F6E56;padding:2px 6px;border-radius:10px;font-weight:600}
-    .slots-bar{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:12px}
-    .countdown-display{display:none;text-align:center;padding:20px}
-    .countdown-display.show{display:block}
+    .team-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px}
+    .team-name{font-size:14px;font-weight:500}.team-manager{font-size:12px;color:var(--muted)}
+    .team-you{font-size:10px;background:var(--green-light);color:#0F6E56;padding:2px 7px;border-radius:10px;font-weight:600}
+    .slots-bar{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
+    .room-pills{margin-bottom:12px}
+    .pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:10px;background:var(--bg);color:var(--muted);margin-right:6px;margin-bottom:4px}
+    .countdown-block{display:none;text-align:center;padding:20px 0}
+    .countdown-block.show{display:block}
     .countdown-num{font-size:56px;font-weight:700;color:var(--green);line-height:1}
     .countdown-label{font-size:14px;color:var(--muted);margin-top:6px}
-    .start-early-btn{margin-top:12px;font-size:13px;padding:8px 20px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--muted)}
-    .error-msg{font-size:13px;color:var(--orange);margin-top:10px;min-height:20px}
-    .room-info-pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:10px;background:var(--bg);color:var(--muted);margin-right:6px;margin-bottom:8px}
+    .error-msg{font-size:13px;color:var(--orange);margin-top:10px;min-height:18px}
+    .start-btn{width:100%;margin-top:12px;padding:10px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--muted);display:none}
+    .start-btn:hover{background:var(--bg)}
   </style>
 </head>
 <body>
@@ -71,7 +70,6 @@
     <div class="page-title">Draft Lobby</div>
     <div class="page-sub">Create a private room or join with a code</div>
 
-    <!-- CREATE -->
     <div class="card">
       <div class="card-title">Create a room</div>
 
@@ -84,16 +82,12 @@
       <label>League</label>
       <div class="league-picker">
         <div class="league-opt selected" data-league="nba" onclick="selectLeague(this)">
-          <span class="league-opt-label">NBA</span>
+          <span class="league-opt-label">🏀 NBA</span>
           <span class="league-opt-sub">160 players</span>
         </div>
         <div class="league-opt" data-league="el" onclick="selectLeague(this)">
-          <span class="league-opt-label">Euroleague</span>
+          <span class="league-opt-label">🌍 Euroleague</span>
           <span class="league-opt-sub">587 players</span>
-        </div>
-        <div class="league-opt" data-league="both" onclick="selectLeague(this)">
-          <span class="league-opt-label">Both</span>
-          <span class="league-opt-sub">747 players</span>
         </div>
       </div>
 
@@ -129,7 +123,6 @@
       <button class="btn btn-outline" onclick="joinPublicLobby()">Join a public room</button>
     </div>
 
-    <!-- JOIN -->
     <div class="card">
       <div class="card-title">Join with a code</div>
       <label>Your name</label>
@@ -148,27 +141,27 @@
   <!-- WAITING ROOM -->
   <div class="waiting-room" id="waiting-room">
     <div class="page-title" id="wr-title">Waiting for players...</div>
-    <div class="page-sub" id="wr-sub">Share the code so others can join</div>
+    <div class="page-sub" id="wr-sub"></div>
 
     <div class="card">
-      <div class="room-code-display" id="wr-code" onclick="copyCode()">XXXXX</div>
-      <div class="room-code-hint" id="copy-hint">Tap code to copy &bull; Share with friends</div>
+      <div class="room-code-display" id="wr-code" onclick="copyCode()">—</div>
+      <div class="room-code-hint" id="copy-hint">Tap code to copy · Share with friends</div>
 
-      <div id="wr-pills"></div>
+      <div class="room-pills" id="wr-pills"></div>
       <div class="slots-bar">
-        <span id="wr-slots">1 / 8 teams</span>
+        <span id="wr-slots"></span>
         <span id="wr-rounds"></span>
       </div>
 
       <div class="team-list" id="wr-teams"></div>
 
-      <div class="countdown-display" id="countdown-block">
+      <div class="countdown-block" id="countdown-block">
         <div class="countdown-num" id="countdown-num">30</div>
         <div class="countdown-label">Draft starts in...</div>
       </div>
 
-      <button class="start-early-btn" id="start-early-btn" onclick="startNow()" style="display:none;width:100%;margin-top:8px">
-        Start now &#9654;
+      <button class="start-btn" id="start-btn" onclick="startNow()">
+        Start draft now ▶
       </button>
     </div>
   </div>
@@ -179,9 +172,9 @@
 const API    = 'https://hoopiq-api-production-d3a4.up.railway.app';
 const socket = io(API, {transports:['polling','websocket']});
 
-let myCode    = null;
-let mySid     = null;
-let amCreator = false;
+let myCode         = null;
+let mySid          = null;
+let amCreator      = false;
 let selectedLeague = 'nba';
 
 socket.on('connect',   ()  => { mySid = socket.id; });
@@ -191,30 +184,31 @@ socket.on('room_created', d => {
   myCode    = d.code;
   mySid     = d.your_sid;
   amCreator = true;
+  saveIdentity(d.room);
   showWaitingRoom(d.room);
-  // Save league pref for the projections page
-  localStorage.setItem('hoopiq_league', d.room.league);
 });
 
 socket.on('joined_ok', d => {
   mySid = d.your_sid;
+  saveIdentity(d.room);
   showWaitingRoom(d.room);
-  localStorage.setItem('hoopiq_league', d.room.league);
 });
 
-socket.on('team_joined',  d => updateWaitingRoom(d.room));
+socket.on('team_joined',    d => updateWaitingRoom(d.room));
+socket.on('team_rejoined',  d => updateWaitingRoom(d.room));
 
 socket.on('countdown', d => {
   document.getElementById('countdown-block').classList.add('show');
   document.getElementById('countdown-num').textContent = d.seconds;
+  document.getElementById('start-btn').style.display = 'none';
 });
 
 socket.on('draft_started', d => {
   const p = new URLSearchParams({
-    code:   myCode,
-    sid:    mySid,
-    rounds: d.rounds,
-    league: d.league,
+    code:    myCode,
+    sid:     mySid,
+    rounds:  d.rounds,
+    league:  d.league,
   });
   window.location.href = `draft.html?${p.toString()}`;
 });
@@ -223,6 +217,15 @@ socket.on('error', d => {
   document.getElementById('create-error').textContent = d.msg;
   document.getElementById('join-error').textContent   = d.msg;
 });
+
+function saveIdentity(room) {
+  // Store identity so user can rejoin after refresh
+  localStorage.setItem('hoopiq_draft', JSON.stringify({
+    code:    room.code,
+    league:  room.league,
+    rounds:  room.rounds,
+  }));
+}
 
 function selectLeague(el) {
   document.querySelectorAll('.league-opt').forEach(o => o.classList.remove('selected'));
@@ -274,7 +277,7 @@ function startNow() {
 function copyCode() {
   if (!myCode) return;
   navigator.clipboard.writeText(myCode).then(() => {
-    document.getElementById('copy-hint').textContent = '✓ Copied to clipboard!';
+    document.getElementById('copy-hint').textContent = '✓ Copied!';
     setTimeout(() => {
       document.getElementById('copy-hint').textContent = 'Tap code to copy · Share with friends';
     }, 2000);
@@ -286,27 +289,25 @@ function showWaitingRoom(room) {
   document.getElementById('waiting-room').classList.add('show');
   myCode = room.code;
   if (amCreator) {
-    document.getElementById('wr-title').textContent = 'Your room is ready';
-    document.getElementById('start-early-btn').style.display = 'block';
+    document.getElementById('wr-title').textContent = 'Room created!';
+    document.getElementById('start-btn').style.display = 'block';
   }
   updateWaitingRoom(room);
 }
 
 function updateWaitingRoom(room) {
-  document.getElementById('wr-code').textContent  = room.code;
-  document.getElementById('wr-slots').textContent = `${room.teams.length} / ${room.max_teams} teams`;
+  const leagueLabel = {nba:'🏀 NBA', el:'🌍 Euroleague'}[room.league] || room.league;
+  document.getElementById('wr-code').textContent   = room.code;
+  document.getElementById('wr-slots').textContent  = `${room.teams.length} / ${room.max_teams} teams joined`;
   document.getElementById('wr-rounds').textContent = `${room.rounds} rounds`;
-  document.getElementById('wr-sub').textContent =
+  document.getElementById('wr-sub').textContent    =
     room.teams.length < room.max_teams
       ? `Waiting for ${room.max_teams - room.teams.length} more team(s)`
       : 'Room full — starting soon!';
-
-  const leagueLabel = {nba:'NBA only', el:'Euroleague only', both:'NBA + Euroleague'}[room.league] || room.league;
   document.getElementById('wr-pills').innerHTML =
-    `<span class="room-info-pill">&#127944; ${leagueLabel}</span>
-     <span class="room-info-pill">&#128197; ${room.rounds} rounds</span>
-     <span class="room-info-pill">&#128101; Max ${room.max_teams} teams</span>`;
-
+    `<span class="pill">${leagueLabel}</span>
+     <span class="pill">📅 ${room.rounds} rounds</span>
+     <span class="pill">👥 Max ${room.max_teams} teams</span>`;
   document.getElementById('wr-teams').innerHTML = room.teams.map(t => `
     <div class="team-item">
       <div>
@@ -315,8 +316,18 @@ function updateWaitingRoom(room) {
       </div>
       ${t.sid === mySid
         ? '<span class="team-you">YOU</span>'
-        : '<span style="color:var(--green)">&#10003;</span>'}
+        : '<span style="color:var(--green);font-size:16px">✓</span>'}
     </div>`).join('');
+}
+
+// Auto-rejoin if user refreshed mid-draft
+const saved = JSON.parse(localStorage.getItem('hoopiq_draft') || 'null');
+if (saved && saved.code) {
+  const managerEl = document.getElementById('join-manager');
+  const teamEl    = document.getElementById('join-team');
+  const codeEl    = document.getElementById('join-code');
+  // Pre-fill join form with saved info — user can confirm or ignore
+  if (codeEl) codeEl.value = saved.code;
 }
 </script>
 </body>

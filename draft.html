@@ -12,75 +12,72 @@
     .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;flex-shrink:0}
     .nav-inner{display:flex;align-items:center;justify-content:space-between;height:48px;gap:12px}
     .logo{font-size:16px;font-weight:700;flex-shrink:0}.logo span{color:var(--green)}
+    .nav-sub{font-size:11px;font-weight:400;color:var(--muted)}
     .pick-status{font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px;white-space:nowrap;flex-shrink:0}
     .pick-status.yours{background:var(--green-light);color:#0F6E56}
     .pick-status.others{background:var(--bg);color:var(--muted)}
     .pick-status.done{background:#f0f0f0;color:var(--muted)}
-    .timer-display{font-size:14px;font-weight:700;min-width:40px;text-align:right;flex-shrink:0}
+    .timer-display{font-size:15px;font-weight:700;min-width:44px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
     .timer-display.urgent{color:var(--orange)}
     .draft-body{display:grid;grid-template-columns:1fr 260px;flex:1;overflow:hidden}
     .pool{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
-    .pool-top{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px}
-    .pool-search{flex:1;padding:6px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none}
+    .pool-top{padding:8px 12px;border-bottom:1px solid var(--border)}
+    .pool-search{width:100%;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);outline:none}
     .pool-search:focus{border-color:var(--green)}
     .pool-tabs{display:flex;border-bottom:1px solid var(--border)}
-    .ptab{flex:1;font-size:11px;font-weight:600;padding:7px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center}
+    .ptab{flex:1;font-size:11px;font-weight:600;padding:8px 4px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-align:center;transition:color .15s}
     .ptab.active{color:var(--green);border-bottom-color:var(--green)}
     .player-list{overflow-y:auto;flex:1}
-    .player-row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);transition:background .1s}
-    .player-row.clickable{cursor:pointer}
-    .player-row.clickable:hover{background:var(--bg)}
-    .player-row.drafted{opacity:.3;pointer-events:none}
+    .player-row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);transition:background .1s}
+    .player-row.can-pick{cursor:pointer}.player-row.can-pick:hover{background:#f0faf6}
+    .player-row.drafted{opacity:.28;pointer-events:none}
     .p-rank{font-size:11px;color:var(--subtle);text-align:right}
-    .p-info{min-width:0}
     .p-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .p-meta{font-size:11px;color:var(--muted)}
+    .p-meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .p-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
-    .p-proj{font-size:13px;font-weight:600;color:var(--green)}
+    .p-proj{font-size:13px;font-weight:700;color:var(--green)}
     .p-proj.el{color:var(--orange)}
-    .rank-star{font-size:14px;cursor:pointer;color:var(--subtle);line-height:1;border:none;background:none;padding:0}
+    .rank-star{font-size:14px;cursor:pointer;color:var(--subtle);border:none;background:none;padding:0;line-height:1}
     .rank-star.on{color:#f59e0b}
-    .draft-btn{font-size:11px;padding:3px 8px;border-radius:5px;border:1px solid var(--green);color:var(--green);background:#fff;cursor:pointer;white-space:nowrap;font-weight:600}
+    .draft-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1.5px solid var(--green);color:var(--green);background:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
     .draft-btn:hover{background:var(--green-light)}
     .sidebar{display:flex;flex-direction:column;overflow:hidden}
-    .sb-header{padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+    .sb-header{padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
     .roster-list{overflow-y:auto;flex:1}
     .roster-slot{display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid var(--border)}
-    .rs-num{font-size:10px;font-weight:600;color:var(--subtle);min-width:18px}
-    .rs-name{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .rs-proj{font-size:11px;color:var(--green);flex-shrink:0}
-    .rs-empty{font-size:12px;color:var(--subtle);font-style:italic;flex:1}
-    .rs-badge{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;flex-shrink:0}
-    .rs-badge.nba{background:var(--green-light);color:#0F6E56}
-    .rs-badge.el{background:var(--orange-light);color:#92400e}
+    .rs-num{font-size:10px;font-weight:700;color:var(--subtle);min-width:18px}
+    .rs-name{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+    .rs-proj{font-size:11px;color:var(--green);flex-shrink:0;font-weight:600}
+    .rs-empty{font-size:11px;color:var(--subtle);font-style:italic;flex:1}
     .log-list{overflow-y:auto;max-height:180px}
     .log-entry{display:flex;align-items:center;gap:6px;padding:5px 12px;border-bottom:1px solid var(--border);font-size:11px}
-    .le-pick{color:var(--subtle);min-width:24px;font-weight:600}
-    .le-team{font-weight:600;min-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .le-pick{color:var(--subtle);min-width:24px;font-weight:700}
+    .le-team{font-weight:600;min-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
     .le-team.you{color:var(--green)}
     .le-player{color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .auto-bar{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0}
     .ab-btn{flex:1;padding:7px 4px;font-size:12px;font-weight:600;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer}
     .ab-btn:hover{background:var(--bg)}
     .ab-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}.ab-btn.primary:hover{opacity:.9}
-    .complete-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:200}
+    .complete-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;z-index:200}
     .complete-overlay.show{display:flex}
-    .complete-card{background:#fff;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center}
-    .complete-title{font-size:22px;font-weight:700;margin-bottom:8px}
+    .complete-card{background:#fff;border-radius:16px;padding:32px;max-width:420px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .complete-title{font-size:24px;font-weight:700;margin-bottom:6px}
     .complete-sub{font-size:14px;color:var(--muted);margin-bottom:20px}
-    .complete-roster{text-align:left;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;max-height:300px;overflow-y:auto}
+    .complete-roster{text-align:left;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;max-height:320px;overflow-y:auto}
     .cr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px}
     .cr-row:last-child{border-bottom:none}
-    .cr-name{font-weight:500}.cr-proj{color:var(--green);font-weight:600}
-    .close-btn{padding:10px 24px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
-    @media(max-width:500px){.draft-body{grid-template-columns:1fr}.sidebar{display:none}}
+    .cr-name{font-weight:500}.cr-proj{color:var(--green);font-weight:700}
+    .close-btn{padding:11px 28px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+    .close-btn:hover{opacity:.9}
+    @media(max-width:520px){.draft-body{grid-template-columns:1fr}.sidebar{display:none}}
   </style>
 </head>
 <body>
 
 <div class="nav">
   <div class="nav-inner">
-    <div class="logo">Hoop<span>IQ</span> <span style="font-size:11px;font-weight:400;color:var(--muted)" id="nav-league"></span></div>
+    <div class="logo">Hoop<span>IQ</span> <span class="nav-sub" id="nav-label"></span></div>
     <div class="pick-status others" id="pick-status">Connecting...</div>
     <div class="timer-display" id="timer"></div>
   </div>
@@ -91,34 +88,25 @@
     <div class="pool-top">
       <input class="pool-search" type="text" placeholder="Search players..." id="search" oninput="renderPool()">
     </div>
-    <div class="pool-tabs" id="pool-tabs">
+    <div class="pool-tabs">
       <button class="ptab active" onclick="setTab(this,'ALL')">All</button>
-      <button class="ptab" onclick="setTab(this,'NBA')" id="tab-nba">NBA</button>
-      <button class="ptab" onclick="setTab(this,'EL')" id="tab-el">Euroleague</button>
-      <button class="ptab" onclick="setTab(this,'ranked')">&#9733; Ranked</button>
+      <button class="ptab" onclick="setTab(this,'ranked')">⭐ Ranked</button>
     </div>
     <div class="player-list" id="player-list">
       <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Loading players...</div>
     </div>
   </div>
-
   <div class="sidebar">
     <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-      <div class="sb-header">
-        <span>Your roster</span>
-        <span id="roster-count">0 picks</span>
-      </div>
+      <div class="sb-header"><span>Your roster</span><span id="roster-count">0 picks</span></div>
       <div class="roster-list" id="roster-list"></div>
     </div>
     <div style="flex-shrink:0">
-      <div class="sb-header">
-        <span>Draft log</span>
-        <span id="log-count"></span>
-      </div>
+      <div class="sb-header"><span>Draft log</span><span id="log-count"></span></div>
       <div class="log-list" id="log-list"></div>
     </div>
     <div class="auto-bar">
-      <button class="ab-btn" onclick="autoPick()">Skip / Auto</button>
+      <button class="ab-btn" onclick="autoPick()">Skip</button>
       <button class="ab-btn primary" onclick="autoPick()">Auto-pick best</button>
     </div>
   </div>
@@ -138,9 +126,9 @@ const API    = 'https://hoopiq-api-production-d3a4.up.railway.app';
 const params = new URLSearchParams(window.location.search);
 const CODE   = params.get('code');
 const ROUNDS = parseInt(params.get('rounds') || '10');
-const LEAGUE = params.get('league') || 'both';
+const LEAGUE = (params.get('league') || 'nba').toLowerCase();
 
-// SID: passed from lobby via URL, then overwritten by server confirmation
+// SID from lobby URL — will be confirmed/overwritten by server
 let mySid      = params.get('sid') || null;
 let myRoster   = [];
 let log        = [];
@@ -151,55 +139,47 @@ let draftTeams = [];
 let currentPickNum = 0;
 let myTurn     = false;
 let isDone     = false;
-let totalPicks = 0;
 let timerInt   = null;
 let timerSecs  = 90;
 let tab        = 'ALL';
+let sidConfirmed = false;
 
-// Set nav league label
-const leagueLabels = {nba:'NBA', el:'Euroleague', both:'NBA + Euroleague'};
-document.getElementById('nav-league').textContent = leagueLabels[LEAGUE] || '';
-
-// Hide league tabs that aren't relevant
-if (LEAGUE === 'nba') {
-  document.getElementById('tab-el').style.display = 'none';
-} else if (LEAGUE === 'el') {
-  document.getElementById('tab-nba').style.display = 'none';
-}
+document.getElementById('nav-label').textContent =
+  LEAGUE === 'nba' ? '· NBA Draft' : LEAGUE === 'el' ? '· Euroleague Draft' : '· Draft';
 
 // ── SOCKET ──────────────────────────────────────────────────────────────────
 const socket = io(API, {transports:['polling','websocket']});
 
 socket.on('connect', () => {
-  // Confirm our SID with server
+  // Server gives us a new SID on every connect — request room state with it
   socket.emit('get_room_state', {code: CODE});
 });
 
 socket.on('connected', d => {
-  // Server confirmed our SID — this is the authoritative one
+  // This is our real SID for this session
   mySid = d.sid;
+  sidConfirmed = true;
   checkMyTurn();
+  renderPool();
+  renderLog();
 });
 
 socket.on('room_state', d => {
   draftTeams     = d.teams || [];
   currentPickNum = d.pick_num || 0;
-  log            = (d.log || []).slice().reverse();
-  totalPicks     = draftTeams.length * ROUNDS;
-  // Rebuild myRoster from log
-  myRoster = (d.log || [])
-    .filter(e => e.team_sid === mySid)
-    .map(e => e.player);
-  // Rebuild draftedIds
-  draftedIds = new Set((d.log || []).map(e => e.player.id));
+  // Rebuild from log
+  const fullLog = d.log || [];
+  log = [...fullLog].reverse();
+  myRoster   = fullLog.filter(e => e.team_sid === mySid).map(e => e.player);
+  draftedIds = new Set(fullLog.map(e => e.player.id));
   renderLog();
   renderRoster();
   checkMyTurn();
+  if (d.status === 'complete') { isDone = true; showComplete(); }
 });
 
 socket.on('draft_started', d => {
-  draftTeams = d.teams;
-  totalPicks = draftTeams.length * ROUNDS;
+  draftTeams     = d.teams;
   currentPickNum = 0;
   checkMyTurn();
 });
@@ -209,22 +189,16 @@ socket.on('pick_made', d => {
   draftedIds.add(entry.player.id);
   log.unshift(entry);
   currentPickNum = d.pick_num;
-
-  if (entry.team_sid === mySid) {
-    myRoster.push(entry.player);
-  }
-
+  if (entry.team_sid === mySid) myRoster.push(entry.player);
   renderLog();
   renderPool();
   renderRoster();
-
-  myTurn = d.next_sid === mySid;
+  myTurn = (d.next_sid === mySid);
   updateStatusBar(d.next_team, myTurn);
-  if (myTurn) startTimer();
-  else        stopTimer();
+  if (myTurn) startTimer(); else stopTimer();
 });
 
-socket.on('draft_complete', d => {
+socket.on('draft_complete', () => {
   isDone = true;
   stopTimer();
   document.getElementById('pick-status').textContent = 'Draft complete';
@@ -232,7 +206,13 @@ socket.on('draft_complete', d => {
   showComplete();
 });
 
-socket.on('error', d => console.warn('Socket error:', d.msg));
+socket.on('team_rejoined', d => {
+  // Update SID in team list
+  draftTeams = (d.room.teams || draftTeams);
+  checkMyTurn();
+});
+
+socket.on('error', d => console.warn('Draft error:', d.msg));
 
 // ── LOAD POOL ────────────────────────────────────────────────────────────────
 fetch(`${API}/draft/pool?league=${LEAGUE}`)
@@ -277,7 +257,6 @@ function draftPlayer(id) {
 
 function autoPick() {
   if (!myTurn || isDone) return;
-  // Use ranked list first
   const fromRanked = ranked
     .map(id => allPlayers.find(p => p.id === id))
     .filter(p => p && !draftedIds.has(p.id));
@@ -285,13 +264,9 @@ function autoPick() {
   if (pick) draftPlayer(pick.id);
 }
 
-function toggleRank(id, event) {
-  event.stopPropagation();
-  if (ranked.includes(id)) {
-    ranked = ranked.filter(r => r !== id);
-  } else {
-    ranked.push(id);
-  }
+function toggleRank(id, e) {
+  e.stopPropagation();
+  ranked = ranked.includes(id) ? ranked.filter(r => r !== id) : [...ranked, id];
   socket.emit('set_rankings', {code: CODE, rankings: ranked});
   renderPool();
 }
@@ -305,32 +280,27 @@ function setTab(btn, t) {
 }
 
 function renderPool() {
-  const q    = document.getElementById('search').value.toLowerCase();
-  let list   = allPlayers.filter(p => p.name.toLowerCase().includes(q));
-  if (tab === 'NBA')    list = list.filter(p => p.league === 'NBA');
-  if (tab === 'EL')     list = list.filter(p => p.league === 'EL');
+  const q      = document.getElementById('search').value.toLowerCase();
+  const canPick = myTurn && !isDone && sidConfirmed;
+  let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
   if (tab === 'ranked') list = list.filter(p => ranked.includes(p.id));
-
-  const canPick = myTurn && !isDone;
 
   document.getElementById('player-list').innerHTML = list.map((p, i) => {
     const isDrafted = draftedIds.has(p.id);
     const isRanked  = ranked.includes(p.id);
     const isEl      = p.league === 'EL';
     return `
-    <div class="player-row${isDrafted ? ' drafted' : canPick && !isDrafted ? ' clickable' : ''}"
+    <div class="player-row${isDrafted ? ' drafted' : canPick ? ' can-pick' : ''}"
          ${canPick && !isDrafted ? `onclick="draftPlayer('${p.id}')"` : ''}>
-      <div class="p-rank">${i + 1}</div>
-      <div class="p-info">
+      <div class="p-rank">${i+1}</div>
+      <div style="min-width:0">
         <div class="p-name">${p.name}</div>
         <div class="p-meta">${p.team} · vs ${p.opp} · ${p.pts}pt ${p.reb}rb ${p.ast}as</div>
       </div>
       <div class="p-right">
-        <div class="p-proj${isEl ? ' el' : ''}">${p.proj_dk.toFixed(1)}</div>
-        <button class="rank-star${isRanked ? ' on' : ''}"
-                onclick="toggleRank('${p.id}', event)"
-                title="${isRanked ? 'Remove ranking' : 'Add to rankings'}">
-          ${isRanked ? '&#9733;' : '&#9734;'}
+        <div class="p-proj${isEl?' el':''}">${p.proj_dk.toFixed(1)}</div>
+        <button class="rank-star${isRanked?' on':''}" onclick="toggleRank('${p.id}',event)">
+          ${isRanked ? '★' : '☆'}
         </button>
         ${canPick && !isDrafted
           ? `<button class="draft-btn" onclick="event.stopPropagation();draftPlayer('${p.id}')">Draft</button>`
@@ -342,14 +312,12 @@ function renderPool() {
 
 function renderRoster() {
   document.getElementById('roster-count').textContent = `${myRoster.length} / ${ROUNDS}`;
-  document.getElementById('roster-list').innerHTML = Array.from({length: ROUNDS}).map((_, i) => {
+  document.getElementById('roster-list').innerHTML = Array.from({length:ROUNDS}).map((_,i) => {
     const p = myRoster[i];
     return `<div class="roster-slot">
-      <div class="rs-num">${i + 1}</div>
+      <div class="rs-num">${i+1}</div>
       ${p
-        ? `<div class="rs-name">${p.name}</div>
-           <span class="rs-badge ${p.league.toLowerCase()}">${p.league}</span>
-           <div class="rs-proj">${p.proj_dk.toFixed(1)}</div>`
+        ? `<div class="rs-name">${p.name}</div><div class="rs-proj">${p.proj_dk.toFixed(1)}</div>`
         : `<div class="rs-empty">empty</div>`}
     </div>`;
   }).join('');
@@ -360,33 +328,31 @@ function renderLog() {
   document.getElementById('log-list').innerHTML = log.map(e => `
     <div class="log-entry">
       <div class="le-pick">#${e.pick}</div>
-      <div class="le-team${e.team_sid === mySid ? ' you' : ''}">${e.team}</div>
+      <div class="le-team${e.team_sid===mySid?' you':''}">${e.team}</div>
       <div class="le-player">${e.player.name}</div>
     </div>`).join('');
 }
 
 function checkMyTurn() {
-  if (!draftTeams.length) return;
+  if (!draftTeams.length || !mySid) return;
   const n    = draftTeams.length;
   const r    = Math.floor(currentPickNum / n);
   const pos  = currentPickNum % n;
-  const tidx = r % 2 === 0 ? pos : (n - 1 - pos);
+  const tidx = r % 2 === 0 ? pos : (n-1-pos);
   const team = draftTeams[tidx];
   myTurn = !!(team && team.sid === mySid);
   updateStatusBar(team ? team.name : '', myTurn);
-  if (myTurn) startTimer();
+  if (myTurn && sidConfirmed) startTimer();
 }
 
 function updateStatusBar(teamName, isMe) {
   const el = document.getElementById('pick-status');
   if (isDone) {
-    el.textContent = 'Draft complete';
-    el.className   = 'pick-status done';
+    el.textContent = 'Draft complete'; el.className = 'pick-status done';
   } else if (isMe) {
-    el.textContent = '🏀 Your pick!';
-    el.className   = 'pick-status yours';
+    el.textContent = '🏀 Your pick!';  el.className = 'pick-status yours';
   } else {
-    el.textContent = teamName ? `${teamName} is picking...` : 'Waiting...';
+    el.textContent = teamName ? `${teamName} picking...` : 'Waiting...';
     el.className   = 'pick-status others';
   }
 }
@@ -394,13 +360,10 @@ function updateStatusBar(teamName, isMe) {
 function showComplete() {
   document.getElementById('complete-overlay').classList.add('show');
   document.getElementById('complete-roster').innerHTML = myRoster.length
-    ? myRoster.map(p => `
+    ? myRoster.map(p=>`
         <div class="cr-row">
-          <div>
-            <span class="cr-name">${p.name}</span>
-            <span style="font-size:10px;margin-left:6px;color:var(--muted)">${p.league} · ${p.team}</span>
-          </div>
-          <div class="cr-proj">${p.proj_dk.toFixed(1)} DK</div>
+          <span class="cr-name">${p.name} <span style="font-size:10px;color:var(--muted)">${p.team}</span></span>
+          <span class="cr-proj">${p.proj_dk.toFixed(1)} DK</span>
         </div>`).join('')
     : '<div class="cr-row" style="color:var(--muted)">No players drafted</div>';
 }
