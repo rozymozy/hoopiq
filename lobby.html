@@ -86,6 +86,18 @@
           <span class="league-opt-sub">587 players</span>
         </div>
       </div>
+      <label>Format</label>
+      <div class="league-picker">
+        <div class="league-opt selected" data-fmt="points" onclick="selectFormat(this)">
+          <span class="league-opt-label">📊 Points</span>
+          <span class="league-opt-sub">Yahoo scoring formula</span>
+        </div>
+        <div class="league-opt" data-fmt="categories" onclick="selectFormat(this)">
+          <span class="league-opt-label">🏆 Categories</span>
+          <span class="league-opt-sub">9-cat H2H</span>
+        </div>
+      </div>
+
       <div class="row2" style="margin-top:14px">
         <div>
           <label>Max teams</label>
@@ -164,6 +176,7 @@ let myManager      = '';
 let myTeam         = '';
 let amCreator      = false;
 let selectedLeague = 'nba';
+let selectedFormat  = 'points';
 
 socket.on('connect',   ()  => { mySid = socket.id; });
 socket.on('connected', d   => { mySid = d.sid; });
@@ -195,6 +208,7 @@ socket.on('draft_started', d => {
     sid:     mySid,
     rounds:  d.rounds,
     league:  d.league,
+    format:  d.format || 'points',
     manager: myManager,
     team:    myTeam,
   });
@@ -210,6 +224,12 @@ function selectLeague(el) {
   document.querySelectorAll('.league-opt').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
   selectedLeague = el.dataset.league;
+}
+
+function selectFormat(el) {
+  document.querySelectorAll('[data-fmt]').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFormat = el.dataset.fmt;
 }
 
 function getCreateFields() {
@@ -235,7 +255,7 @@ function createRoom() {
   socket.emit('create_room', {
     manager_name: manager, team_name: team,
     max_teams: max, rounds: rounds,
-    league: selectedLeague, is_public: false,
+    league: selectedLeague, format: selectedFormat, is_public: false,
   });
 }
 
@@ -295,8 +315,10 @@ function updateWaitingRoom(room) {
     room.teams.length < room.max_teams
       ? `Waiting for ${room.max_teams - room.teams.length} more team(s)`
       : 'Room full — starting soon!';
+  const fmtLabel = room.format === 'categories' ? '🏆 Categories' : '📊 Points';
   document.getElementById('wr-pills').innerHTML =
     `<span class="pill">${leagueLabel}</span>
+     <span class="pill">${fmtLabel}</span>
      <span class="pill">📅 ${room.rounds} rounds</span>
      <span class="pill">👥 Max ${room.max_teams} teams</span>`;
   document.getElementById('wr-teams').innerHTML = room.teams.map(t => `

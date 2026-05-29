@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoopIQ — Matchup</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --green:#1D9E75;--green-light:#E1F5EE;
+      --orange:#D85A30;--orange-light:#FAECE7;
+      --purple:#7C3AED;--purple-light:#EDE9FE;
+      --blue:#2563EB;--blue-light:#EFF6FF;
+      --bg:#f4f4f6;--border:#e8e8ec;
+      --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* NAV */
+    .nav{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;position:sticky;top:0;z-index:100}
+    .nav-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px;gap:12px}
+    .logo{font-size:17px;font-weight:700}.logo span{color:var(--green)}
+    .nav-links{display:flex;align-items:center;gap:12px}
+    .nav-link{font-size:13px;color:var(--muted);text-decoration:none}.nav-link:hover{color:var(--text)}
+
+    /* CONNECT */
+    .connect-wrap{max-width:900px;margin:20px auto;padding:0 16px}
+    .connect-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:20px}
+    .connect-title{font-size:15px;font-weight:600;margin-bottom:12px}
+    .connect-row{display:flex;gap:8px;flex-wrap:wrap}
+    .connect-input{flex:1;min-width:130px;padding:9px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;outline:none}
+    .connect-input:focus{border-color:var(--green)}
+    .connect-btn{padding:9px 20px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+    .connect-btn:hover{opacity:.9}
+    .connect-err{font-size:12px;color:var(--orange);margin-top:6px;min-height:16px}
+
+    /* MAIN */
+    .main{max-width:900px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start}
+    @media(max-width:700px){.main{grid-template-columns:1fr}}
+
+    /* PAGE TABS */
+    .page-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
+    .page-tab{font-size:14px;font-weight:600;padding:10px 20px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+    .page-tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+    /* WEEK NAV */
+    .week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .week-label{font-size:16px;font-weight:700}
+    .week-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .week-btn{padding:6px 14px;font-size:13px;font-weight:600;border-radius:7px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--muted)}
+    .week-btn:hover{background:var(--bg)}.week-btn:disabled{opacity:.3;cursor:default}
+
+    /* MATCHUP CARD */
+    .matchup-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:12px}
+    .matchup-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px;gap:12px;border-bottom:1px solid var(--border)}
+    .team-side{display:flex;flex-direction:column}
+    .team-side.right{align-items:flex-end;text-align:right}
+    .team-name-h{font-size:15px;font-weight:700}
+    .team-you-tag{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 6px;border-radius:8px;font-weight:700;display:inline-block;margin-left:4px;vertical-align:middle}
+    .team-score{font-size:28px;font-weight:800;line-height:1.1}
+    .team-score.winning{color:var(--green)}
+    .team-score.losing{color:var(--muted)}
+    .vs-block{text-align:center}
+    .vs-text{font-size:11px;font-weight:700;color:var(--subtle)}
+    .winner-label{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;margin-top:4px;display:inline-block}
+    .winner-label.home{background:var(--green-light);color:#0F6E56}
+    .winner-label.away{background:var(--orange-light);color:var(--orange)}
+    .winner-label.tie{background:var(--bg);color:var(--muted)}
+
+    /* POINTS TOTALS */
+    .totals-row{display:grid;grid-template-columns:repeat(9,1fr);border-bottom:1px solid var(--border)}
+    .totals-header{display:grid;grid-template-columns:repeat(9,1fr);background:var(--bg);padding:6px 0;border-bottom:1px solid var(--border)}
+    .tot-cell{text-align:center;padding:4px 2px;font-size:11px;color:var(--text)}
+    .tot-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;text-align:center;padding:4px 2px}
+    .tot-cell.winner-cell{font-weight:700;color:var(--green)}
+    .tot-cell.loser-cell{color:var(--muted)}
+
+    /* CATEGORIES TABLE */
+    .cats-table{width:100%;border-collapse:collapse}
+    .cats-table th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:center;background:var(--bg);border-bottom:1px solid var(--border)}
+    .cats-table th:first-child{text-align:left}
+    .cats-table td{font-size:13px;padding:9px 12px;text-align:center;border-bottom:1px solid var(--border)}
+    .cats-table td:first-child{font-weight:600;text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase}
+    .cats-table tr:last-child td{border-bottom:none}
+    .cat-win{font-weight:700;color:var(--green)}
+    .cat-lose{color:var(--muted)}
+    .cat-tie{color:var(--subtle)}
+    .cat-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px}
+    .cat-badge.w{background:var(--green-light);color:#0F6E56}
+    .cat-badge.l{background:var(--orange-light);color:var(--orange)}
+    .cat-badge.t{background:var(--bg);color:var(--muted)}
+    .score-banner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg);font-size:13px;font-weight:600}
+
+    /* ROSTER SECTION */
+    .roster-section{padding:12px 16px;border-top:1px solid var(--border)}
+    .roster-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+    .roster-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .roster-col{display:flex;flex-direction:column;gap:4px}
+    .roster-col-title{font-size:11px;font-weight:700;margin-bottom:4px;color:var(--text)}
+    .player-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg);border-radius:6px;font-size:11px}
+    .pi-name{font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pi-proj{color:var(--green);font-weight:700;flex-shrink:0;margin-left:6px}
+
+    /* OTHER MATCHUPS */
+    .other-matchup{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;font-size:13px}
+    .om-team{font-weight:500;flex:1}
+    .om-score{font-weight:700;color:var(--muted);margin:0 8px;font-size:12px}
+    .om-vs{font-size:10px;color:var(--subtle);margin:0 6px}
+
+    /* STANDINGS */
+    .standings-table{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+    .standings-table table{width:100%;border-collapse:collapse}
+    .standings-table th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:right;background:var(--bg);border-bottom:2px solid var(--border)}
+    .standings-table th:first-child,.standings-table th:nth-child(2){text-align:left}
+    .standings-table td{font-size:13px;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border)}
+    .standings-table td:first-child{text-align:left;font-weight:700;min-width:24px;color:var(--subtle);font-size:11px}
+    .standings-table td:nth-child(2){text-align:left;font-weight:600}
+    .standings-table tr:last-child td{border-bottom:none}
+    .standings-table tr:hover td{background:#f9fafb}
+    .you-row td{background:var(--green-light)!important}
+    .record{font-weight:700}
+    .td-green{color:var(--green);font-weight:700}
+    .td-m{color:var(--muted)}
+
+    /* SIDEBAR */
+    .sb-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px;margin-bottom:12px}
+    .sb-title{font-size:13px;font-weight:700;margin-bottom:10px}
+    .league-info-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #f4f4f6;color:var(--muted)}
+    .league-info-row:last-child{border-bottom:none}
+    .league-info-row span{font-weight:600;color:var(--text)}
+
+    .empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner">
+    <div class="logo">Hoop<span>IQ</span></div>
+    <div class="nav-links">
+      <a class="nav-link" href="waivers.html" id="waivers-link">Waivers</a>
+      <a class="nav-link" href="index.html">Projections</a>
+    </div>
+  </div>
+</div>
+
+<!-- CONNECT -->
+<div class="connect-wrap" id="connect-wrap">
+  <div class="connect-card">
+    <div class="connect-title">Connect to your league</div>
+    <div class="connect-row">
+      <input class="connect-input" type="text" id="inp-code"
+             placeholder="Room code (ABCDE)" maxlength="5"
+             style="letter-spacing:3px;font-weight:700;text-transform:uppercase"
+             oninput="this.value=this.value.toUpperCase()">
+      <input class="connect-input" type="text" id="inp-team" placeholder="Your team name">
+      <button class="connect-btn" onclick="connect()">Connect</button>
+    </div>
+    <div class="connect-err" id="conn-err"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main" style="display:none">
+  <div>
+    <div class="page-tabs">
+      <button class="page-tab active" onclick="setTab(this,'matchup')">Matchup</button>
+      <button class="page-tab" onclick="setTab(this,'standings')">Standings</button>
+    </div>
+
+    <!-- MATCHUP TAB -->
+    <div id="matchup-panel">
+      <div class="week-nav">
+        <div>
+          <div class="week-label" id="week-label">Week 1</div>
+          <div class="week-sub" id="week-sub"></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="week-btn" id="prev-btn" onclick="changeWeek(-1)">← Prev</button>
+          <button class="week-btn" id="next-btn" onclick="changeWeek(1)">Next →</button>
+        </div>
+      </div>
+      <div id="matchup-content"><div class="empty">Loading...</div></div>
+    </div>
+
+    <!-- STANDINGS TAB -->
+    <div id="standings-panel" style="display:none">
+      <div class="standings-table">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th style="text-align:right">W</th>
+              <th style="text-align:right">L</th>
+              <th style="text-align:right">T</th>
+              <th id="pts-for-header" style="text-align:right">Pts For</th>
+              <th style="text-align:right">Pts Agnst</th>
+            </tr>
+          </thead>
+          <tbody id="standings-body"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div>
+    <div class="sb-card">
+      <div class="sb-title">League Info</div>
+      <div id="league-info"></div>
+    </div>
+    <div class="sb-card" id="other-matchups-card" style="display:none">
+      <div class="sb-title">Other Matchups</div>
+      <div id="other-matchups"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API  = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const urlP = new URLSearchParams(window.location.search);
+
+let myCode   = urlP.get('code')?.toUpperCase() || '';
+let myTeam   = urlP.get('team') || '';
+let roomInfo = null;
+let pageTab  = 'matchup';
+let curWeek  = 1;
+let totalWeeks = 1;
+let fmt      = 'points';
+
+if (myCode) document.getElementById('inp-code').value = myCode;
+if (myTeam) document.getElementById('inp-team').value = myTeam;
+
+// Update waivers link
+document.getElementById('waivers-link').href =
+  myCode && myTeam ? `waivers.html?code=${myCode}&team=${encodeURIComponent(myTeam)}` : 'waivers.html';
+
+async function connect() {
+  myCode = document.getElementById('inp-code').value.trim().toUpperCase();
+  myTeam = document.getElementById('inp-team').value.trim();
+  if (!myCode || myCode.length < 5) {
+    document.getElementById('conn-err').textContent = 'Enter a 5-letter room code.'; return;
+  }
+  document.getElementById('conn-err').textContent = '';
+  await loadAll();
+}
+
+async function loadAll() {
+  try {
+    // Load room info
+    const infoRes = await fetch(`${API}/room/${myCode}/info`);
+    if (!infoRes.ok) { document.getElementById('conn-err').textContent = 'Room not found.'; return; }
+    roomInfo  = await infoRes.json();
+    fmt       = roomInfo.format || 'points';
+    curWeek   = roomInfo.current_week || 1;
+
+    document.getElementById('connect-wrap').style.display = 'none';
+    document.getElementById('main').style.display = 'grid';
+    document.getElementById('waivers-link').href =
+      `waivers.html?code=${myCode}&team=${encodeURIComponent(myTeam)}`;
+
+    renderLeagueInfo();
+    await loadMatchup();
+    await loadStandings();
+  } catch(e) {
+    document.getElementById('conn-err').textContent = 'Failed to connect: ' + e.message;
+  }
+}
+
+function setTab(btn, tab) {
+  pageTab = tab;
+  document.querySelectorAll('.page-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('matchup-panel').style.display  = tab==='matchup'   ? 'block' : 'none';
+  document.getElementById('standings-panel').style.display = tab==='standings' ? 'block' : 'none';
+}
+
+async function changeWeek(delta) {
+  curWeek = Math.max(1, Math.min(totalWeeks, curWeek + delta));
+  await loadMatchup();
+}
+
+async function loadMatchup() {
+  document.getElementById('matchup-content').innerHTML = '<div class="empty">Loading...</div>';
+  try {
+    const res  = await fetch(`${API}/room/${myCode}/matchup?week=${curWeek}`);
+    const data = await res.json();
+    totalWeeks = data.total_weeks || 1;
+    fmt        = data.format || 'points';
+    curWeek    = data.week || curWeek;
+
+    document.getElementById('week-label').textContent = `Week ${curWeek}`;
+    document.getElementById('week-sub').textContent   =
+      curWeek < (roomInfo?.current_week||1) ? 'Completed' :
+      curWeek === (roomInfo?.current_week||1) ? 'Current week' : 'Upcoming';
+    document.getElementById('prev-btn').disabled = curWeek <= 1;
+    document.getElementById('next-btn').disabled = curWeek >= totalWeeks;
+
+    renderMatchups(data.matchups || [], fmt);
+  } catch(e) {
+    document.getElementById('matchup-content').innerHTML = `<div class="empty">Failed to load matchup</div>`;
+  }
+}
+
+async function loadStandings() {
+  try {
+    const res  = await fetch(`${API}/room/${myCode}/standings`);
+    const data = await res.json();
+    renderStandings(data.standings || [], data.format || 'points');
+  } catch(e) {}
+}
+
+// ── RENDER MATCHUP ──────────────────────────────────────────────────────────
+function renderMatchups(matchups, format) {
+  if (!matchups.length) {
+    document.getElementById('matchup-content').innerHTML =
+      '<div class="empty">No matchups this week</div>';
+    document.getElementById('other-matchups-card').style.display = 'none';
+    return;
+  }
+
+  // Find my matchup
+  const myMatchup = matchups.find(m =>
+    m.home.name === myTeam || m.away.name === myTeam
+  );
+  const otherMatchups = matchups.filter(m => m !== myMatchup);
+
+  let html = '';
+
+  if (myMatchup) {
+    html += renderOneMatchup(myMatchup, format, true);
+  }
+
+  document.getElementById('matchup-content').innerHTML =
+    html || '<div class="empty">You are not in a matchup this week</div>';
+
+  // Other matchups in sidebar
+  if (otherMatchups.length) {
+    document.getElementById('other-matchups-card').style.display = 'block';
+    document.getElementById('other-matchups').innerHTML = otherMatchups.map(m => {
+      if (format === 'points') {
+        const hs = m.home.score.toFixed(1), as_ = m.away.score.toFixed(1);
+        const hwin = parseFloat(hs) >= parseFloat(as_);
+        return `<div class="other-matchup">
+          <span class="om-team" style="${hwin?'font-weight:700':''}">${m.home.name}</span>
+          <span class="om-score">${hs}</span>
+          <span class="om-vs">vs</span>
+          <span class="om-score">${as_}</span>
+          <span class="om-team" style="text-align:right;${!hwin?'font-weight:700':''}">${m.away.name}</span>
+        </div>`;
+      } else {
+        const hw = m.home.wins, aw = m.away.wins;
+        return `<div class="other-matchup">
+          <span class="om-team" style="${hw>aw?'font-weight:700':''}">${m.home.name}</span>
+          <span class="om-score">${hw}-${aw}</span>
+          <span class="om-vs">cats</span>
+          <span class="om-team" style="text-align:right;${aw>hw?'font-weight:700':''}">${m.away.name}</span>
+        </div>`;
+      }
+    }).join('');
+  } else {
+    document.getElementById('other-matchups-card').style.display = 'none';
+  }
+}
+
+function renderOneMatchup(m, format, isMe) {
+  const iAmHome = m.home.name === myTeam;
+  const iAmAway = m.away.name === myTeam;
+  const CAT_LABELS = {
+    pts:'PTS', reb:'REB', ast:'AST', stl:'STL', blk:'BLK',
+    fg3m:'3PM', fg_pct:'FG%', ft_pct:'FT%', tov:'TO'
+  };
+
+  if (format === 'points') {
+    const homeWin = m.home.score >= m.away.score;
+    const homeScore = m.home.score.toFixed(1);
+    const awayScore = m.away.score.toFixed(1);
+    const tot = m.home.totals;
+    const atot = m.away.totals;
+    const cats = ['pts','reb','ast','stl','blk','fg3m','fg_pct','ft_pct','tov'];
+
+    return `
+    <div class="matchup-card">
+      <div class="matchup-header">
+        <div class="team-side">
+          <div class="team-name-h">${m.home.name}${iAmHome?'<span class="team-you-tag">YOU</span>':''}</div>
+          <div class="team-score ${homeWin?'winning':'losing'}">${homeScore}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">pts</div>
+        </div>
+        <div class="vs-block">
+          <div class="vs-text">VS</div>
+          <div class="winner-label ${m.winner}">
+            ${m.winner==='home'?m.home.name+' leads':m.winner==='away'?m.away.name+' leads':'Tied'}
+          </div>
+        </div>
+        <div class="team-side right">
+          <div class="team-name-h">${iAmAway?'<span class="team-you-tag">YOU</span>':''}${m.away.name}</div>
+          <div class="team-score ${!homeWin?'winning':'losing'}">${awayScore}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">pts</div>
+        </div>
+      </div>
+      <div class="totals-header">
+        ${cats.map(c => `<div class="tot-label">${CAT_LABELS[c]}</div>`).join('')}
+      </div>
+      <div class="totals-row" style="border-bottom:1px solid var(--border);background:${iAmHome?'var(--green-light)':''}">
+        ${cats.map(c => {
+          const hv = tot[c]||0, av = atot[c]||0;
+          const hwin = c==='tov' ? hv<=av : hv>=av;
+          const disp = c.includes('pct') ? (hv*100).toFixed(1)+'%' : hv.toFixed(1);
+          return `<div class="tot-cell ${hwin?'winner-cell':'loser-cell'}">${disp}</div>`;
+        }).join('')}
+      </div>
+      <div class="totals-row" style="background:${iAmAway?'var(--green-light)':''}">
+        ${cats.map(c => {
+          const hv = tot[c]||0, av = atot[c]||0;
+          const awin = c==='tov' ? av<=hv : av>=hv;
+          const disp = c.includes('pct') ? ((av||0)*100).toFixed(1)+'%' : (av||0).toFixed(1);
+          return `<div class="tot-cell ${awin?'winner-cell':'loser-cell'}">${disp}</div>`;
+        }).join('')}
+      </div>
+      ${renderRosters(m, iAmHome, iAmAway)}
+    </div>`;
+  } else {
+    // Categories format
+    const cats = Object.entries(m.categories||{});
+    return `
+    <div class="matchup-card">
+      <div class="matchup-header">
+        <div class="team-side">
+          <div class="team-name-h">${m.home.name}${iAmHome?'<span class="team-you-tag">YOU</span>':''}</div>
+          <div class="team-score ${m.winner==='home'?'winning':'losing'}">${m.home.wins}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">categories won</div>
+        </div>
+        <div class="vs-block">
+          <div class="vs-text">VS</div>
+          <div class="winner-label ${m.winner}">
+            ${m.winner==='home'?m.home.name+' leads':m.winner==='away'?m.away.name+' leads':'Tied'}
+          </div>
+        </div>
+        <div class="team-side right">
+          <div class="team-name-h">${iAmAway?'<span class="team-you-tag">YOU</span>':''}${m.away.name}</div>
+          <div class="team-score ${m.winner==='away'?'winning':'losing'}">${m.away.wins}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">categories won</div>
+        </div>
+      </div>
+      <div class="score-banner">
+        <span>${m.home.name}: ${m.home.wins} wins</span>
+        <span style="color:var(--muted);font-size:11px">${m.ties} tie${m.ties!==1?'s':''}</span>
+        <span>${m.away.name}: ${m.away.wins} wins</span>
+      </div>
+      <table class="cats-table">
+        <thead><tr>
+          <th>Category</th>
+          <th>${m.home.name}${iAmHome?' (YOU)':''}</th>
+          <th>Result</th>
+          <th>${m.away.name}${iAmAway?' (YOU)':''}</th>
+        </tr></thead>
+        <tbody>
+          ${cats.map(([cat, res]) => {
+            const label = CAT_LABELS[cat] || cat.toUpperCase();
+            const hv = res.home, av = res.away;
+            const fmt_val = v => cat.includes('pct') ? (v*100).toFixed(1)+'%' : v.toFixed ? v.toFixed(1) : v;
+            const hw = res.winner==='home', aw = res.winner==='away', tw = res.winner==='tie';
+            return `<tr>
+              <td>${label}</td>
+              <td class="${hw?'cat-win':tw?'cat-tie':'cat-lose'}">${fmt_val(hv)}</td>
+              <td style="font-size:11px">
+                ${hw?`<span class="cat-badge w">HOME ✓</span>`:aw?`<span class="cat-badge l">AWAY ✓</span>`:`<span class="cat-badge t">TIE</span>`}
+              </td>
+              <td class="${aw?'cat-win':tw?'cat-tie':'cat-lose'}">${fmt_val(av)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      ${renderRosters(m, iAmHome, iAmAway)}
+    </div>`;
+  }
+}
+
+function renderRosters(m, iAmHome, iAmAway) {
+  const homeRoster = m.home.roster || [];
+  const awayRoster = m.away.roster || [];
+  if (!homeRoster.length && !awayRoster.length) return '';
+  return `
+  <div class="roster-section">
+    <div class="roster-title">Rosters</div>
+    <div class="roster-grid">
+      <div class="roster-col">
+        <div class="roster-col-title">${m.home.name}${iAmHome?' (YOU)':''}</div>
+        ${homeRoster.map(p => `
+          <div class="player-item">
+            <span class="pi-name">${p.name}</span>
+            <span class="pi-proj">${p.proj_dk?.toFixed(1)||'—'}</span>
+          </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players drafted</div>'}
+      </div>
+      <div class="roster-col">
+        <div class="roster-col-title">${m.away.name}${iAmAway?' (YOU)':''}</div>
+        ${awayRoster.map(p => `
+          <div class="player-item">
+            <span class="pi-name">${p.name}</span>
+            <span class="pi-proj">${p.proj_dk?.toFixed(1)||'—'}</span>
+          </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players drafted</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER STANDINGS ────────────────────────────────────────────────────────
+function renderStandings(standings, format) {
+  const isCats = format === 'categories';
+  // Update header
+  document.getElementById('pts-for-header').textContent = isCats ? 'Cats Won' : 'Pts For';
+
+  document.getElementById('standings-body').innerHTML = standings.map(t => {
+    const isMe = t.name === myTeam;
+    const ptsFor = isCats ? (t.cats_won||0) : t.pts_for.toFixed(1);
+    const ptsAg  = isCats ? (t.cats_lost||0) : t.pts_against.toFixed(1);
+    return `<tr class="${isMe?'you-row':''}">
+      <td>${t.rank}</td>
+      <td>${t.name}${isMe?' <span style="font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700">YOU</span>':''}</td>
+      <td class="td-green">${t.wins}</td>
+      <td class="td-m">${t.losses}</td>
+      <td class="td-m">${t.ties}</td>
+      <td>${ptsFor}</td>
+      <td class="td-m">${ptsAg}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">No standings yet</td></tr>';
+}
+
+// ── LEAGUE INFO SIDEBAR ──────────────────────────────────────────────────────
+function renderLeagueInfo() {
+  if (!roomInfo) return;
+  const fmtLabel = roomInfo.format==='categories'?'🏆 Categories (9-cat)':'📊 Points (Yahoo)';
+  const lgLabel  = roomInfo.league==='el'?'🌍 Euroleague':'🏀 NBA';
+  document.getElementById('league-info').innerHTML = [
+    ['Room code', roomInfo.code],
+    ['League',    lgLabel],
+    ['Format',    fmtLabel],
+    ['Teams',     roomInfo.teams.length],
+    ['Status',    roomInfo.status],
+    ['Week',      `${roomInfo.current_week || 1}`],
+  ].map(([k,v]) => `
+    <div class="league-info-row"><span style="color:var(--muted)">${k}</span><span>${v}</span></div>
+  `).join('');
+}
+
+// Auto-connect if URL params present
+if (myCode && myTeam) {
+  window.addEventListener('load', () => setTimeout(connect, 200));
+}
+</script>
+</body>
+</html>
