@@ -138,14 +138,14 @@
     @media(max-width:700px){.draft-body{grid-template-columns:1fr 180px}.teams-panel{display:none}}
     @media(max-width:480px){.draft-body{grid-template-columns:1fr}.sidebar{display:none}.teams-panel{display:none}}
   </style>
+  <link rel="stylesheet" href="player-panel.css">
+  <script src="player-panel.js" defer></script>
+  <script src="nav.js" defer></script>
 </head>
 <body>
 
 <!-- NAV -->
-<div class="nav">
-  <div class="nav-inner">
-    <div class="logo">Hoop<span>IQ</span></div>
-    <div style="font-size:11px;color:var(--muted)" id="nav-label"></div>
+<div style="font-size:11px;color:var(--muted)" id="nav-label"></div>
   </div>
 </div>
 
@@ -499,7 +499,7 @@ function renderPool() {
     return `<tr class="${isDrafted?'drafted':canPick?'can-pick':''}"
                 ${canPick&&!isDrafted?`onclick="draftPlayer('${p.id}')"`:''}">
       <td>
-        <div class="pname"><span class="pos-b">${p.pos||'—'}</span>${p.name}</div>
+        <div class="pname"><span class="pos-b">${p.pos||'—'}</span><span class="pp-trigger" data-player="${p.name}" data-league="${p.league.toLowerCase()}">${p.name}</span></div>
         <div class="pmeta">${p.league}·${p.team}·vs ${p.opp}</div>
       </td>
       <td class="td-r">#${p.proj_rank??'—'}</td>

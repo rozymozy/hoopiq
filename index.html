@@ -86,13 +86,13 @@
       .stats-grid, .detail-row { grid-template-columns: repeat(4, 1fr); gap: 4px; }
     }
   </style>
+  <link rel="stylesheet" href="player-panel.css">
+  <script src="player-panel.js" defer></script>
+  <script src="nav.js" defer></script>
 </head>
 <body>
 
-<div class="nav">
-  <div class="nav-inner">
-    <div class="logo">Hoop<span>IQ</span></div>
-    <div class="league-toggle">
+<div class="league-toggle">
       <button class="league-btn nba active" onclick="switchLeague('nba', this)">NBA</button>
       <button class="league-btn el" onclick="switchLeague('el', this)">Euroleague</button>
     </div>
@@ -179,7 +179,7 @@ function renderPlayers(players) {
         <div class="card-left">
           <div class="rank">#${i+1}</div>
           <div style="min-width:0">
-            <div class="player-name">${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span></div>
+            <div class="player-name pp-trigger" data-player="${p.name}" data-league="${isEL?'el':'nba'}">${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span></div>
             <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min_avg ?? '—'} min</div>
             <div class="trend ${trendClass}">${trendText}</div>
           </div>

@@ -134,13 +134,13 @@
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .empty{text-align:center;padding:36px;color:var(--muted);font-size:13px}
   </style>
+  <link rel="stylesheet" href="player-panel.css">
+  <script src="player-panel.js" defer></script>
+  <script src="nav.js" defer></script>
 </head>
 <body>
 
-<div class="nav">
-  <div class="nav-inner">
-    <div class="logo">Hoop<span>IQ</span></div>
-    <div class="nav-links">
+<div class="nav-links">
       <div class="faab-pill" id="faab-pill">💰 $— FAAB</div>
       <a class="nav-link" href="index.html">Projections</a>
       <a class="nav-link" href="lobby.html">Draft</a>
@@ -440,7 +440,7 @@ function render() {
       : `<div class="act"><button class="add-btn fa" onclick="openModal('fa','${p.id}')">+ Add</button></div>`;
     return `<tr>
       <td>
-        <div class="p-name"><span class="pos-badge">${p.pos||'—'}</span>${p.name}${sbadge}</div>
+        <div class="p-name"><span class="pos-badge">${p.pos||'—'}</span><span class="pp-trigger" data-player="${p.name}" data-league="${p.league.toLowerCase()}">${p.name}</span>${sbadge}</div>
         <div class="p-meta">${p.league} · ${p.team} · vs ${p.opp}</div>
       </td>
       <td class="td-rank">#${p.proj_rank??'—'}</td>
@@ -470,7 +470,7 @@ function renderRoster() {
   if (!list.length) { tbody.innerHTML = `<tr><td colspan="15" class="empty">Your roster is empty</td></tr>`; return; }
   tbody.innerHTML = list.map(p => `<tr>
     <td>
-      <div class="p-name"><span class="pos-badge">${p.pos||'—'}</span>${p.name}</div>
+      <div class="p-name"><span class="pos-badge">${p.pos||'—'}</span><span class="pp-trigger" data-player="${p.name}" data-league="${p.league.toLowerCase()}">${p.name}</span></div>
       <div class="p-meta">${p.league} · ${p.team}</div>
     </td>
     <td class="td-rank">#${p.proj_rank??'—'}</td>

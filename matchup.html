@@ -131,13 +131,13 @@
 
     .empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
   </style>
+  <link rel="stylesheet" href="player-panel.css">
+  <script src="player-panel.js" defer></script>
+  <script src="nav.js" defer></script>
 </head>
 <body>
 
-<div class="nav">
-  <div class="nav-inner">
-    <div class="logo">Hoop<span>IQ</span></div>
-    <div class="nav-links">
+<div class="nav-links">
       <a class="nav-link" href="waivers.html" id="waivers-link">Waivers</a>
       <a class="nav-link" href="index.html">Projections</a>
     </div>
@@ -490,7 +490,7 @@ function renderRosters(m, iAmHome, iAmAway) {
         <div class="roster-col-title">${m.home.name}${iAmHome?' (YOU)':''}</div>
         ${homeRoster.map(p => `
           <div class="player-item">
-            <span class="pi-name">${p.name}</span>
+            <span class="pi-name pp-trigger" data-player="${p.name}" data-league="${p.league?.toLowerCase()||'nba'}">${p.name}</span>
             <span class="pi-proj">${p.proj_dk?.toFixed(1)||'—'}</span>
           </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players drafted</div>'}
       </div>
@@ -498,7 +498,7 @@ function renderRosters(m, iAmHome, iAmAway) {
         <div class="roster-col-title">${m.away.name}${iAmAway?' (YOU)':''}</div>
         ${awayRoster.map(p => `
           <div class="player-item">
-            <span class="pi-name">${p.name}</span>
+            <span class="pi-name pp-trigger" data-player="${p.name}" data-league="${p.league?.toLowerCase()||'nba'}">${p.name}</span>
             <span class="pi-proj">${p.proj_dk?.toFixed(1)||'—'}</span>
           </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players drafted</div>'}
       </div>
