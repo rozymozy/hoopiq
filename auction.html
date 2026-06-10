@@ -240,6 +240,25 @@ let expandedTeams = new Set();
 
 const ASC_COLS = new Set(['proj_rank','league_rank','tov']);
 
+const ROSTER_SLOTS = {
+  6:  ['PG','SG','SF','PF','C','UTIL'],
+  8:  ['PG','SG','G','SF','PF','F','C','C'],
+  10: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL'],
+  13: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN'],
+  15: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN','BN','BN'],
+};
+function getSlots(rounds) {
+  const defined = Object.keys(ROSTER_SLOTS).map(Number).sort((a,b)=>a-b);
+  let best = defined[0];
+  for (const r of defined) { if (r <= rounds) best = r; }
+  return ROSTER_SLOTS[best];
+}
+const SLOT_COLORS = {
+  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
+  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
+};
+
 // ── SOCKET ──────────────────────────────────────────────────────────────────
 const socket = io(API, {transports:['polling','websocket']});
 
@@ -256,10 +275,20 @@ socket.on('joined_ok', d => {
     window.location.href = `draft.html${window.location.search}`;
     return;
   }
+  // Save to localStorage
+  localStorage.setItem('hoopiq_league', JSON.stringify({
+    code: CODE, team: MY_TEAM, manager: MY_MANAGER
+  }));
   draftedIds = new Set((room.log||[]).map(e => e.player.id));
   myRoster   = (room.log||[]).filter(e => e.team === MY_TEAM).map(e => e.player);
   updateBanner();
   socket.emit('get_auction_state', {code: CODE});
+});
+
+// Handle case where draft hasn't started yet — show waiting state
+socket.on('countdown', d => {
+  document.getElementById('ab-status').textContent = `Draft starting in ${d.seconds}s...`;
+  document.getElementById('auction-banner').className = 'auction-banner nominating';
 });
 
 socket.on('draft_started', d => {
@@ -290,6 +319,8 @@ fetch(`${API}/draft/pool?league=${LEAGUE}`)
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 function applyState(state) {
+  if (!state) return;
+  state._local_snap = Date.now() / 1000;
   auctionState = state;
   draftedIds   = new Set((state.log||[]).map(e => e.player.id));
   myRoster     = (state.log||[]).filter(e => e.team === MY_TEAM).map(e => e.player);
@@ -320,7 +351,8 @@ function myMaxBid() {
 
 function isMyNomTurn() {
   if (!auctionState) return false;
-  return auctionState.nom_sid === mySid;
+  // Match by SID or by team name as fallback (SID can mismatch on reconnect)
+  return auctionState.nom_sid === mySid || auctionState.nom_team === MY_TEAM;
 }
 
 // ── BANNER ─────────────────────────────────────────────────────────────────
@@ -374,7 +406,7 @@ function renderAuctionCentre() {
       </div>`;
   } else if (auctionState.status === 'bidding') {
     const nom  = auctionState.nomination;
-    const isWinning = auctionState.high_sid === mySid;
+    const isWinning = auctionState.high_sid === mySid || auctionState.high_team === MY_TEAM;
     const maxB = myMaxBid();
     const canBid = !isWinning && maxB > auctionState.high_bid;
     clearInterval(timerInterval);
@@ -443,13 +475,6 @@ function startTimerDisplay() {
   }, 200);
 }
 
-// Set local snap time when state arrives
-const _origApply = applyState;
-function applyState(state) {
-  if (state) state._local_snap = Date.now()/1000;
-  _origApply(state);
-}
-
 // ── BID ACTIONS ────────────────────────────────────────────────────────────
 function submitBid() {
   const input = document.getElementById('bid-input');
@@ -463,7 +488,12 @@ function quickBid(amount) {
 }
 
 function nominatePlayer(playerId) {
-  if (!isMyNomTurn()) return;
+  // Allow nomination if it's our SID turn OR our team name turn (SID can mismatch on reconnect)
+  const myTurn = auctionState && (
+    auctionState.nom_sid === mySid ||
+    auctionState.nom_team === MY_TEAM
+  );
+  if (!myTurn) { showToast("It's not your turn to nominate"); return; }
   socket.emit('nominate_player', {code: CODE, player_id: playerId});
 }
 
@@ -567,13 +597,19 @@ function renderTeams() {
         </div>
         <div class="team-picks${isOpen?'':' hidden'}">
           ${(t.roster||[]).length
-            ? (t.roster||[]).map((p,i) => {
-                const entry = (auctionState.log||[]).find(e=>e.team===t.name && e.player.id===p.id);
-                return `<div class="tp-row">
-                  <div class="tp-name">${p.name}</div>
-                  <div class="tp-price">$${entry?.price??'?'}</div>
-                </div>`;
-              }).join('')
+            ? (() => {
+                const slots = getSlots(ROUNDS);
+                return slots.map((slot,i) => {
+                  const p = t.roster[i];
+                  const entry = p ? (auctionState.log||[]).find(e=>e.team===t.name && e.player.id===p.id) : null;
+                  const color = SLOT_COLORS[slot]||'#374151';
+                  return `<div class="tp-row">
+                    <span style="font-size:8px;font-weight:800;color:${color};min-width:28px">${slot}</span>
+                    ${p ? `<div class="tp-name">${p.name}</div><div class="tp-price">$${entry?.price??'?'}</div>`
+                        : `<span class="tp-empty">empty</span>`}
+                  </div>`;
+                }).join('');
+              })()
             : `<div class="tp-row"><span class="tp-empty">No picks yet</span></div>`}
         </div>
       </div>`;
@@ -602,12 +638,17 @@ function renderLog() {
 function showComplete() {
   clearInterval(timerInterval);
   document.getElementById('complete-overlay').classList.add('show');
+  const slots = getSlots(ROUNDS);
   document.getElementById('complete-roster').innerHTML = myRoster.length
-    ? myRoster.map(p => {
-        const entry = auctionState?.log?.find(e=>e.team===MY_TEAM&&e.player.id===p.id);
+    ? slots.map((slot,i) => {
+        const p = myRoster[i];
+        const entry = p ? auctionState?.log?.find(e=>e.team===MY_TEAM&&e.player.id===p.id) : null;
+        const color = SLOT_COLORS[slot]||'#374151';
         return `<div class="cr-row">
-          <span class="cr-name">${p.name} <span style="font-size:10px;color:var(--muted)">${p.team}</span></span>
-          <span class="cr-price">$${entry?.price??'?'}</span>
+          <span style="font-size:9px;font-weight:800;color:${color};min-width:32px">${slot}</span>
+          ${p ? `<span class="cr-name">${p.name} <span style="font-size:10px;color:var(--muted)">${p.team}</span></span>
+                 <span class="cr-price">$${entry?.price??'?'}</span>`
+              : `<span style="color:var(--muted);font-size:11px;font-style:italic">empty</span>`}
         </div>`;
       }).join('')
     : '<div class="cr-row" style="color:var(--muted)">No players drafted</div>';
