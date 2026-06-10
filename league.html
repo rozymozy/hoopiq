@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoopIQ — My League</title>
+  <link rel="stylesheet" href="player-panel.css?v=2">
+  <script src="player-panel.js?v=2" defer></script>
+  <script src="nav.js?v=2" defer></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --green:#1D9E75;--green-light:#E1F5EE;
+      --orange:#D85A30;--orange-light:#FAECE7;
+      --purple:#7C3AED;--purple-light:#EDE9FE;
+      --gold:#F59E0B;--gold-light:#FEF3C7;
+      --bg:#f4f4f6;--border:#e8e8ec;
+      --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* CONNECT */
+    .connect-wrap{max-width:480px;margin:40px auto;padding:0 16px}
+    .connect-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:28px}
+    .connect-logo{font-size:24px;font-weight:700;margin-bottom:4px}.connect-logo span{color:var(--green)}
+    .connect-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+    .connect-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;margin-top:14px;display:block}
+    .connect-label:first-of-type{margin-top:0}
+    .connect-input{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;outline:none;background:#fff;color:var(--text)}
+    .connect-input:focus{border-color:var(--green)}
+    .connect-btn{width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:18px}
+    .connect-btn:hover{opacity:.9}
+    .connect-err{font-size:12px;color:var(--orange);margin-top:8px;min-height:16px}
+    .connect-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--subtle);font-size:12px}
+    .connect-divider::before,.connect-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .connect-new-btn{width:100%;padding:10px;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+    .connect-new-btn:hover{background:var(--bg)}
+
+    /* LEAGUE HUB */
+    .hub{display:none;max-width:900px;margin:0 auto;padding:16px}
+    .hub.show{display:block}
+    .hub-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+    .hub-title{font-size:20px;font-weight:700}
+    .hub-code{font-size:12px;color:var(--muted);background:var(--bg);padding:4px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-family:monospace;font-weight:700;letter-spacing:2px}
+    .hub-code:hover{background:var(--green-light);color:var(--green)}
+    .hub-you{font-size:12px;color:var(--muted)}
+    .hub-you span{font-weight:600;color:var(--text)}
+
+    /* TABS */
+    .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{font-size:14px;font-weight:600;padding:10px 20px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
+    .tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+    /* STANDINGS */
+    .standings-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+    .standings-card table{width:100%;border-collapse:collapse}
+    .standings-card th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:9px 14px;text-align:right;background:var(--bg);border-bottom:2px solid var(--border)}
+    .standings-card th:first-child,.standings-card th:nth-child(2){text-align:left}
+    .standings-card td{font-size:13px;padding:10px 14px;text-align:right;border-bottom:1px solid var(--border)}
+    .standings-card td:first-child{text-align:left;font-size:11px;font-weight:700;color:var(--subtle)}
+    .standings-card td:nth-child(2){text-align:left;font-weight:600}
+    .standings-card tr:last-child td{border-bottom:none}
+    .standings-card tr:hover td{background:#f9fafb}
+    .you-row td{background:var(--green-light)!important}
+    .you-badge{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:5px;vertical-align:middle}
+    .td-g{color:var(--green);font-weight:700}
+    .td-m{color:var(--muted)}
+    .budget-badge{font-size:11px;font-weight:700;color:var(--purple);margin-left:6px}
+
+    /* PLAYERS TAB */
+    .players-filters{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+    .pf-search{flex:1;min-width:150px;padding:7px 10px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:#fff;outline:none}
+    .pf-search:focus{border-color:var(--green)}
+    .pf-sel{padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:7px;background:#fff;cursor:pointer;outline:none}
+    .pos-btns{display:flex;gap:4px;flex-wrap:wrap}
+    .pos-btn{padding:4px 10px;font-size:11px;font-weight:700;border-radius:6px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer}
+    .pos-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+    .players-tbl-wrap{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden;overflow-x:auto}
+    table.ptbl{width:100%;border-collapse:collapse;min-width:700px}
+    table.ptbl thead tr{background:var(--bg);border-bottom:2px solid var(--border)}
+    table.ptbl th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:right;white-space:nowrap;cursor:pointer;user-select:none}
+    table.ptbl th:first-child{text-align:left;cursor:default}
+    table.ptbl th.sorted{color:var(--green)}
+    table.ptbl th:not(:first-child):hover{color:var(--text)}
+    table.ptbl tbody tr{border-bottom:1px solid var(--border)}
+    table.ptbl tbody tr:last-child{border-bottom:none}
+    table.ptbl tbody tr:hover{background:#f9fafb}
+    table.ptbl td{font-size:12px;padding:8px 10px;text-align:right;white-space:nowrap}
+    table.ptbl td:first-child{text-align:left}
+    .pl-name{font-size:13px;font-weight:600}
+    .pl-meta{font-size:10px;color:var(--muted);margin-top:1px}
+    .pl-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;margin-left:4px;vertical-align:middle}
+    .pl-badge.owned{background:var(--orange-light);color:var(--orange)}
+    .pl-badge.you{background:var(--green-light);color:#0F6E56}
+    .pos-b{display:inline-block;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;background:#f0f0f0;color:var(--muted);margin-right:3px}
+
+    /* DRAFT TAB */
+    .draft-info-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:20px;margin-bottom:12px}
+    .di-title{font-size:15px;font-weight:700;margin-bottom:12px}
+    .di-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .di-row:last-child{border-bottom:none}
+    .di-label{color:var(--muted);font-size:12px}
+    .di-val{font-weight:600}
+    .draft-status-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700}
+    .draft-status-pill.waiting{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+    .draft-status-pill.drafting{background:var(--green-light);color:#0F6E56}
+    .draft-status-pill.complete{background:#f0f0f0;color:var(--muted)}
+    .go-draft-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px}
+    .go-draft-btn:hover{opacity:.9}
+    .go-draft-btn.auction{background:var(--gold)}
+    .go-draft-btn:disabled{background:var(--subtle);cursor:default}
+    .team-order-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+    .to-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-radius:8px;font-size:13px}
+    .to-num{font-size:11px;font-weight:700;color:var(--subtle);min-width:20px}
+    .to-name{flex:1;font-weight:500}
+    .to-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 6px;border-radius:8px;font-weight:700}
+    .to-budget{font-size:12px;font-weight:700;color:var(--purple)}
+
+    /* SETTINGS TAB */
+    .settings-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:20px;margin-bottom:12px}
+    .settings-title{font-size:14px;font-weight:700;margin-bottom:14px}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .setting-row:last-child{border-bottom:none}
+    .setting-label{color:var(--muted);font-size:12px}
+    .setting-val{font-weight:600;color:var(--text)}
+    .slot-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+    .slot-chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff}
+
+    .empty{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+    .loading{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+
+<!-- CONNECT SCREEN -->
+<div id="connect-screen">
+  <div class="connect-wrap">
+    <div class="connect-card">
+      <div class="connect-logo">Hoop<span>IQ</span></div>
+      <div class="connect-sub">Enter your league code to join</div>
+      <span class="connect-label">League code</span>
+      <input class="connect-input" type="text" id="inp-code"
+             placeholder="e.g. ABCDE" maxlength="5"
+             style="letter-spacing:4px;font-weight:700;text-transform:uppercase;font-size:20px;text-align:center"
+             oninput="this.value=this.value.toUpperCase()">
+      <div id="inp-name-wrap" style="display:none">
+        <span class="connect-label" style="margin-top:14px">Your name</span>
+        <input class="connect-input" type="text" id="inp-manager" placeholder="e.g. Alex">
+        <span class="connect-label" style="margin-top:10px">Team name</span>
+        <input class="connect-input" type="text" id="inp-team" placeholder="e.g. Brooklyn Ballers">
+      </div>
+      <div class="connect-err" id="connect-err"></div>
+      <button class="connect-btn" onclick="tryConnect()">Enter League</button>
+      <div class="connect-divider">or</div>
+      <button class="connect-new-btn" onclick="window.location.href='lobby.html'">Create a new league</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEAGUE HUB -->
+<div class="hub" id="hub">
+  <div class="hub-header">
+    <div>
+      <div class="hub-title" id="hub-title">My League</div>
+      <div class="hub-you">Playing as <span id="hub-you-name">—</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="hub-code" id="hub-code" onclick="copyCode()" title="Click to copy">—</div>
+      <button onclick="signOut()" style="font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">Leave</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setTab(this,'standings')">🏆 Standings</button>
+    <button class="tab" onclick="setTab(this,'players')">📊 Players</button>
+    <button class="tab" onclick="setTab(this,'draft')">🏀 Draft</button>
+    <button class="tab" onclick="setTab(this,'settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- STANDINGS -->
+  <div id="tab-standings">
+    <div class="standings-card" id="standings-table">
+      <div class="loading">Loading standings...</div>
+    </div>
+  </div>
+
+  <!-- PLAYERS -->
+  <div id="tab-players" style="display:none">
+    <div class="players-filters">
+      <input class="pf-search" type="text" id="pl-search" placeholder="Search players..." oninput="renderPlayers()">
+      <select class="pf-sel" id="pl-league" onchange="renderPlayers()">
+        <option value="all">All Leagues</option>
+        <option value="NBA">NBA</option>
+        <option value="EL">Euroleague</option>
+      </select>
+      <select class="pf-sel" id="pl-status" onchange="renderPlayers()">
+        <option value="all">All Players</option>
+        <option value="available">Available</option>
+        <option value="owned">Owned</option>
+        <option value="mine">My Team</option>
+      </select>
+      <div class="pos-btns">
+        <button class="pos-btn active" onclick="setPosFilter(this,'ALL')">ALL</button>
+        <button class="pos-btn" onclick="setPosFilter(this,'PG')">PG</button>
+        <button class="pos-btn" onclick="setPosFilter(this,'SG')">SG</button>
+        <button class="pos-btn" onclick="setPosFilter(this,'SF')">SF</button>
+        <button class="pos-btn" onclick="setPosFilter(this,'PF')">PF</button>
+        <button class="pos-btn" onclick="setPosFilter(this,'C')">C</button>
+      </div>
+    </div>
+    <div class="players-tbl-wrap">
+      <table class="ptbl">
+        <thead><tr>
+          <th style="cursor:default">Player</th>
+          <th id="th-proj_rank"   onclick="sortPlayers('proj_rank',true)"  >Rank <span id="arr-proj_rank"></span></th>
+          <th id="th-proj_dk"     onclick="sortPlayers('proj_dk')"          class="sorted">Proj DK <span id="arr-proj_dk">↓</span></th>
+          <th id="th-dk_avg"      onclick="sortPlayers('dk_avg')"           >DK Avg <span id="arr-dk_avg"></span></th>
+          <th id="th-pts"         onclick="sortPlayers('pts')"              >PTS <span id="arr-pts"></span></th>
+          <th id="th-reb"         onclick="sortPlayers('reb')"              >REB <span id="arr-reb"></span></th>
+          <th id="th-ast"         onclick="sortPlayers('ast')"              >AST <span id="arr-ast"></span></th>
+          <th id="th-stl"         onclick="sortPlayers('stl')"              >STL <span id="arr-stl"></span></th>
+          <th id="th-blk"         onclick="sortPlayers('blk')"              >BLK <span id="arr-blk"></span></th>
+          <th id="th-tov"         onclick="sortPlayers('tov',true)"         >TO <span id="arr-tov"></span></th>
+          <th id="th-fg3m"        onclick="sortPlayers('fg3m')"             >3PM <span id="arr-fg3m"></span></th>
+          <th id="th-fg_pct"      onclick="sortPlayers('fg_pct')"           >FG% <span id="arr-fg_pct"></span></th>
+          <th id="th-ft_pct"      onclick="sortPlayers('ft_pct')"           >FT% <span id="arr-ft_pct"></span></th>
+        </tr></thead>
+        <tbody id="players-body"><tr><td colspan="13" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DRAFT -->
+  <div id="tab-draft" style="display:none">
+    <div class="draft-info-card">
+      <div class="di-title">Draft Info</div>
+      <div id="draft-info-rows"><div class="loading">Loading...</div></div>
+      <button class="go-draft-btn" id="go-draft-btn" onclick="goToDraft()" style="display:none">Enter Draft Room</button>
+    </div>
+    <div class="draft-info-card" id="team-order-card" style="display:none">
+      <div class="di-title">Teams in this league</div>
+      <div class="team-order-list" id="team-order-list"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="tab-settings" style="display:none">
+    <div class="settings-card">
+      <div class="settings-title">League Settings</div>
+      <div id="settings-rows"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-title">Roster Slots</div>
+      <div class="slot-grid" id="slot-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:10px;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;pointer-events:none" id="toast"></div>
+
+<script>
+const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
+
+const ROSTER_SLOTS = {
+  6:  ['PG','SG','SF','PF','C','UTIL'],
+  8:  ['PG','SG','G','SF','PF','F','C','C'],
+  10: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL'],
+  13: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN'],
+  15: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN','BN','BN'],
+};
+const SLOT_COLORS = {
+  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',SF:'#D85A30',
+  PF:'#B45309',F:'#92400E',C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
+};
+function getSlots(rounds) {
+  const defined = Object.keys(ROSTER_SLOTS).map(Number).sort((a,b)=>a-b);
+  let best = defined[0];
+  for (const r of defined) { if (r <= rounds) best = r; }
+  return ROSTER_SLOTS[best];
+}
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let myCode    = '';
+let myTeam    = '';
+let myManager = '';
+let roomInfo  = null;
+let standings = null;
+let allPlayers= [];
+let rostered  = {};   // player_id -> team_name
+let activeTab = 'standings';
+let plSortKey = 'proj_dk';
+let plSortAsc = false;
+let posFilter = 'ALL';
+
+// Try to restore from localStorage + URL
+const urlP = new URLSearchParams(window.location.search);
+const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
+
+if (urlP.get('code')) myCode    = urlP.get('code').toUpperCase();
+if (urlP.get('team')) myTeam    = urlP.get('team');
+if (urlP.get('manager')) myManager = urlP.get('manager');
+if (!myCode && saved.code)    myCode    = saved.code;
+if (!myTeam && saved.team)    myTeam    = saved.team;
+if (!myManager && saved.manager) myManager = saved.manager;
+
+// Pre-fill inputs
+if (myCode)    document.getElementById('inp-code').value    = myCode;
+if (myTeam)    document.getElementById('inp-team').value    = myTeam;
+if (myManager) document.getElementById('inp-manager').value = myManager;
+
+// If we have code + team, try auto-connect
+if (myCode && myTeam) {
+  autoConnect();
+} else if (myCode) {
+  // Have code but no team — show name fields
+  document.getElementById('inp-name-wrap').style.display = 'block';
+}
+
+// Show name fields when code is complete
+document.getElementById('inp-code').addEventListener('input', function() {
+  document.getElementById('inp-name-wrap').style.display =
+    this.value.length === 5 && !myTeam ? 'block' : 'none';
+});
+
+async function tryConnect() {
+  const code    = document.getElementById('inp-code').value.trim().toUpperCase();
+  const manager = document.getElementById('inp-manager').value.trim() || myManager || 'Manager';
+  const team    = document.getElementById('inp-team').value.trim() || myTeam;
+
+  if (!code || code.length < 5) {
+    document.getElementById('connect-err').textContent = 'Enter a 5-letter league code.'; return;
+  }
+  if (!team) {
+    document.getElementById('inp-name-wrap').style.display = 'block';
+    document.getElementById('connect-err').textContent = 'Enter your team name.'; return;
+  }
+
+  myCode = code; myTeam = team; myManager = manager;
+  document.getElementById('connect-err').textContent = '';
+  await loadLeague();
+}
+
+async function autoConnect() {
+  await loadLeague();
+}
+
+async function loadLeague() {
+  try {
+    const [infoRes, standRes] = await Promise.all([
+      fetch(`${API}/room/${myCode}/info`),
+      fetch(`${API}/room/${myCode}/standings`),
+    ]);
+    if (!infoRes.ok) throw new Error('Room not found');
+    roomInfo  = await infoRes.json();
+    const sd  = await standRes.json();
+    standings = sd.standings || [];
+
+    // Build rostered map from standings teams
+    rostered = {};
+    for (const t of (roomInfo.teams||[])) {
+      for (const p of (t.roster||[])) {
+        rostered[p.id] = t.name;
+      }
+    }
+
+    // Save to localStorage
+    localStorage.setItem('hoopiq_league', JSON.stringify({
+      code: myCode, team: myTeam, manager: myManager
+    }));
+
+    // Update URL
+    const p = new URLSearchParams({code:myCode, team:myTeam, manager:myManager});
+    window.history.replaceState({}, '', `league.html?${p}`);
+
+    showHub();
+    await loadPlayers();
+  } catch(e) {
+    document.getElementById('connect-err').textContent = e.message || 'Could not load league';
+  }
+}
+
+async function loadPlayers() {
+  const league = roomInfo?.league || 'nba';
+  try {
+    const res  = await fetch(`${API}/draft/pool?league=${league}`);
+    allPlayers = await res.json();
+    if (activeTab === 'players') renderPlayers();
+  } catch(e) {}
+}
+
+// ── SHOW HUB ────────────────────────────────────────────────────────────────
+function showHub() {
+  document.getElementById('connect-screen').style.display = 'none';
+  document.getElementById('hub').classList.add('show');
+  const leagueLabel = roomInfo.league === 'el' ? 'Euroleague' : 'NBA';
+  document.getElementById('hub-title').textContent = `${leagueLabel} League · ${myCode}`;
+  document.getElementById('hub-you-name').textContent = `${myTeam} (${myManager})`;
+  document.getElementById('hub-code').textContent = myCode;
+  renderStandings();
+  renderDraft();
+  renderSettings();
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function setTab(btn, tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['standings','players','draft','settings'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'players' && allPlayers.length) renderPlayers();
+}
+
+// ── STANDINGS ────────────────────────────────────────────────────────────────
+function renderStandings() {
+  const fmt   = roomInfo?.format || 'points';
+  const isCat = fmt === 'categories';
+  const el    = document.getElementById('standings-table');
+
+  if (!standings?.length) {
+    el.innerHTML = '<div class="empty">No standings yet — draft hasn\'t started</div>';
+    return;
+  }
+
+  el.innerHTML = `<table>
+    <thead><tr>
+      <th>#</th><th>Team</th>
+      <th>W</th><th>L</th><th>T</th>
+      <th>${isCat ? 'Cats Won' : 'Pts For'}</th>
+      <th>${isCat ? 'Cats Lost' : 'Pts Agnst'}</th>
+    </tr></thead>
+    <tbody>
+      ${standings.map(t => {
+        const isMe   = t.name === myTeam;
+        const ptsFor = isCat ? (t.cats_won||0) : t.pts_for?.toFixed(1)||'0.0';
+        const ptsAg  = isCat ? (t.cats_lost||0) : t.pts_against?.toFixed(1)||'0.0';
+        const budLeft= t.auction_budget !== undefined
+          ? `<span class="budget-badge">$${(t.auction_budget||200)-(t.auction_spent||0)} left</span>` : '';
+        return `<tr class="${isMe?'you-row':''}">
+          <td>${t.rank}</td>
+          <td>${t.name}${isMe?'<span class="you-badge">YOU</span>':''}${budLeft}</td>
+          <td class="td-g">${t.wins}</td>
+          <td class="td-m">${t.losses}</td>
+          <td class="td-m">${t.ties}</td>
+          <td>${ptsFor}</td>
+          <td class="td-m">${ptsAg}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ── PLAYERS ──────────────────────────────────────────────────────────────────
+function setPosFilter(btn, pos) {
+  posFilter = pos;
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlayers();
+}
+
+function sortPlayers(key, defaultAsc) {
+  const ASC = new Set(['proj_rank','league_rank','tov']);
+  if (plSortKey === key) plSortAsc = !plSortAsc;
+  else { plSortKey = key; plSortAsc = defaultAsc ?? ASC.has(key); }
+  document.querySelectorAll('th[id^="th-"]').forEach(th => {
+    th.classList.remove('sorted');
+    const sp = document.getElementById(`arr-${th.id.slice(3)}`);
+    if (sp) sp.textContent = '';
+  });
+  const th  = document.getElementById(`th-${key}`);
+  const arr = document.getElementById(`arr-${key}`);
+  if (th) th.classList.add('sorted');
+  if (arr) arr.textContent = plSortAsc ? '↑' : '↓';
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const q       = document.getElementById('pl-search').value.toLowerCase();
+  const lgF     = document.getElementById('pl-league').value;
+  const stF     = document.getElementById('pl-status').value;
+
+  let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
+  if (lgF !== 'all')       list = list.filter(p => p.league === lgF);
+  if (posFilter !== 'ALL') list = list.filter(p => p.pos === posFilter);
+  if (stF === 'available') list = list.filter(p => !rostered[p.id]);
+  if (stF === 'owned')     list = list.filter(p =>  rostered[p.id]);
+  if (stF === 'mine')      list = list.filter(p =>  rostered[p.id] === myTeam);
+
+  list = [...list].sort((a,b) => {
+    const av = a[plSortKey]??0, bv = b[plSortKey]??0;
+    return plSortAsc ? av-bv : bv-av;
+  });
+
+  const tbody = document.getElementById('players-body');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="13" class="empty">No players found</td></tr>'; return; }
+
+  tbody.innerHTML = list.map(p => {
+    const owner   = rostered[p.id];
+    const isOwned = !!owner;
+    const isMe    = owner === myTeam;
+    return `<tr>
+      <td>
+        <div class="pl-name">
+          <span class="pos-b">${p.pos||'—'}</span>
+          <span class="pp-trigger" data-player="${p.name}" data-league="${p.league.toLowerCase()}"
+                onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${p.league.toLowerCase()}')">${p.name}</span>
+          ${isMe    ? '<span class="pl-badge you">MY TEAM</span>'  : ''}
+          ${isOwned && !isMe ? `<span class="pl-badge owned">${owner}</span>` : ''}
+        </div>
+        <div class="pl-meta">${p.league} · ${p.team} · vs ${p.opp}</div>
+      </td>
+      <td class="td-m" style="font-size:10px">#${p.proj_rank??'—'}</td>
+      <td style="color:var(--green);font-weight:700">${p.proj_dk.toFixed(1)}</td>
+      <td class="td-m">${p.dk_avg.toFixed(1)}</td>
+      <td>${p.pts.toFixed(1)}</td>
+      <td>${p.reb.toFixed(1)}</td>
+      <td>${p.ast.toFixed(1)}</td>
+      <td>${p.stl.toFixed(1)}</td>
+      <td>${p.blk.toFixed(1)}</td>
+      <td>${p.tov.toFixed(1)}</td>
+      <td>${p.fg3m.toFixed(1)}</td>
+      <td>${((p.fg_pct||0)*100).toFixed(1)}%</td>
+      <td>${((p.ft_pct||0)*100).toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── DRAFT TAB ────────────────────────────────────────────────────────────────
+function renderDraft() {
+  if (!roomInfo) return;
+  const status    = roomInfo.status;
+  const draftType = roomInfo.draft_type || 'snake';
+  const isAuction = draftType === 'auction';
+
+  const statusLabels = {
+    waiting:   { label:'Waiting for teams', cls:'waiting', icon:'⏳' },
+    countdown: { label:'Starting soon!',    cls:'drafting', icon:'🚀' },
+    drafting:  { label:'Draft in progress', cls:'drafting', icon:'🔴' },
+    complete:  { label:'Draft complete',    cls:'complete', icon:'✓'  },
+  };
+  const s = statusLabels[status] || statusLabels.waiting;
+
+  document.getElementById('draft-info-rows').innerHTML = `
+    <div class="di-row">
+      <div class="di-label">Status</div>
+      <div><span class="draft-status-pill ${s.cls}">${s.icon} ${s.label}</span></div>
+    </div>
+    <div class="di-row">
+      <div class="di-label">Draft type</div>
+      <div class="di-val">${isAuction ? '🔨 Auction ($200 budget)' : '🐍 Snake draft'}</div>
+    </div>
+    <div class="di-row">
+      <div class="di-label">League</div>
+      <div class="di-val">${roomInfo.league === 'el' ? '🌍 Euroleague' : '🏀 NBA'}</div>
+    </div>
+    <div class="di-row">
+      <div class="di-label">Rounds / Roster size</div>
+      <div class="di-val">${roomInfo.rounds} rounds</div>
+    </div>
+    <div class="di-row">
+      <div class="di-label">Teams</div>
+      <div class="di-val">${roomInfo.teams?.length || 0} / ${roomInfo.max_teams}</div>
+    </div>
+    ${isAuction ? `<div class="di-row">
+      <div class="di-label">Bid timer</div>
+      <div class="di-val">${roomInfo.bid_timer||30}s (resets to 10s on new bid)</div>
+    </div>` : ''}
+    ${status === 'waiting' ? `<div class="di-row">
+      <div class="di-label">How to join draft</div>
+      <div class="di-val" style="font-size:12px;color:var(--muted)">Go to <a href="lobby.html" style="color:var(--green)">lobby.html</a> and join with code <strong>${myCode}</strong></div>
+    </div>` : ''}
+  `;
+
+  // Show enter draft button for active/complete drafts
+  const btn = document.getElementById('go-draft-btn');
+  if (status === 'drafting' || status === 'complete') {
+    btn.style.display = 'block';
+    btn.textContent = status === 'complete' ? 'View Draft Results' : `Enter ${isAuction ? 'Auction' : 'Draft'} Room`;
+    btn.className = `go-draft-btn${isAuction?' auction':''}`;
+  } else {
+    btn.style.display = 'none';
+  }
+
+  // Team list
+  const teams = roomInfo.teams || [];
+  if (teams.length) {
+    document.getElementById('team-order-card').style.display = 'block';
+    document.getElementById('team-order-list').innerHTML = teams.map((t,i) => {
+      const isMe  = t.name === myTeam;
+      const budLeft = t.auction_budget !== undefined
+        ? `<span class="to-budget">$${(t.auction_budget||200)-(t.auction_spent||0)}</span>` : '';
+      return `<div class="to-row">
+        <div class="to-num">${i+1}</div>
+        <div class="to-name">${t.name} ${isMe?'<span class="to-you">YOU</span>':''}</div>
+        <div style="font-size:11px;color:var(--muted)">${t.manager||''}</div>
+        ${budLeft}
+        <div style="font-size:11px;color:var(--muted)">${t.roster_count||0}/${roomInfo.rounds} picks</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function goToDraft() {
+  if (!roomInfo) return;
+  const isAuction = roomInfo.draft_type === 'auction';
+  const p = new URLSearchParams({
+    code:       myCode,
+    team:       myTeam,
+    manager:    myManager,
+    league:     roomInfo.league,
+    rounds:     roomInfo.rounds,
+    format:     roomInfo.format || 'points',
+    draft_type: roomInfo.draft_type || 'snake',
+    bid_timer:  roomInfo.bid_timer || 30,
+  });
+  window.location.href = `${isAuction?'auction':'draft'}.html?${p}`;
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+function renderSettings() {
+  if (!roomInfo) return;
+  const slots  = getSlots(roomInfo.rounds);
+  const fmt    = roomInfo.format === 'categories' ? '🏆 9-Cat Categories' : '📊 Points (Yahoo)';
+  const dtype  = roomInfo.draft_type === 'auction' ? '🔨 Auction' : '🐍 Snake';
+
+  document.getElementById('settings-rows').innerHTML = [
+    ['Room code',    roomInfo.code],
+    ['League',       roomInfo.league === 'el' ? '🌍 Euroleague' : '🏀 NBA'],
+    ['Scoring',      fmt],
+    ['Draft type',   dtype],
+    ['Rounds',       `${roomInfo.rounds} rounds`],
+    ['Max teams',    `${roomInfo.max_teams} teams`],
+    ['Your team',    myTeam],
+  ].map(([label,val]) => `
+    <div class="setting-row">
+      <div class="setting-label">${label}</div>
+      <div class="setting-val">${val}</div>
+    </div>`).join('');
+
+  document.getElementById('slot-grid').innerHTML = slots.map(slot => {
+    const color = SLOT_COLORS[slot]||'#374151';
+    return `<span class="slot-chip" style="background:${color}">${slot}</span>`;
+  }).join('');
+}
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+function copyCode() {
+  if (!myCode) return;
+  navigator.clipboard.writeText(myCode).then(() => showToast('Code copied!'));
+}
+
+function signOut() {
+  localStorage.removeItem('hoopiq_league');
+  window.location.href = 'league.html';
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.opacity='1'; el.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(80px)';}, 2500);
+}
+</script>
+</body>
+</html>

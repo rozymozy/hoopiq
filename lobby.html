@@ -330,6 +330,10 @@ function copyCode() {
 }
 
 function showWaitingRoom(room) {
+  // Save league info to localStorage
+  localStorage.setItem('hoopiq_league', JSON.stringify({
+    code: room.code, team: myTeam, manager: myManager
+  }));
   document.getElementById('setup-cards').classList.add('hide');
   document.getElementById('waiting-room').classList.add('show');
   myCode = room.code;

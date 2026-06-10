@@ -216,14 +216,14 @@
     <div class="complete-sub">Your final roster</div>
     <div class="complete-roster" id="complete-roster"></div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="close-btn" style="background:#374151"
+              onclick="window.location.href=`league.html?code=${CODE}&team=${encodeURIComponent(MY_TEAM)}&manager=${encodeURIComponent(MY_MANAGER)}`">
+        My League
+      </button>
       <button class="close-btn" onclick="window.location.href='index.html'">Projections</button>
       <button class="close-btn" style="background:var(--purple)"
               onclick="window.location.href=`waivers.html?code=${CODE}&team=${encodeURIComponent(MY_TEAM)}`">
         Waivers
-      </button>
-      <button class="close-btn" style="background:var(--blue,#2563EB)"
-              onclick="window.location.href=`matchup.html?code=${CODE}&team=${encodeURIComponent(MY_TEAM)}`">
-        Matchup
       </button>
     </div>
   </div>
@@ -239,6 +239,28 @@ const MY_MANAGER = params.get('manager') || '';
 const MY_TEAM    = params.get('team')    || '';
 
 let mySid          = params.get('sid') || null;
+
+// Roster slot config — mirrors api.py
+const ROSTER_SLOTS = {
+  6:  ['PG','SG','SF','PF','C','UTIL'],
+  8:  ['PG','SG','G','SF','PF','F','C','C'],
+  10: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL'],
+  13: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN'],
+  15: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN','BN','BN'],
+};
+
+function getSlots(rounds) {
+  const defined = Object.keys(ROSTER_SLOTS).map(Number).sort((a,b)=>a-b);
+  let best = defined[0];
+  for (const r of defined) { if (r <= rounds) best = r; }
+  return ROSTER_SLOTS[best];
+}
+
+const SLOT_COLORS = {
+  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
+  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
+};
 let myRoster       = [];
 let log            = [];
 let allPlayers     = [];
@@ -291,6 +313,11 @@ socket.on('connected', d => {
 
 socket.on('joined_ok', d => {
   mySid = d.your_sid; sidConfirmed = true;
+  // Save to localStorage
+  localStorage.setItem('hoopiq_league', JSON.stringify({
+    code: CODE, team: MY_TEAM, manager: MY_MANAGER,
+    rounds: ROUNDS, league: LEAGUE,
+  }));
   draftTeams = d.room.teams || [];
   currentPickNum = d.room.pick_num || 0;
   const fullLog = d.room.log || [];
@@ -548,10 +575,12 @@ function renderPool() {
 // ── MY ROSTER ────────────────────────────────────────────────────────────────
 function renderRoster() {
   document.getElementById('roster-count').textContent=`${myRoster.length}/${ROUNDS}`;
-  document.getElementById('roster-list').innerHTML=Array.from({length:ROUNDS}).map((_,i)=>{
+  const slots = getSlots(ROUNDS);
+  document.getElementById('roster-list').innerHTML=slots.map((slot,i)=>{
     const p=myRoster[i];
+    const color=SLOT_COLORS[slot]||'#374151';
     return `<div class="roster-slot">
-      <div class="rs-num">${i+1}</div>
+      <div class="rs-num" style="color:${color};font-size:8px;min-width:26px;font-weight:800">${slot}</div>
       ${p?`<div class="rs-name">${p.name}</div><div class="rs-proj">${p.proj_dk.toFixed(1)}</div>`
          :`<div class="rs-empty">empty</div>`}
     </div>`;

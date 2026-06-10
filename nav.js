@@ -9,8 +9,10 @@
     'index.html':   { label: 'Projections',  icon: '📊' },
     'lobby.html':   { label: 'Draft Lobby',  icon: '🏀' },
     'draft.html':   { label: 'Draft',        icon: '🏀' },
+    'auction.html': { label: 'Auction',      icon: '🔨' },
     'waivers.html': { label: 'Waivers',      icon: '📋' },
     'matchup.html': { label: 'Matchup',      icon: '⚔️'  },
+    'league.html':  { label: 'My League',    icon: '🏆' },
   };
 
   // Determine current page
@@ -18,7 +20,7 @@
   const current = Object.keys(PAGES).find(p => path.endsWith(p)) || 'index.html';
 
   // Nav order for breadcrumb logic
-  const NAV_ORDER = ['index.html','lobby.html','draft.html','waivers.html','matchup.html'];
+  const NAV_ORDER = ['index.html','lobby.html','league.html','draft.html','auction.html','waivers.html','matchup.html'];
 
   function canGoBack() {
     return window.history.length > 1;
@@ -47,11 +49,24 @@
 
   // Preserve URL params for waiver/matchup links
   function linkWithParams(page) {
-    const p = new URLSearchParams(window.location.search);
-    const code = p.get('code');
-    const team = p.get('team');
-    if (code && team && (page === 'waivers.html' || page === 'matchup.html')) {
-      return `${page}?code=${code}&team=${encodeURIComponent(team)}`;
+    // Try URL params first, then localStorage
+    const p       = new URLSearchParams(window.location.search);
+    let code      = p.get('code');
+    let team      = p.get('team');
+    let manager   = p.get('manager');
+    if (!code || !team) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
+        if (!code)    code    = saved.code;
+        if (!team)    team    = saved.team;
+        if (!manager) manager = saved.manager;
+      } catch(e) {}
+    }
+    const leaguePages = ['waivers.html','matchup.html','league.html','draft.html','auction.html'];
+    if (code && team && leaguePages.includes(page)) {
+      const params = new URLSearchParams({code, team});
+      if (manager) params.set('manager', manager);
+      return `${page}?${params}`;
     }
     return page;
   }
@@ -164,7 +179,8 @@
         <div class="hn-current">${PAGES[current]?.label || ''}</div>
         <div class="hn-links">
           <a class="hn-link ${current==='index.html'?'active':''}"    href="${linkWithParams('index.html')}">Projections</a>
-          <a class="hn-link ${current==='lobby.html'?'active':''}"    href="lobby.html">Draft</a>
+          <a class="hn-link ${current==='lobby.html'?'active':''}"    href="lobby.html">New League</a>
+          <a class="hn-link ${current==='league.html'?'active':''}"   href="${linkWithParams('league.html')}">My League</a>
           <a class="hn-link ${current==='waivers.html'?'active':''}"  href="${linkWithParams('waivers.html')}">Waivers</a>
           <a class="hn-link ${current==='matchup.html'?'active':''}"  href="${linkWithParams('matchup.html')}">Matchup</a>
         </div>
