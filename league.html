@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HoopIQ — My League</title>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <link rel="stylesheet" href="player-panel.css?v=2">
   <script src="player-panel.js?v=2" defer></script>
   <script src="nav.js?v=2" defer></script>
@@ -529,25 +530,71 @@ function renderPlayers() {
 }
 
 // ── DRAFT TAB ────────────────────────────────────────────────────────────────
+let draftCountdownInt = null;
+
+function fmtDraftTime(ts) {
+  if (!ts) return null;
+  return new Date(ts * 1000).toLocaleString([], {
+    weekday:'short', month:'short', day:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function startDraftCountdown(draftTimeTs) {
+  clearInterval(draftCountdownInt);
+  const el = document.getElementById('draft-countdown');
+  if (!el) return;
+  draftCountdownInt = setInterval(() => {
+    const secs = Math.max(0, Math.round(draftTimeTs - Date.now()/1000));
+    if (secs <= 0) {
+      el.textContent = 'Starting now...';
+      clearInterval(draftCountdownInt);
+      setTimeout(() => loadLeague(), 3000); // reload after start
+      return;
+    }
+    const h = Math.floor(secs/3600);
+    const m = Math.floor((secs%3600)/60);
+    const s = secs % 60;
+    const parts = [];
+    if (h) parts.push(`${h}h`);
+    if (m || h) parts.push(`${m}m`);
+    parts.push(`${s}s`);
+    el.textContent = `Starts in ${parts.join(' ')}`;
+  }, 1000);
+}
+
 function renderDraft() {
   if (!roomInfo) return;
+  clearInterval(draftCountdownInt);
   const status    = roomInfo.status;
   const draftType = roomInfo.draft_type || 'snake';
   const isAuction = draftType === 'auction';
+  const draftTs   = roomInfo.draft_time;
+  const draftTimeStr = fmtDraftTime(draftTs);
+
+  // Check if current user is the creator (first team)
+  const isCreator = roomInfo.teams?.length > 0 && roomInfo.teams[0].name === myTeam;
 
   const statusLabels = {
-    waiting:   { label:'Waiting for teams', cls:'waiting', icon:'⏳' },
-    countdown: { label:'Starting soon!',    cls:'drafting', icon:'🚀' },
+    waiting:   { label:'Waiting', cls:'waiting', icon:'⏳' },
+    countdown: { label:'Starting soon!', cls:'drafting', icon:'🚀' },
     drafting:  { label:'Draft in progress', cls:'drafting', icon:'🔴' },
-    complete:  { label:'Draft complete',    cls:'complete', icon:'✓'  },
+    complete:  { label:'Draft complete', cls:'complete', icon:'✓' },
   };
   const s = statusLabels[status] || statusLabels.waiting;
 
   document.getElementById('draft-info-rows').innerHTML = `
     <div class="di-row">
       <div class="di-label">Status</div>
-      <div><span class="draft-status-pill ${s.cls}">${s.icon} ${s.label}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="draft-status-pill ${s.cls}">${s.icon} ${s.label}</span>
+        ${draftTs && status === 'waiting' ? `<span id="draft-countdown" style="font-size:12px;font-weight:700;color:var(--green)">—</span>` : ''}
+      </div>
     </div>
+    ${draftTimeStr ? `<div class="di-row">
+      <div class="di-label">Scheduled for</div>
+      <div class="di-val">📅 ${draftTimeStr}</div>
+    </div>` : ''}
     <div class="di-row">
       <div class="di-label">Draft type</div>
       <div class="di-val">${isAuction ? '🔨 Auction ($200 budget)' : '🐍 Snake draft'}</div>
@@ -561,25 +608,35 @@ function renderDraft() {
       <div class="di-val">${roomInfo.rounds} rounds</div>
     </div>
     <div class="di-row">
-      <div class="di-label">Teams</div>
-      <div class="di-val">${roomInfo.teams?.length || 0} / ${roomInfo.max_teams}</div>
+      <div class="di-label">Teams joined</div>
+      <div class="di-val">${roomInfo.teams?.length || 0} / ${roomInfo.max_teams}
+        ${status === 'waiting' ? `<a href="lobby.html" style="font-size:11px;color:var(--green);margin-left:8px">+ Invite</a>` : ''}</div>
     </div>
     ${isAuction ? `<div class="di-row">
       <div class="di-label">Bid timer</div>
       <div class="di-val">${roomInfo.bid_timer||30}s (resets to 10s on new bid)</div>
     </div>` : ''}
-    ${status === 'waiting' ? `<div class="di-row">
-      <div class="di-label">How to join draft</div>
-      <div class="di-val" style="font-size:12px;color:var(--muted)">Go to <a href="lobby.html" style="color:var(--green)">lobby.html</a> and join with code <strong>${myCode}</strong></div>
+    ${status === 'waiting' && !draftTimeStr ? `<div class="di-row">
+      <div class="di-label">Join draft</div>
+      <div class="di-val" style="font-size:12px;color:var(--muted)">Share code <strong>${myCode}</strong> — teams join at <a href="lobby.html" style="color:var(--green)">lobby.html</a></div>
     </div>` : ''}
   `;
 
-  // Show enter draft button for active/complete drafts
+  // Start live countdown if scheduled
+  if (draftTs && status === 'waiting') startDraftCountdown(draftTs);
+
+  // Buttons
   const btn = document.getElementById('go-draft-btn');
   if (status === 'drafting' || status === 'complete') {
     btn.style.display = 'block';
-    btn.textContent = status === 'complete' ? 'View Draft Results' : `Enter ${isAuction ? 'Auction' : 'Draft'} Room`;
-    btn.className = `go-draft-btn${isAuction?' auction':''}`;
+    btn.textContent   = status === 'complete' ? 'View Draft Results' : `Enter ${isAuction ? 'Auction' : 'Draft'} Room`;
+    btn.className     = `go-draft-btn${isAuction?' auction':''}`;
+  } else if (status === 'waiting' && isCreator) {
+    btn.style.display = 'block';
+    btn.textContent   = '▶ Force Start Draft Now';
+    btn.className     = 'go-draft-btn';
+    btn.style.background = '#374151';
+    btn.onclick       = forceStart;
   } else {
     btn.style.display = 'none';
   }
@@ -589,7 +646,7 @@ function renderDraft() {
   if (teams.length) {
     document.getElementById('team-order-card').style.display = 'block';
     document.getElementById('team-order-list').innerHTML = teams.map((t,i) => {
-      const isMe  = t.name === myTeam;
+      const isMe    = t.name === myTeam;
       const budLeft = t.auction_budget !== undefined
         ? `<span class="to-budget">$${(t.auction_budget||200)-(t.auction_spent||0)}</span>` : '';
       return `<div class="to-row">
@@ -601,6 +658,32 @@ function renderDraft() {
       </div>`;
     }).join('');
   }
+}
+
+async function forceStart() {
+  if (!confirm('Force start the draft now? Empty slots will be filled with bot teams.')) return;
+  // Connect a socket just to emit start_now
+  const io = window.io || (await import('https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js')).default;
+  const sock = io('https://hoopiq-api-production-d3a4.up.railway.app', {transports:['polling','websocket']});
+  sock.on('connect', () => {
+    sock.emit('join_room_draft', {code: myCode, manager_name: myManager, team_name: myTeam});
+  });
+  sock.on('joined_ok', () => {
+    sock.emit('start_now', {code: myCode});
+  });
+  sock.on('draft_started', d => {
+    sock.disconnect();
+    const isAuction = d.draft_type === 'auction';
+    const p = new URLSearchParams({
+      code: myCode, team: myTeam, manager: myManager,
+      rounds: d.rounds, league: d.league,
+      format: d.format||'points',
+      draft_type: d.draft_type||'snake',
+      bid_timer: d.bid_timer||30,
+    });
+    window.location.href = `${isAuction?'auction':'draft'}.html?${p}`;
+  });
+  sock.on('error', d => { showToast('Error: ' + d.msg); sock.disconnect(); });
 }
 
 function goToDraft() {

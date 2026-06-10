@@ -118,6 +118,12 @@
         </select>
       </div>
 
+      <label>Draft date & time <span style="font-size:10px;color:var(--subtle);font-weight:400">(optional — leave blank to start manually)</span></label>
+      <input type="datetime-local" id="create-draft-time"
+             style="width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none"
+             onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'">
+      <div style="font-size:11px;color:var(--subtle);margin-top:4px">Times are in your local timezone. Teams will get a reminder 1 hour before.</div>
+
       <div class="row2" style="margin-top:14px">
         <div>
           <label>Max teams</label>
@@ -244,6 +250,17 @@ socket.on('error', d => {
   document.getElementById('join-error').textContent   = d.msg;
 });
 
+socket.on('room_updated', d => { updateWaitingRoom(d); });
+
+socket.on('draft_reminder', d => {
+  // Show a prominent reminder banner
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;z-index:400;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+  banner.textContent = '🏀 Draft starts in 1 hour!';
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 8000);
+});
+
 function selectLeague(el) {
   document.querySelectorAll('.league-opt').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
@@ -283,12 +300,20 @@ function createRoom() {
   const max    = parseInt(document.getElementById('create-max').value);
   const rounds = parseInt(document.getElementById('create-rounds').value);
   document.getElementById('create-error').textContent = '';
-  const bidTimer = parseInt(document.getElementById('create-bid-timer')?.value || '30');
+  const bidTimer   = parseInt(document.getElementById('create-bid-timer')?.value || '30');
+  const draftTimeRaw = document.getElementById('create-draft-time')?.value;
+  // Convert local datetime-local value to UTC ISO string
+  let draftTimeUTC = null;
+  if (draftTimeRaw) {
+    const local = new Date(draftTimeRaw);
+    if (!isNaN(local.getTime())) draftTimeUTC = local.toISOString();
+  }
   socket.emit('create_room', {
     manager_name: manager, team_name: team,
     max_teams: max, rounds: rounds,
     league: selectedLeague, format: selectedFormat,
     draft_type: selectedDraftType, bid_timer: bidTimer,
+    draft_time: draftTimeUTC,
     is_public: false,
   });
 }
@@ -344,15 +369,31 @@ function showWaitingRoom(room) {
   updateWaitingRoom(room);
 }
 
+function fmtDraftTime(ts) {
+  if (!ts) return null;
+  return new Date(ts * 1000).toLocaleString([], {
+    weekday:'short', month:'short', day:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
 function updateWaitingRoom(room) {
   const leagueLabel = {nba:'🏀 NBA', el:'🌍 Euroleague'}[room.league] || room.league;
   document.getElementById('wr-code').textContent   = room.code;
   document.getElementById('wr-slots').textContent  = `${room.teams.length} / ${room.max_teams} teams joined`;
   document.getElementById('wr-rounds').textContent = `${room.rounds} rounds`;
-  document.getElementById('wr-sub').textContent    =
-    room.teams.length < room.max_teams
-      ? `Waiting for ${room.max_teams - room.teams.length} more team(s)`
-      : 'Room full — starting soon!';
+
+  const draftTimeStr = room.draft_time ? fmtDraftTime(room.draft_time) : null;
+  if (draftTimeStr) {
+    document.getElementById('wr-sub').textContent = `Draft scheduled: ${draftTimeStr}`;
+    startWaitingCountdown(room.draft_time);
+  } else {
+    document.getElementById('wr-sub').textContent =
+      room.teams.length < room.max_teams
+        ? `Waiting for ${room.max_teams - room.teams.length} more team(s)`
+        : 'Room full — creator can start the draft';
+  }
+
   const fmtLabel   = room.format === 'categories' ? '🏆 Categories' : '📊 Points';
   const draftLabel = room.draft_type === 'auction' ? '🔨 Auction ($200)' : '🐍 Snake';
   document.getElementById('wr-pills').innerHTML =
@@ -360,7 +401,8 @@ function updateWaitingRoom(room) {
      <span class="pill">${draftLabel}</span>
      <span class="pill">${fmtLabel}</span>
      <span class="pill">📅 ${room.rounds} rounds</span>
-     <span class="pill">👥 Max ${room.max_teams} teams</span>`;
+     <span class="pill">👥 Max ${room.max_teams} teams</span>
+     ${draftTimeStr ? `<span class="pill" style="background:var(--green-light);color:#0F6E56">🗓 ${draftTimeStr}</span>` : ''}`;
   document.getElementById('wr-teams').innerHTML = room.teams.map(t => `
     <div class="team-item">
       <div>
@@ -371,6 +413,24 @@ function updateWaitingRoom(room) {
         ? '<span class="team-you">YOU</span>'
         : '<span style="color:var(--green);font-size:16px">✓</span>'}
     </div>`).join('');
+}
+
+let wrCountdownInt = null;
+function startWaitingCountdown(draftTimeTs) {
+  clearInterval(wrCountdownInt);
+  const subEl = document.getElementById('wr-sub');
+  wrCountdownInt = setInterval(() => {
+    const secs = Math.max(0, Math.round(draftTimeTs - Date.now()/1000));
+    if (secs <= 0) { clearInterval(wrCountdownInt); return; }
+    const h = Math.floor(secs/3600);
+    const m = Math.floor((secs%3600)/60);
+    const s = secs % 60;
+    const parts = [];
+    if (h) parts.push(`${h}h`);
+    if (m || h) parts.push(`${m}m`);
+    parts.push(`${s}s`);
+    subEl.textContent = `Draft starts in ${parts.join(' ')}`;
+  }, 1000);
 }
 </script>
 </body>
