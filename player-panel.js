@@ -71,15 +71,20 @@ const PlayerPanel = (() => {
       const trigger = e.target.closest('.pp-trigger');
       if (trigger) {
         e.stopPropagation();
-        const name   = trigger.dataset.player;
-        const league = trigger.dataset.league || 'nba';
-        if (name) open(name, league);
+        const name   = (trigger.dataset.player || '').trim();
+        const league = (trigger.dataset.league || 'nba').trim().toLowerCase();
+        if (name && name !== '[object Object]') open(name, league);
       }
     });
   }
 
   // ── OPEN ───────────────────────────────────────────────────────────────────
   async function open(name, league = 'nba') {
+    // Guard: ensure name is a plain string, not an object
+    name   = (typeof name   === 'string' ? name   : String(name   || '')).trim();
+    league = (typeof league === 'string' ? league : String(league || 'nba')).trim().toLowerCase();
+    if (!name || name === '[object Object]') return;
+
     init();
 
     // Show panel immediately with loading state
