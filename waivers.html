@@ -291,6 +291,24 @@
 
 <script>
 const API  = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const ROSTER_SLOTS = {
+  6:  ['PG','SG','SF','PF','C','UTIL'],
+  8:  ['PG','SG','G','SF','PF','F','C','C'],
+  10: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL'],
+  13: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN'],
+  15: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN','BN','BN'],
+};
+function getSlots(rounds) {
+  const defined = Object.keys(ROSTER_SLOTS).map(Number).sort((a,b)=>a-b);
+  let best = defined[0];
+  for (const r of defined) { if (r <= rounds) best = r; }
+  return ROSTER_SLOTS[best];
+}
+const SLOT_COLORS = {
+  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
+  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
+};
 const sock = io(API, {transports:['polling','websocket']});
 const urlP = new URLSearchParams(window.location.search);
 
@@ -321,12 +339,18 @@ sock.on('waiver_state', d => {
   document.getElementById('connect-wrap').style.display = 'none';
   document.getElementById('main').style.display = 'grid';
   renderAll();
+  // Save to localStorage so league.html can auto-reconnect
+  if (myCode && myTeam) {
+    const saved = JSON.parse(localStorage.getItem('hoopiq_league')||'{}');
+    localStorage.setItem('hoopiq_league', JSON.stringify({...saved, code:myCode, team:myTeam}));
+  }
 });
 
 sock.on('player_dropped',     () => { refresh(); showToast('Player sent to waivers'); });
 sock.on('waiver_resolved',    d  => { refresh(); showToast(d.winner ? `${d.winner} won ${d.player.name} ($${d.bid})` : `${d.player.name} is now a free agent`); });
 sock.on('free_agent_claimed', d  => { refresh(); showToast(`${d.by_team} claimed ${d.player.name}`); });
 sock.on('drop_ok',            d  => { refresh(); closeModal(); showToast(`${d.player.name} sent to waivers`); });
+sock.on('waiver_bid_placed',  d  => { refresh(); }); // another team bid — update count
 sock.on('claim_ok',           d  => { refresh(); closeModal(); showToast(`${d.player.name} added!`); });
 sock.on('bid_submitted',      d  => { myBids[d.player_id]=d.amount; closeModal(); showToast(`Bid of $${d.amount} placed`); refresh(); });
 sock.on('error',              d  => { showToast('Error: '+d.msg); document.getElementById('conn-err').textContent=d.msg; });
@@ -464,30 +488,51 @@ function render() {
 // ── ROSTER TABLE ─────────────────────────────────────────────────────────────
 function renderRoster() {
   if (!wData) return;
-  const me   = wData.teams.find(t => t.name===myTeam);
-  const list = me?.roster ?? [];
-  const tbody = document.getElementById('roster-body');
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="15" class="empty">Your roster is empty</td></tr>`; return; }
-  tbody.innerHTML = list.map(p => `<tr>
-    <td>
-      <div class="p-name"><span class="pos-badge">${p.pos||'—'}</span><span class="pp-trigger" data-player="${p.name}" data-league="${p.league.toLowerCase()}" onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${p.league.toLowerCase()}')">${p.name}</span></div>
-      <div class="p-meta">${p.league} · ${p.team}</div>
-    </td>
-    <td class="td-rank">#${p.proj_rank??'—'}</td>
-    <td class="td-rank">#${p.league_rank??'—'}</td>
-    <td class="td-green">${p.proj_dk.toFixed(1)}</td>
-    <td class="td-muted">${p.dk_avg.toFixed(1)}</td>
-    <td>${p.pts.toFixed(1)}</td>
-    <td>${p.reb.toFixed(1)}</td>
-    <td>${p.ast.toFixed(1)}</td>
-    <td>${p.stl.toFixed(1)}</td>
-    <td>${p.blk.toFixed(1)}</td>
-    <td>${p.tov.toFixed(1)}</td>
-    <td>${p.fg3m.toFixed(1)}</td>
-    <td>${((p.fg_pct||0)*100).toFixed(1)}%</td>
-    <td>${((p.ft_pct||0)*100).toFixed(1)}%</td>
-    <td><button class="drop-btn-sm" onclick="dropPlayer('${p.id}')">Drop</button></td>
-  </tr>`).join('');
+  const me     = wData.teams.find(t => t.name===myTeam);
+  const list   = me?.roster ?? [];
+  const tbody  = document.getElementById('roster-body');
+  // Get rounds from URL or default to 10
+  const rounds = parseInt(new URLSearchParams(window.location.search).get('rounds')||'10');
+  const slots  = getSlots(rounds);
+  if (!list.length && !slots.length) {
+    tbody.innerHTML = `<tr><td colspan="15" class="empty">Your roster is empty</td></tr>`; return;
+  }
+  tbody.innerHTML = slots.map((slot,i) => {
+    const p     = list[i];
+    const color = SLOT_COLORS[slot]||'#374151';
+    if (!p) return `<tr>
+      <td colspan="2">
+        <span style="font-size:9px;font-weight:800;color:${color};margin-right:6px">${slot}</span>
+        <span style="color:var(--subtle);font-style:italic;font-size:11px">empty</span>
+      </td>
+      <td colspan="13"></td>
+    </tr>`;
+    return `<tr>
+      <td>
+        <div class="p-name">
+          <span style="font-size:8px;font-weight:800;color:${color};margin-right:4px">${slot}</span>
+          <span class="pos-badge">${p.pos||'—'}</span>
+          <span class="pp-trigger" data-player="${p.name}" data-league="${p.league.toLowerCase()}"
+                onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${p.league.toLowerCase()}')">${p.name}</span>
+        </div>
+        <div class="p-meta">${p.league} · ${p.team}</div>
+      </td>
+      <td class="td-rank">#${p.proj_rank??'—'}</td>
+      <td class="td-rank">#${p.league_rank??'—'}</td>
+      <td class="td-green">${p.proj_dk.toFixed(1)}</td>
+      <td class="td-muted">${p.dk_avg.toFixed(1)}</td>
+      <td>${p.pts.toFixed(1)}</td>
+      <td>${p.reb.toFixed(1)}</td>
+      <td>${p.ast.toFixed(1)}</td>
+      <td>${p.stl.toFixed(1)}</td>
+      <td>${p.blk.toFixed(1)}</td>
+      <td>${p.tov.toFixed(1)}</td>
+      <td>${p.fg3m.toFixed(1)}</td>
+      <td>${((p.fg_pct||0)*100).toFixed(1)}%</td>
+      <td>${((p.ft_pct||0)*100).toFixed(1)}%</td>
+      <td><button class="drop-btn-sm" onclick="dropPlayer('${p.id}')">Drop</button></td>
+    </tr>`;
+  }).join('');
 }
 
 // ── SIDEBAR ──────────────────────────────────────────────────────────────────

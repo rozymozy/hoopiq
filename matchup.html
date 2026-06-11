@@ -99,6 +99,7 @@
     .roster-col-title{font-size:11px;font-weight:700;margin-bottom:4px;color:var(--text)}
     .player-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg);border-radius:6px;font-size:11px}
     .pi-name{font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pi-slot{font-size:9px;font-weight:800;min-width:28px;flex-shrink:0;margin-right:4px}
     .pi-proj{color:var(--green);font-weight:700;flex-shrink:0;margin-left:6px}
 
     /* OTHER MATCHUPS */
@@ -131,6 +132,7 @@
 
     .empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <link rel="stylesheet" href="player-panel.css?v=2">
   <script src="player-panel.js?v=2" defer></script>
   <script src="nav.js?v=2" defer></script>
@@ -223,6 +225,11 @@ const urlP = new URLSearchParams(window.location.search);
 
 let myCode   = urlP.get('code')?.toUpperCase() || '';
 let myTeam   = urlP.get('team') || '';
+const SLOT_COLORS = {
+  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
+  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
+};
 let roomInfo = null;
 let pageTab  = 'matchup';
 let curWeek  = 1;
@@ -263,6 +270,7 @@ async function loadAll() {
     renderLeagueInfo();
     await loadMatchup();
     await loadStandings();
+    connectMatchSocket();
   } catch(e) {
     document.getElementById('conn-err').textContent = 'Failed to connect: ' + e.message;
   }
@@ -479,28 +487,38 @@ function renderOneMatchup(m, format, isMe) {
 }
 
 function renderRosters(m, iAmHome, iAmAway) {
-  const homeRoster = m.home.roster || [];
-  const awayRoster = m.away.roster || [];
-  if (!homeRoster.length && !awayRoster.length) return '';
+  const homeLineup = m.home.lineup || m.home.roster?.map(p=>({slot:'—',player:p})) || [];
+  const awayLineup = m.away.lineup || m.away.roster?.map(p=>({slot:'—',player:p})) || [];
+  if (!homeLineup.length && !awayLineup.length) return '';
+  const maxRows = Math.max(homeLineup.length, awayLineup.length);
+  function lineupRow(entry) {
+    if (!entry) return '<div class="player-item"><span class="pi-slot" style="color:#9ca3af">—</span><span style="color:var(--muted);font-size:11px;font-style:italic">empty</span></div>';
+    const slot  = entry.slot || '—';
+    const p     = entry.player;
+    const color = SLOT_COLORS[slot]||'#374151';
+    const isBN  = slot === 'BN';
+    if (!p) return `<div class="player-item"><span class="pi-slot" style="color:${color}">${slot}</span><span style="color:var(--muted);font-size:11px;font-style:italic">empty</span></div>`;
+    return `<div class="player-item${isBN?' style="opacity:.6"':''}">
+      <span class="pi-slot" style="color:${color};font-weight:800;font-size:9px;min-width:28px">${slot}</span>
+      <span class="pi-name pp-trigger" data-player="${p.name}" data-league="${p.league?.toLowerCase()||'nba'}"
+            onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${p.league?.toLowerCase()||'nba'}')"
+            style="${isBN?'color:var(--muted)':''}">
+        ${p.name}${isBN?' <span style="font-size:9px;color:var(--subtle)">(BN)</span>':''}
+      </span>
+      <span class="pi-proj" style="${isBN?'color:var(--subtle)':''}">${p.proj_dk?.toFixed(1)||'—'}</span>
+    </div>`;
+  }
   return `
   <div class="roster-section">
-    <div class="roster-title">Rosters</div>
+    <div class="roster-title">Lineups <span style="font-size:10px;color:var(--muted);font-weight:400">BN = bench (doesn't count)</span></div>
     <div class="roster-grid">
       <div class="roster-col">
         <div class="roster-col-title">${m.home.name}${iAmHome?' (YOU)':''}</div>
-        ${homeRoster.map(p => `
-          <div class="player-item">
-            <span class="pi-name pp-trigger" data-player="${p.name}" data-league="${p.league?.toLowerCase()||'nba'}" onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${p.league?.toLowerCase()||'nba'}')">${p.name}</span>
-            <span class="pi-proj">${p.proj_dk?.toFixed(1)||'—'}</span>
-          </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players drafted</div>'}
+        ${homeLineup.map(lineupRow).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players</div>'}
       </div>
       <div class="roster-col">
         <div class="roster-col-title">${m.away.name}${iAmAway?' (YOU)':''}</div>
-        ${awayRoster.map(p => `
-          <div class="player-item">
-            <span class="pi-name pp-trigger" data-player="${p.name}" data-league="${p.league?.toLowerCase()||'nba'}" onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${p.league?.toLowerCase()||'nba'}')">${p.name}</span>
-            <span class="pi-proj">${p.proj_dk?.toFixed(1)||'—'}</span>
-          </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players drafted</div>'}
+        ${awayLineup.map(lineupRow).join('') || '<div style="color:var(--muted);font-size:12px;padding:4px">No players</div>'}
       </div>
     </div>
   </div>`;

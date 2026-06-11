@@ -391,6 +391,152 @@ let plSortKey = 'proj_dk';
 let plSortAsc = false;
 let posFilter = 'ALL';
 
+// ── PERSISTENT SOCKET ────────────────────────────────────────────────────────
+const API_URL = 'https://hoopiq-api-production-d3a4.up.railway.app';
+let leagueSock = null;
+
+function connectLeagueSocket() {
+  if (leagueSock) leagueSock.disconnect();
+  leagueSock = io(API_URL, {transports:['polling','websocket']});
+
+  leagueSock.on('connect', () => {
+    leagueSock.emit('join_room_draft', {
+      code: myCode, manager_name: myManager, team_name: myTeam
+    });
+  });
+
+  leagueSock.on('joined_ok', d => {
+    // Update roomInfo with live room state
+    roomInfo = {...roomInfo, ...d.room};
+    rerenderCurrentTab();
+  });
+
+  leagueSock.on('team_joined', d => {
+    roomInfo = {...roomInfo, ...d.room};
+    rerenderCurrentTab();
+    showToast(`${d.team.name} joined the league`);
+  });
+
+  leagueSock.on('settings_updated', d => {
+    // Broadcast to ALL connected league members
+    roomInfo = d;
+    showToast('Commissioner updated league settings');
+    rerenderCurrentTab();
+    // Refresh standings in case format changed
+    loadStandings();
+  });
+
+  leagueSock.on('room_updated', d => {
+    roomInfo = d;
+    rerenderCurrentTab();
+  });
+
+  leagueSock.on('countdown', d => {
+    showToast(`Draft starting in ${d.seconds}s...`);
+  });
+
+  leagueSock.on('draft_started', d => {
+    const isAuction = d.draft_type === 'auction';
+    const p = new URLSearchParams({
+      code: myCode, team: myTeam, manager: myManager,
+      rounds: d.rounds, league: d.league,
+      format: d.format||'points',
+      draft_type: d.draft_type||'snake',
+      bid_timer: d.bid_timer||30,
+    });
+    window.location.href = `${isAuction?'auction':'draft'}.html?${p}`;
+  });
+
+  leagueSock.on('draft_reminder', () => {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;z-index:400;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+    banner.textContent = '🏀 Draft starts in 1 hour!';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 8000);
+  });
+
+  // ── Waiver wire events ──────────────────────────────────────────────────
+  leagueSock.on('player_dropped', d => {
+    showToast(`${d.dropped_by} dropped ${d.player.name}`);
+    refreshWaiverData();
+  });
+
+  leagueSock.on('waiver_resolved', d => {
+    if (d.winner) {
+      showToast(`${d.winner} won ${d.player.name} off waivers ($${d.bid})`);
+    } else {
+      showToast(`${d.player.name} cleared waivers — now a free agent`);
+    }
+    refreshWaiverData();
+  });
+
+  leagueSock.on('free_agent_claimed', d => {
+    showToast(`${d.by_team} claimed ${d.player.name}`);
+    refreshWaiverData();
+  });
+
+  // ── Draft events ─────────────────────────────────────────────────────────
+  leagueSock.on('pick_made', d => {
+    showToast(`${d.entry.team} drafted ${d.entry.player.name}`);
+    roomInfo = {...roomInfo, pick_num: d.pick_num};
+    rerenderCurrentTab();
+  });
+
+  leagueSock.on('auction_won', d => {
+    showToast(`${d.winner} won ${d.entry.player.name} for $${d.price}`);
+    rerenderCurrentTab();
+  });
+
+  leagueSock.on('draft_complete', d => {
+    showToast('Draft complete!');
+    loadLeague(); // full refresh to get final rosters
+  });
+
+  leagueSock.on('waiver_bid_placed', d => {
+    // Show blind notification — don't reveal who bid or how much
+    showToast(`New bid placed on ${d.player_name}`);
+    // No roster change so no need to refresh
+  });
+
+  leagueSock.on('error', d => showToast('Error: ' + d.msg));
+}
+
+// ── WAIVER DATA REFRESH ───────────────────────────────────────────────────────
+async function refreshWaiverData() {
+  try {
+    const [infoRes, standRes] = await Promise.all([
+      fetch(`${API_URL}/room/${myCode}/info`),
+      fetch(`${API_URL}/room/${myCode}/standings`),
+    ]);
+    if (infoRes.ok) {
+      roomInfo = await infoRes.json();
+      // Rebuild roster map
+      rostered = {};
+      for (const t of (roomInfo.teams||[])) {
+        for (const p of (t.roster||[])) rostered[p.id] = t.name;
+      }
+    }
+    if (standRes.ok) {
+      const sd = await standRes.json();
+      standings = sd.standings || [];
+    }
+    rerenderCurrentTab();
+  } catch(e) {}
+}
+
+function rerenderCurrentTab() {
+  renderStandings();
+  renderDraft();
+  renderSettings();
+  if (activeTab === 'commissioner') renderCommissioner();
+  if (activeTab === 'players') renderPlayers();
+  // Update hub header with any name change
+  if (roomInfo) {
+    const leagueLabel = roomInfo.league === 'el' ? 'Euroleague' : 'NBA';
+    document.getElementById('hub-title').textContent = roomInfo.name || `${leagueLabel} League`;
+  }
+}
+
 // Try to restore from localStorage + URL
 const urlP = new URLSearchParams(window.location.search);
 const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
@@ -501,6 +647,8 @@ function showHub() {
   renderStandings();
   renderDraft();
   renderSettings();
+  // Connect persistent socket for real-time updates
+  connectLeagueSocket();
 }
 
 // ── TABS ─────────────────────────────────────────────────────────────────────
@@ -760,30 +908,9 @@ function renderDraft() {
   }
 }
 
-async function forceStart() {
+function forceStart() {
   if (!confirm('Force start the draft now? Empty slots will be filled with bot teams.')) return;
-  // Connect a socket just to emit start_now
-  const io = window.io || (await import('https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js')).default;
-  const sock = io('https://hoopiq-api-production-d3a4.up.railway.app', {transports:['polling','websocket']});
-  sock.on('connect', () => {
-    sock.emit('join_room_draft', {code: myCode, manager_name: myManager, team_name: myTeam});
-  });
-  sock.on('joined_ok', () => {
-    sock.emit('start_now', {code: myCode});
-  });
-  sock.on('draft_started', d => {
-    sock.disconnect();
-    const isAuction = d.draft_type === 'auction';
-    const p = new URLSearchParams({
-      code: myCode, team: myTeam, manager: myManager,
-      rounds: d.rounds, league: d.league,
-      format: d.format||'points',
-      draft_type: d.draft_type||'snake',
-      bid_timer: d.bid_timer||30,
-    });
-    window.location.href = `${isAuction?'auction':'draft'}.html?${p}`;
-  });
-  sock.on('error', d => { showToast('Error: ' + d.msg); sock.disconnect(); });
+  if (leagueSock) leagueSock.emit('start_now', {code: myCode});
 }
 
 function goToDraft() {
@@ -882,7 +1009,8 @@ function renderCommissioner() {
     (roomInfo.draft_type === 'auction') ? 'flex' : 'none';
 }
 
-async function saveSettings() {
+function saveSettings() {
+  if (!leagueSock) { showToast('Not connected'); return; }
   const leagueName  = document.getElementById('comm-league-name').value.trim();
   const maxTeams    = document.getElementById('comm-max-teams').value;
   const rounds      = document.getElementById('comm-rounds').value;
@@ -893,38 +1021,21 @@ async function saveSettings() {
     const local = new Date(draftTimeRaw);
     if (!isNaN(local.getTime())) draftTimeUTC = local.toISOString();
   }
-
-  // Need a socket connection to emit
-  const sock = io('https://hoopiq-api-production-d3a4.up.railway.app', {transports:['polling','websocket']});
-  sock.on('connect', () => {
-    sock.emit('join_room_draft', {code: myCode, manager_name: myManager, team_name: myTeam});
+  leagueSock.emit('update_settings', {
+    code:        myCode,
+    ...(leagueName && {league_name: leagueName}),
+    league:      commSettings.league     || roomInfo.league,
+    format:      commSettings.format     || roomInfo.format,
+    draft_type:  commSettings.draft_type || roomInfo.draft_type,
+    max_teams:   parseInt(maxTeams),
+    rounds:      parseInt(rounds),
+    bid_timer:   parseInt(bidTimer),
+    draft_time:  draftTimeUTC,
   });
-  sock.on('joined_ok', () => {
-    sock.emit('update_settings', {
-      code:        myCode,
-      ...(leagueName && {league_name: leagueName}),
-      league:      commSettings.league    || roomInfo.league,
-      format:      commSettings.format    || roomInfo.format,
-      draft_type:  commSettings.draft_type|| roomInfo.draft_type,
-      max_teams:   parseInt(maxTeams),
-      rounds:      parseInt(rounds),
-      bid_timer:   parseInt(bidTimer),
-      draft_time:  draftTimeUTC,
-    });
-  });
-  sock.on('settings_saved', d => {
+  // Listen for confirmation once
+  leagueSock.once('settings_saved', () => {
     document.getElementById('comm-saved-msg').textContent = '✓ Settings saved';
     setTimeout(() => document.getElementById('comm-saved-msg').textContent = '', 3000);
-    sock.disconnect();
-    loadLeague(); // refresh roomInfo
-  });
-  sock.on('settings_updated', d => {
-    roomInfo = d;
-    renderSettings();
-  });
-  sock.on('error', d => {
-    showToast('Error: ' + d.msg);
-    sock.disconnect();
   });
 }
 
