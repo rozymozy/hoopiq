@@ -130,6 +130,17 @@
 
     .empty{text-align:center;padding:40px;color:var(--muted);font-size:13px}
     .loading{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+
+    /* COMMISSIONER */
+    .comm-input{width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text);outline:none}
+    .comm-input:focus{border-color:var(--green)}
+    .comm-opt{flex:1;padding:8px 12px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:all .15s}
+    .comm-opt:hover{border-color:var(--green)}
+    .comm-opt.selected{border-color:var(--green);background:var(--green-light);color:#0F6E56}
+    .comm-save-btn{flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+    .comm-save-btn:hover{opacity:.9}
+    .comm-start-btn{flex:1;padding:10px;background:#374151;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+    .comm-start-btn:hover{opacity:.9}
   </style>
 </head>
 <body>
@@ -177,6 +188,7 @@
     <button class="tab" onclick="setTab(this,'players')">📊 Players</button>
     <button class="tab" onclick="setTab(this,'draft')">🏀 Draft</button>
     <button class="tab" onclick="setTab(this,'settings')">⚙️ Settings</button>
+    <button class="tab" id="commissioner-tab" onclick="setTab(this,'commissioner')" style="display:none">👑 Commissioner</button>
   </div>
 
   <!-- STANDINGS -->
@@ -254,6 +266,90 @@
     <div class="settings-card">
       <div class="settings-title">Roster Slots</div>
       <div class="slot-grid" id="slot-grid"></div>
+    </div>
+  </div>
+
+  <!-- COMMISSIONER -->
+  <div id="tab-commissioner" style="display:none">
+    <div id="commissioner-locked" style="display:none;background:#fff;border-radius:10px;border:1px solid var(--border);padding:20px;margin-bottom:12px;text-align:center;color:var(--muted);font-size:14px">
+      🔒 Draft has started — settings are locked
+    </div>
+    <div id="commissioner-form">
+      <div class="settings-card">
+        <div class="settings-title">League Settings</div>
+
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">League name</div>
+          <input type="text" id="comm-league-name" class="comm-input" placeholder="My League">
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Player pool</div>
+          <div style="display:flex;gap:8px;width:100%">
+            <button class="comm-opt selected" data-cfield="league" data-cval="nba" onclick="selectCommOpt(this,'league')">🏀 NBA</button>
+            <button class="comm-opt" data-cfield="league" data-cval="el" onclick="selectCommOpt(this,'league')">🌍 Euroleague</button>
+          </div>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Scoring format</div>
+          <div style="display:flex;gap:8px;width:100%">
+            <button class="comm-opt selected" data-cfield="format" data-cval="points" onclick="selectCommOpt(this,'format')">📊 Points (Yahoo)</button>
+            <button class="comm-opt" data-cfield="format" data-cval="categories" onclick="selectCommOpt(this,'format')">🏆 9-Cat</button>
+          </div>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Draft type</div>
+          <div style="display:flex;gap:8px;width:100%">
+            <button class="comm-opt selected" data-cfield="draft_type" data-cval="snake" onclick="selectCommOpt(this,'draft_type')">🐍 Snake</button>
+            <button class="comm-opt" data-cfield="draft_type" data-cval="auction" onclick="selectCommOpt(this,'draft_type')">🔨 Auction ($200)</button>
+          </div>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Max teams</div>
+          <select id="comm-max-teams" class="comm-input">
+            <option value="2">2</option><option value="4">4</option>
+            <option value="6">6</option><option value="8" selected>8</option>
+            <option value="10">10</option><option value="12">12</option>
+            <option value="16">16</option><option value="20">20</option>
+          </select>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Draft rounds (roster size)</div>
+          <select id="comm-rounds" class="comm-input">
+            <option value="6">6 rounds</option><option value="8">8 rounds</option>
+            <option value="10" selected>10 rounds</option>
+            <option value="13">13 rounds</option><option value="15">15 rounds</option>
+          </select>
+        </div>
+        <div id="comm-bid-timer-row" style="display:none" class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Bid timer</div>
+          <select id="comm-bid-timer" class="comm-input">
+            <option value="15">15 seconds</option>
+            <option value="30" selected>30 seconds</option>
+            <option value="60">60 seconds</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">Draft Schedule</div>
+        <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+          <div class="setting-label">Draft date & time <span style="font-size:10px;color:var(--subtle)">(optional — leave blank for manual start)</span></div>
+          <input type="datetime-local" id="comm-draft-time" class="comm-input">
+          <div style="font-size:11px;color:var(--subtle)">Times are in your local timezone. Teams get a reminder 1 hour before.</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="comm-save-btn" onclick="saveSettings()">💾 Save settings</button>
+          <button class="comm-start-btn" onclick="forceStart()">▶ Force start now</button>
+        </div>
+        <div id="comm-saved-msg" style="font-size:12px;color:var(--green);margin-top:8px;min-height:16px"></div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">Share League</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Share this code with your league members. They join at <strong>lobby.html</strong> or <strong>league.html</strong>.</div>
+        <div style="font-size:32px;font-weight:700;letter-spacing:8px;color:var(--green);text-align:center;padding:12px;background:var(--green-light);border-radius:8px;cursor:pointer;user-select:all" onclick="copyCode()" id="comm-code-display">—</div>
+        <div style="font-size:11px;color:var(--subtle);text-align:center;margin-top:6px">Click to copy</div>
+      </div>
     </div>
   </div>
 </div>
@@ -396,9 +492,12 @@ function showHub() {
   document.getElementById('connect-screen').style.display = 'none';
   document.getElementById('hub').classList.add('show');
   const leagueLabel = roomInfo.league === 'el' ? 'Euroleague' : 'NBA';
-  document.getElementById('hub-title').textContent = `${leagueLabel} League · ${myCode}`;
+  document.getElementById('hub-title').textContent = roomInfo.name || `${leagueLabel} League`;
   document.getElementById('hub-you-name').textContent = `${myTeam} (${myManager})`;
   document.getElementById('hub-code').textContent = myCode;
+  // Show commissioner tab only if we are the creator (first team)
+  const isCommissioner = roomInfo.teams?.length > 0 && roomInfo.teams[0].name === myTeam;
+  document.getElementById('commissioner-tab').style.display = isCommissioner ? 'block' : 'none';
   renderStandings();
   renderDraft();
   renderSettings();
@@ -409,10 +508,11 @@ function setTab(btn, tab) {
   activeTab = tab;
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  ['standings','players','draft','settings'].forEach(t => {
+  ['standings','players','draft','settings','commissioner'].forEach(t => {
     document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
   });
   if (tab === 'players' && allPlayers.length) renderPlayers();
+  if (tab === 'commissioner') renderCommissioner();
 }
 
 // ── STANDINGS ────────────────────────────────────────────────────────────────
@@ -730,6 +830,104 @@ function renderSettings() {
 }
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
+// Commissioner state
+const commSettings = {};
+
+function selectCommOpt(el, field) {
+  document.querySelectorAll(`[data-cfield="${field}"]`).forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  commSettings[field] = el.dataset.cval;
+  // Show/hide bid timer for auction
+  if (field === 'draft_type') {
+    document.getElementById('comm-bid-timer-row').style.display =
+      el.dataset.cval === 'auction' ? 'flex' : 'none';
+  }
+}
+
+function renderCommissioner() {
+  if (!roomInfo) return;
+  const isDraftLocked = roomInfo.status !== 'waiting';
+  document.getElementById('commissioner-locked').style.display = isDraftLocked ? 'block' : 'none';
+  document.getElementById('commissioner-form').style.display   = isDraftLocked ? 'none'  : 'block';
+  document.getElementById('comm-code-display').textContent     = myCode;
+  if (isDraftLocked) return;
+
+  // Pre-fill from roomInfo
+  document.getElementById('comm-league-name').value = roomInfo.name || '';
+  document.getElementById('comm-max-teams').value   = roomInfo.max_teams || 8;
+  document.getElementById('comm-rounds').value      = roomInfo.rounds || 10;
+  document.getElementById('comm-bid-timer').value   = roomInfo.bid_timer || 30;
+
+  // Pre-select toggle buttons
+  ['league','format','draft_type'].forEach(field => {
+    const val = roomInfo[field] || (field==='league'?'nba':field==='format'?'points':'snake');
+    document.querySelectorAll(`[data-cfield="${field}"]`).forEach(b => {
+      b.classList.toggle('selected', b.dataset.cval === val);
+    });
+    commSettings[field] = val;
+  });
+
+  // Draft time
+  if (roomInfo.draft_time) {
+    const local = new Date(roomInfo.draft_time * 1000);
+    const pad   = n => String(n).padStart(2,'0');
+    document.getElementById('comm-draft-time').value =
+      `${local.getFullYear()}-${pad(local.getMonth()+1)}-${pad(local.getDate())}T${pad(local.getHours())}:${pad(local.getMinutes())}`;
+  } else {
+    document.getElementById('comm-draft-time').value = '';
+  }
+
+  // Show/hide bid timer
+  document.getElementById('comm-bid-timer-row').style.display =
+    (roomInfo.draft_type === 'auction') ? 'flex' : 'none';
+}
+
+async function saveSettings() {
+  const leagueName  = document.getElementById('comm-league-name').value.trim();
+  const maxTeams    = document.getElementById('comm-max-teams').value;
+  const rounds      = document.getElementById('comm-rounds').value;
+  const bidTimer    = document.getElementById('comm-bid-timer').value;
+  const draftTimeRaw= document.getElementById('comm-draft-time').value;
+  let draftTimeUTC  = null;
+  if (draftTimeRaw) {
+    const local = new Date(draftTimeRaw);
+    if (!isNaN(local.getTime())) draftTimeUTC = local.toISOString();
+  }
+
+  // Need a socket connection to emit
+  const sock = io('https://hoopiq-api-production-d3a4.up.railway.app', {transports:['polling','websocket']});
+  sock.on('connect', () => {
+    sock.emit('join_room_draft', {code: myCode, manager_name: myManager, team_name: myTeam});
+  });
+  sock.on('joined_ok', () => {
+    sock.emit('update_settings', {
+      code:        myCode,
+      ...(leagueName && {league_name: leagueName}),
+      league:      commSettings.league    || roomInfo.league,
+      format:      commSettings.format    || roomInfo.format,
+      draft_type:  commSettings.draft_type|| roomInfo.draft_type,
+      max_teams:   parseInt(maxTeams),
+      rounds:      parseInt(rounds),
+      bid_timer:   parseInt(bidTimer),
+      draft_time:  draftTimeUTC,
+    });
+  });
+  sock.on('settings_saved', d => {
+    document.getElementById('comm-saved-msg').textContent = '✓ Settings saved';
+    setTimeout(() => document.getElementById('comm-saved-msg').textContent = '', 3000);
+    sock.disconnect();
+    loadLeague(); // refresh roomInfo
+  });
+  sock.on('settings_updated', d => {
+    roomInfo = d;
+    renderSettings();
+  });
+  sock.on('error', d => {
+    showToast('Error: ' + d.msg);
+    sock.disconnect();
+  });
+}
+
 function copyCode() {
   if (!myCode) return;
   navigator.clipboard.writeText(myCode).then(() => showToast('Code copied!'));
