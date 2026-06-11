@@ -63,8 +63,8 @@
     .pname{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
     .pmeta{font-size:9px;color:var(--muted)}
     .pos-b{display:inline-block;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;background:#f0f0f0;color:var(--muted);margin-right:2px}
-    .nom-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1.5px solid var(--purple);color:var(--purple);background:#fff;cursor:pointer;font-weight:700;white-space:nowrap}
-    .nom-btn:hover{background:var(--purple-light)}
+    .nom-btn{font-size:11px;padding:5px 12px;border-radius:6px;border:none;color:#fff;background:var(--purple);cursor:pointer;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(124,58,237,.4)}
+    .nom-btn:hover{opacity:.9;transform:scale(1.03)}
 
     /* AUCTION CENTRE PANEL */
     .auction-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;background:#fff}
@@ -167,6 +167,9 @@
 
   <!-- PLAYER POOL -->
   <div class="pool">
+    <div id="nom-banner" style="display:none;background:#7C3AED;color:#fff;padding:8px 12px;font-size:12px;font-weight:700;text-align:center;flex-shrink:0">
+      👆 YOUR TURN — click any player to nominate them
+    </div>
     <div class="pool-top">
       <input class="pool-search" type="text" placeholder="Search players..." id="search" oninput="renderPool()">
     </div>
@@ -223,9 +226,19 @@ const params     = new URLSearchParams(window.location.search);
 const CODE       = params.get('code');
 const ROUNDS     = parseInt(params.get('rounds') || '10');
 const LEAGUE     = (params.get('league') || 'nba').toLowerCase();
-const MY_MANAGER = params.get('manager') || '';
-const MY_TEAM    = params.get('team')    || '';
+let MY_MANAGER = params.get('manager') || '';
+let MY_TEAM    = params.get('team')    || '';
 const BID_TIMER  = parseInt(params.get('bid_timer') || '30');
+
+// Fallback to localStorage if URL params missing
+if (!MY_TEAM || !MY_MANAGER) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
+    if (!MY_TEAM && saved.team)       MY_TEAM    = saved.team;
+    if (!MY_MANAGER && saved.manager) MY_MANAGER = saved.manager;
+  } catch(e) {}
+}
+console.log('[HoopIQ Auction] CODE:', CODE, 'MY_TEAM:', MY_TEAM, 'MY_MANAGER:', MY_MANAGER);
 
 let mySid         = null;
 let allPlayers    = [];
@@ -300,6 +313,22 @@ socket.on('auction_state',    applyState);
 socket.on('auction_nominate', d => { applyState(d.state); showToast(`${d.nom_team} is nominating...`); });
 socket.on('auction_bid_update', d => { applyState(d); });
 
+socket.on('auction_uncontested', d => {
+  // No one can outbid — stop timer and show message
+  clearInterval(timerInterval); timerInterval = null;
+  timerEnd = 0;
+  // Update the timer bar to show "awarded" state
+  const fill   = document.getElementById('timer-fill');
+  const secsEl = document.getElementById('timer-secs');
+  if (fill)   { fill.style.width = '100%'; fill.style.background = '#1D9E75'; }
+  if (secsEl) secsEl.textContent = '✓ Uncontested';
+  showToast(`${d.message}`);
+  // Update banner
+  document.getElementById('ab-status').textContent =
+    `Awarding ${d.player?.name} to ${d.winner} for $${d.bid}...`;
+  document.getElementById('auction-banner').className = 'auction-banner your-turn';
+});
+
 socket.on('auction_won', d => {
   const entry = d.entry;
   draftedIds.add(entry.player.id);
@@ -318,9 +347,45 @@ fetch(`${API}/draft/pool?league=${LEAGUE}`)
   .then(data => { allPlayers = data; renderPool(); });
 
 // ── STATE ──────────────────────────────────────────────────────────────────
+let _lastHighBid = 0;
+let _lastStatus  = '';
+
 function applyState(state) {
   if (!state) return;
-  state._local_snap = Date.now() / 1000;
+  const isNewBid = (
+    state.status === 'bidding' &&
+    _lastStatus  === 'bidding' &&
+    state.high_bid > _lastHighBid
+  );
+  const isNewNomination = (
+    state.status === 'bidding' &&
+    _lastStatus  !== 'bidding'
+  );
+
+  // Update timer
+  if (isNewNomination) {
+    // Fresh nomination — start timer at full BID_TIMER
+    timerEnd = Date.now() + BID_TIMER * 1000;
+    timerDur = BID_TIMER * 1000;
+    if (!timerInterval) startTimerDisplay();
+  } else if (isNewBid) {
+    // Bid placed — reset to exactly 10s
+    timerEnd = Date.now() + 10000;
+    timerDur = 10000;
+  } else if (state.status === 'bidding' && timerEnd === 0) {
+    // Reconnect mid-auction — sync from server
+    setTimerFromState(state, false);
+    startTimerDisplay();
+  } else if (state.status !== 'bidding') {
+    // Not bidding — stop timer
+    clearInterval(timerInterval); timerInterval = null; timerEnd = 0;
+    timerInterval = null;
+    timerEnd = 0;
+  }
+
+  _lastHighBid = state.high_bid || 0;
+  _lastStatus  = state.status   || '';
+
   auctionState = state;
   draftedIds   = new Set((state.log||[]).map(e => e.player.id));
   myRoster     = (state.log||[]).filter(e => e.team === MY_TEAM).map(e => e.player);
@@ -365,18 +430,22 @@ function updateBanner() {
   budget.textContent = `$${budgetLeft} left`;
   const t = myTeamData();
   picks.textContent = t ? `${(t.roster||[]).length}/${ROUNDS} picks` : '';
+  const nomBanner = document.getElementById('nom-banner');
   if (!auctionState) {
     status.textContent = 'Waiting for draft to start...';
     banner.className = 'auction-banner';
+    if (nomBanner) nomBanner.style.display = 'none';
     return;
   }
   if (auctionState.status === 'nominating') {
     if (isMyNomTurn()) {
       status.textContent = '👆 Your turn to nominate a player';
       banner.className = 'auction-banner your-turn';
+      if (nomBanner) nomBanner.style.display = 'block';
     } else {
       status.textContent = `${auctionState.nom_team} is nominating...`;
       banner.className = 'auction-banner nominating';
+      if (nomBanner) nomBanner.style.display = 'none';
     }
   } else if (auctionState.status === 'bidding') {
     const nom = auctionState.nomination;
@@ -426,6 +495,21 @@ function renderAuctionCentre() {
           <div class="aa-winning" style="color:${isWinning?'var(--green)':'var(--text)'}">
             ${isWinning ? '✓ You are winning!' : `${auctionState.high_team} is winning`}
           </div>
+          ${(() => {
+            // Check if bid is uncontestable locally (approximate)
+            const teams = auctionState.teams || [];
+            const highBid = auctionState.high_bid || 0;
+            const canOutbid = teams.some(t => {
+              if (t.sid === auctionState.high_sid || t.name === auctionState.high_team) return false;
+              const budLeft = (t.budget||200) - (t.spent||0);
+              const spotsLeft = Math.max(0, ${ROUNDS} - (t.roster?.length||0) - 1);
+              const maxBid = Math.max(1, budLeft - spotsLeft);
+              return maxBid > highBid;
+            });
+            return !canOutbid
+              ? '<div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px">🔒 Uncontested — awarding automatically</div>'
+              : '';
+          })()}
         </div>
         <div class="aa-timer">
           <div class="aa-timer-track">
@@ -450,29 +534,61 @@ function renderAuctionCentre() {
           ${isWinning ? 'You\'re the high bidder — sit tight' : `Max bid: $${maxB}`}
         </div>`}
       </div>`;
-    startTimerDisplay();
   } else {
     centre.innerHTML = '<div class="idle-state">Waiting...</div>';
   }
 }
 
-// ── TIMER DISPLAY ──────────────────────────────────────────────────────────
+// ── TIMER SYSTEM ────────────────────────────────────────────────────────────
+// Tracks a local countdown independently of DOM re-renders.
+// timerEnd = absolute JS timestamp (ms) when current period expires.
+// timerDur = the duration the current period started with (for the progress bar).
+let timerEnd = 0;
+let timerDur = BID_TIMER * 1000;  // ms
+
+function setTimerFromState(state, isNewBid) {
+  // Called when state arrives. isNewBid = true means a bid just happened.
+  if (!state || state.status !== 'bidding') return;
+
+  const serverRemaining = (state.timer_remaining || 0) * 1000; // ms
+  const networkLatency  = 300; // rough compensation
+
+  if (isNewBid) {
+    // Bid just placed — server reset to 10s. Snap our local timer to 10s.
+    timerEnd = Date.now() + 10000 - networkLatency;
+    timerDur = 10000;
+  } else if (timerEnd === 0) {
+    // First time seeing this auction — use server value as-is
+    timerEnd = Date.now() + serverRemaining - networkLatency;
+    // If remaining > 10s, it's the initial nomination timer (BID_TIMER)
+    timerDur = serverRemaining > 10500 ? BID_TIMER * 1000 : 10000;
+  }
+  // If timer already running with <10s left, don't let a state refresh reset it
+  // (state updates from other events shouldn't touch timer unless it's a new bid)
+}
+
 function startTimerDisplay() {
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     if (!auctionState || auctionState.status !== 'bidding') {
-      clearInterval(timerInterval); return;
+      clearInterval(timerInterval);
+      const fill   = document.getElementById('timer-fill');
+      const secsEl = document.getElementById('timer-secs');
+      if (fill)   fill.style.width = '0%';
+      if (secsEl) secsEl.textContent = '—';
+      return;
     }
-    const remaining = auctionState.timer_remaining;
-    const elapsed   = (Date.now()/1000) - (auctionState._local_snap || Date.now()/1000);
-    const secs      = Math.max(0, remaining - elapsed);
-    const dur       = auctionState.status === 'bidding' ? 10 : BID_TIMER;
-    const pct       = Math.min(100, (secs / dur) * 100);
+    const remaining = Math.max(0, timerEnd - Date.now());
+    const secs      = remaining / 1000;
+    const pct       = timerDur > 0 ? Math.min(100, (remaining / timerDur) * 100) : 0;
     const fill      = document.getElementById('timer-fill');
     const secsEl    = document.getElementById('timer-secs');
-    if (fill)  { fill.style.width = pct + '%'; fill.className = 'aa-timer-fill' + (secs<5?' urgent':''); }
-    if (secsEl) secsEl.textContent = `${Math.ceil(secs)}s`;
-  }, 200);
+    if (fill) {
+      fill.style.width    = pct + '%';
+      fill.className      = 'aa-timer-fill' + (secs < 5 ? ' urgent' : '');
+    }
+    if (secsEl) secsEl.textContent = secs > 0 ? `${Math.ceil(secs)}s` : '0s';
+  }, 100);
 }
 
 // ── BID ACTIONS ────────────────────────────────────────────────────────────
@@ -519,7 +635,11 @@ function sortPool(key) {
 
 function renderPool() {
   const q       = document.getElementById('search').value.toLowerCase();
-  const canNom  = auctionState?.status === 'nominating' && isMyNomTurn();
+  const myTurnNow = isMyNomTurn();
+  const canNom  = auctionState?.status === 'nominating' && myTurnNow;
+  if (auctionState?.status === 'nominating') {
+    console.log('[HoopIQ] Nom turn check — nom_team:', auctionState.nom_team, '| MY_TEAM:', MY_TEAM, '| nom_sid:', auctionState.nom_sid, '| mySid:', mySid, '| isMyTurn:', myTurnNow);
+  }
   let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
   if (posFilter !== 'ALL') list = list.filter(p => p.pos === posFilter);
   list = [...list].sort((a,b) => sortAsc ? (a[sortKey]??0)-(b[sortKey]??0) : (b[sortKey]??0)-(a[sortKey]??0));
