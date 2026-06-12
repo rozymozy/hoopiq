@@ -6,6 +6,7 @@
 
 (function() {
   const PAGES = {
+    'home.html':      { label: 'Home',         icon: '🏠' },
     'index.html':     { label: 'Projections',  icon: '📊' },
     'lobby.html':     { label: 'New League',   icon: '🏀' },
     'draft.html':     { label: 'Draft',        icon: '🏀' },
@@ -79,7 +80,7 @@
     if (existing) return; // already injected
 
     const backLabel = getBackLabel();
-    const isHome    = current === 'index.html';
+    const isHome    = current === 'index.html' || current === 'home.html';
 
     const nav = document.createElement('div');
     nav.className = 'hoopiq-nav';
@@ -177,7 +178,7 @@
           </button>
           <div class="hn-divider"></div>
         ` : ''}
-        <a class="hn-logo" href="index.html">Hoop<span>IQ</span></a>
+        <a class="hn-logo" href="home.html">Hoop<span>IQ</span></a>
         <div class="hn-current">${PAGES[current]?.label || ''}</div>
         <div class="hn-links">
           <a class="hn-link ${current==='index.html'?'active':''}"    href="${linkWithParams('index.html')}">Projections</a>

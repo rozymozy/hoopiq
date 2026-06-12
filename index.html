@@ -51,6 +51,9 @@
     .proj-val { font-size: 22px; font-weight: 700; color: var(--green); line-height: 1; }
     .proj-val.el { color: var(--orange); }
     .proj-label { font-size: 10px; color: var(--subtle); margin-top: 2px; }
+        .extra-ranks { display:flex; gap:6px; margin-top:6px; justify-content:flex-end; }
+    .extra-ranks span { font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; background:var(--bg); color:var(--muted); }
+    .extra-ranks .auction-val { background:var(--green-light); color:#0F6E56; }
     .avg-bar { margin-top: 10px; }
     .avg-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--subtle); margin-bottom: 4px; }
     .bar-track { height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
@@ -111,11 +114,12 @@
   <div class="meta-row">
     <div class="count" id="count"></div>
     <select class="sort-select" id="sort" onchange="sortPlayers()">
-      <option value="proj_dk">Sort: Proj DK</option>
+      <option value="proj_dk">Sort: Proj Rank (DK)</option>
+      <option value="dk_avg">Sort: Last Year Rank (DK)</option>
+      <option value="auction_value">Sort: Auction Value</option>
       <option value="pts">Sort: PTS avg</option>
       <option value="reb">Sort: REB avg</option>
       <option value="ast">Sort: AST avg</option>
-      <option value="dk_avg">Sort: DK avg</option>
     </select>
   </div>
   <div id="player-list"><div class="loading"><div class="spinner"></div>Loading projections...</div></div>
@@ -153,11 +157,49 @@ async function loadLeague(league) {
   try {
     const r = await fetch(league === 'el' ? `${API}/euroleague/top?limit=200` : `${API}/top?limit=200`);
     allPlayers = await r.json();
+    computeDerivedStats(allPlayers);
     renderPlayers(allPlayers);
     document.getElementById('count').textContent = `${allPlayers.length} players · sorted by projected DK pts`;
   } catch(e) {
     document.getElementById('player-list').innerHTML = `<div class="error-msg">Failed to load data.</div>`;
   }
+}
+
+/**
+ * Compute "last year rank" (by season DK avg) and a dummy auction value
+ * (proportional share of a $2400 league budget pool above replacement level).
+ * These are estimates until real draft data is collected from users.
+ */
+function computeDerivedStats(players) {
+  // Last year rank — by season dk_avg, descending
+  const byDkAvg = [...players].sort((a,b) => (b.dk_avg ?? 0) - (a.dk_avg ?? 0));
+  byDkAvg.forEach((p, i) => { p.last_year_rank = i + 1; });
+
+  // Auction value — dummy estimate based on proj_dk above replacement level.
+  // Assumes a 12-team league, 13 roster spots => 156 rostered players.
+  // Budget pool = 12 teams x $200 = $2400.
+  const ROSTER_SPOTS = 156;
+  const BUDGET_POOL  = 2400;
+  const byProj = [...players].sort((a,b) => (b.proj_dk ?? 0) - (a.proj_dk ?? 0));
+  const replacementIdx = Math.min(ROSTER_SPOTS, byProj.length - 1);
+  const replacementVal = byProj[replacementIdx]?.proj_dk ?? 0;
+
+  // Sum of positive value above replacement across rostered players
+  let totalAboveRepl = 0;
+  byProj.forEach((p, i) => {
+    const above = Math.max(0, (p.proj_dk ?? 0) - replacementVal);
+    p._above_repl = (i < ROSTER_SPOTS) ? above : 0;
+    totalAboveRepl += p._above_repl;
+  });
+
+  players.forEach(p => {
+    if (p._above_repl > 0 && totalAboveRepl > 0) {
+      const raw = (p._above_repl / totalAboveRepl) * BUDGET_POOL;
+      p.auction_value = Math.max(1, Math.round(raw));
+    } else {
+      p.auction_value = 1;
+    }
+  });
 }
 
 function renderPlayers(players) {
@@ -186,7 +228,11 @@ function renderPlayers(players) {
         </div>
         <div class="proj-block">
           <div class="proj-val${isEL ? ' el' : ''}">${projDk.toFixed(1)}</div>
-          <div class="proj-label">proj DK</div>
+          <div class="proj-label">proj DK · #${p.proj_rank ?? '—'}</div>
+          <div class="extra-ranks">
+            <span title="Last year rank (by season DK avg)">LY #${p.last_year_rank ?? '—'}</span>
+            <span class="auction-val" title="Estimated auction value">$${p.auction_value ?? 1}</span>
+          </div>
         </div>
       </div>
       <div class="avg-bar">
@@ -247,7 +293,11 @@ function filterPlayers() {
 }
 function sortPlayers() {
   sortField = document.getElementById('sort').value;
-  renderPlayers([...allPlayers].sort((a,b) => (b[sortField]??0)-(a[sortField]??0)));
+  const ascFields = ['last_year_rank']; // lower rank number = better, sort ascending
+  const asc = ascFields.includes(sortField);
+  renderPlayers([...allPlayers].sort((a,b) =>
+    asc ? (a[sortField]??9999)-(b[sortField]??9999) : (b[sortField]??0)-(a[sortField]??0)
+  ));
 }
 
 init();
