@@ -6,13 +6,15 @@
 
 (function() {
   const PAGES = {
-    'index.html':   { label: 'Projections',  icon: '📊' },
-    'lobby.html':   { label: 'Draft Lobby',  icon: '🏀' },
-    'draft.html':   { label: 'Draft',        icon: '🏀' },
-    'auction.html': { label: 'Auction',      icon: '🔨' },
-    'waivers.html': { label: 'Waivers',      icon: '📋' },
-    'matchup.html': { label: 'Matchup',      icon: '⚔️'  },
-    'league.html':  { label: 'My League',    icon: '🏆' },
+    'index.html':     { label: 'Projections',  icon: '📊' },
+    'lobby.html':     { label: 'New League',   icon: '🏀' },
+    'draft.html':     { label: 'Draft',        icon: '🏀' },
+    'auction.html':   { label: 'Auction',      icon: '🔨' },
+    'waivers.html':   { label: 'Waivers',      icon: '📋' },
+    'matchup.html':   { label: 'Matchup',      icon: '⚔️'  },
+    'league.html':    { label: 'My League',    icon: '🏆' },
+    'dashboard.html': { label: 'Dashboard',    icon: '🏠' },
+    'auth.html':      { label: 'Sign In',      icon: '👤' },
   };
 
   // Determine current page
@@ -183,6 +185,15 @@
           <a class="hn-link ${current==='league.html'?'active':''}"   href="${linkWithParams('league.html')}">My League</a>
           <a class="hn-link ${current==='waivers.html'?'active':''}"  href="${linkWithParams('waivers.html')}">Waivers</a>
           <a class="hn-link ${current==='matchup.html'?'active':''}"  href="${linkWithParams('matchup.html')}">Matchup</a>
+          ${(()=>{
+            try {
+              const sess = JSON.parse(localStorage.getItem('hoopiq_session')||'null');
+              if (sess?.access_token) {
+                return \`<a class="hn-link ${current==='dashboard.html'?'active':''}" href="dashboard.html">Dashboard</a>\`;
+              }
+              return \`<a class="hn-link ${current==='auth.html'?'active':''}" href="auth.html">Sign in</a>\`;
+            } catch(e) { return ''; }
+          })()}
         </div>
       </div>
     `;
