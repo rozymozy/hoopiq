@@ -83,10 +83,14 @@
 <script>
 const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
 
-// If already logged in, redirect to dashboard
+// Determine where to go after sign-in
+const urlParams   = new URLSearchParams(window.location.search);
+const redirectTo  = urlParams.get('redirect') === 'lobby' ? 'lobby.html' : 'dashboard.html';
+
+// If already logged in, redirect immediately
 const session = JSON.parse(localStorage.getItem('hoopiq_session') || 'null');
 if (session?.access_token) {
-  window.location.href = 'dashboard.html';
+  window.location.href = redirectTo;
 }
 
 function setTab(btn, tab) {
@@ -120,7 +124,7 @@ async function login() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');
     saveSession(data);
-    window.location.href = 'dashboard.html';
+    window.location.href = redirectTo;
   } catch(e) {
     errEl.textContent = e.message;
     setLoading('login-btn', false);
@@ -161,7 +165,8 @@ async function signup() {
 
 async function googleSignIn() {
   try {
-    const res  = await fetch(`${API}/auth/google-url?redirect=${encodeURIComponent('https://rozymozy.github.io/hoopiq/auth-callback.html')}`);
+    const callbackUrl = `https://rozymozy.github.io/hoopiq/auth-callback.html?redirect=${redirectTo === 'lobby.html' ? 'lobby' : 'dashboard'}`;
+    const res  = await fetch(`${API}/auth/google-url?redirect=${encodeURIComponent(callbackUrl)}`);
     const data = await res.json();
     if (data.url) window.location.href = data.url;
   } catch(e) {

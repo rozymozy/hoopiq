@@ -57,6 +57,20 @@
 
 <div class="container">
 
+  <!-- AUTH GATE -->
+  <div id="auth-gate" style="display:none">
+    <div class="page-title">Sign in to continue</div>
+    <div class="page-sub">You need an account to create or join a league — this lets your leagues be saved to your dashboard.</div>
+    <div class="card" style="text-align:center;padding:32px 24px">
+      <div style="font-size:40px;margin-bottom:12px">🔒</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Account required</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+        Sign in or create a free account to start a league. Your leagues, rosters, and stats will be saved permanently.
+      </div>
+      <button class="btn btn-green" onclick="window.location.href='auth.html?redirect=lobby'" style="margin-top:0">Sign in / Create account</button>
+    </div>
+  </div>
+
   <div class="setup-cards" id="setup-cards">
     <div class="page-title">Start a League</div>
     <div class="page-sub">Create a private league or join one with a code</div>
@@ -130,6 +144,18 @@
 
 <script>
 const API    = 'https://hoopiq-api-production-d3a4.up.railway.app';
+
+// ── AUTH CHECK — require sign-in before showing forms ────────────────────
+const session = JSON.parse(localStorage.getItem('hoopiq_session') || 'null');
+const user     = JSON.parse(localStorage.getItem('hoopiq_user')    || 'null');
+
+if (!session?.access_token) {
+  document.getElementById('auth-gate').style.display   = 'block';
+  document.getElementById('setup-cards').style.display = 'none';
+} else {
+  document.getElementById('auth-gate').style.display   = 'none';
+}
+
 const socket = io(API, {transports:['polling','websocket']});
 
 let myCode    = null;
@@ -137,11 +163,15 @@ let mySid     = null;
 let myManager = '';
 let myTeam    = '';
 let selectedLeague = 'nba';
+const accessToken = session?.access_token || null;
 
-// Pre-fill from localStorage
+// Pre-fill manager name from account, then localStorage as fallback
 const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
-if (saved.manager) document.getElementById('create-manager').value = saved.manager;
-if (saved.manager) document.getElementById('join-manager').value   = saved.manager;
+const defaultManager = user?.email ? user.email.split('@')[0] : (saved.manager || '');
+if (defaultManager) {
+  document.getElementById('create-manager').value = defaultManager;
+  document.getElementById('join-manager').value   = defaultManager;
+}
 
 socket.on('connect',   ()  => { mySid = socket.id; });
 socket.on('connected', d   => { mySid = d.sid; });
@@ -211,6 +241,7 @@ function createRoom() {
     manager_name: manager,
     team_name:    team,
     league:       selectedLeague,
+    access_token: accessToken,
     // Sensible defaults — commissioner can change all of these
     format:       'points',
     draft_type:   'snake',
@@ -230,7 +261,7 @@ function joinRoom() {
   }
   myManager = manager; myTeam = team; myCode = code;
   document.getElementById('join-error').textContent = '';
-  socket.emit('join_room_draft', {code, manager_name: manager, team_name: team});
+  socket.emit('join_room_draft', {code, manager_name: manager, team_name: team, access_token: accessToken});
 }
 
 function goToLeague() {

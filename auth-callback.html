@@ -52,7 +52,9 @@ async function handleCallback() {
         localStorage.setItem('hoopiq_session', JSON.stringify({access_token, refresh_token}));
         localStorage.setItem('hoopiq_user',    JSON.stringify(data.user));
         document.getElementById('msg').textContent = 'Signed in! Redirecting...';
-        window.location.href = 'dashboard.html';
+        const urlParams  = new URLSearchParams(window.location.search);
+        const redirectTo = urlParams.get('redirect') === 'lobby' ? 'lobby.html' : 'dashboard.html';
+        window.location.href = redirectTo;
       } else {
         throw new Error(data.error || 'Auth failed');
       }
