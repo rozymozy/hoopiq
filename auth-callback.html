@@ -25,19 +25,49 @@
 <script>
 const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
 
-// Supabase sends tokens in the URL hash after OAuth
+// Supabase can return tokens two ways:
+// 1. Implicit flow: #access_token=...&refresh_token=...  (URL hash)
+// 2. PKCE flow:     ?code=...                              (query string)
 async function handleCallback() {
-  const hash   = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
+  const hash       = window.location.hash.substring(1);
+  const hashParams = new URLSearchParams(hash);
+  const queryParams = new URLSearchParams(window.location.search);
 
-  const access_token  = params.get('access_token');
-  const refresh_token = params.get('refresh_token');
-  const error         = params.get('error_description') || params.get('error');
+  const access_token  = hashParams.get('access_token');
+  const refresh_token = hashParams.get('refresh_token');
+  const pkce_code     = queryParams.get('code');
+  const error         = hashParams.get('error_description') || hashParams.get('error')
+                       || queryParams.get('error_description') || queryParams.get('error');
 
   if (error) {
     document.getElementById('msg').textContent = 'Sign-in failed';
     document.getElementById('err').textContent = error;
     setTimeout(() => window.location.href = 'auth.html', 3000);
+    return;
+  }
+
+  // PKCE flow: exchange the code for a session via our API
+  if (pkce_code && !access_token) {
+    try {
+      const res  = await fetch(`${API}/auth/exchange`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({code: pkce_code}),
+      });
+      const data = await res.json();
+      if (res.ok && data.session?.access_token) {
+        localStorage.setItem('hoopiq_session', JSON.stringify(data.session));
+        localStorage.setItem('hoopiq_user',    JSON.stringify(data.user));
+        document.getElementById('msg').textContent = 'Signed in! Redirecting...';
+        const redirectTo = queryParams.get('redirect') === 'lobby' ? 'lobby.html' : 'dashboard.html';
+        window.location.href = redirectTo;
+      } else {
+        throw new Error(data.error || 'Exchange failed');
+      }
+    } catch(e) {
+      document.getElementById('err').textContent = e.message;
+      setTimeout(() => window.location.href = 'auth.html', 3000);
+    }
     return;
   }
 
