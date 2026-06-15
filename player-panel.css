@@ -96,6 +96,7 @@
 .pp-badge.hot   { background: var(--pp-orange-light); color: #993C1D; border-color: #F5C4B3; }
 .pp-badge.cold  { background: var(--pp-blue-light); color: #185FA5; border-color: #B5D4F4; }
 .pp-badge.el    { background: var(--pp-orange-light); color: #993C1D; border-color: #F5C4B3; }
+.pp-badge.trade { background: var(--pp-purple-light); color: #5B21B6; border-color: #DDD6FE; }
 .pp-close {
   width: 28px; height: 28px;
   border-radius: 50%;
@@ -200,6 +201,31 @@
 .pp-proj-track{ flex: 1; height: 5px; background: var(--pp-bg); border-radius: 3px; overflow: hidden; }
 .pp-proj-fill { height: 100%; background: var(--pp-green); border-radius: 3px; }
 .pp-proj-val  { font-size: 11px; font-weight: 700; color: var(--pp-green); min-width: 28px; text-align: right; }
+
+/* Season History */
+.pp-sh-wrap   { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 8px; }
+.pp-sh-row    { background: var(--pp-bg); border-radius: 8px; padding: 8px 10px; }
+.pp-sh-row.pp-sh-total   { background: var(--pp-green-light); border: 1px solid #BFE6D8; }
+.pp-sh-row.pp-sh-traded  { border-left: 3px solid var(--pp-purple); }
+.pp-sh-row.pp-sh-unavailable {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; opacity: .55;
+}
+.pp-sh-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.pp-sh-season { font-size: 11px; font-weight: 700; color: var(--pp-text); }
+.pp-sh-team   { font-size: 11px; font-weight: 600; color: var(--pp-muted); }
+.pp-sh-row.pp-sh-total .pp-sh-team { color: #0F6E56; }
+.pp-sh-games  { font-size: 10px; color: var(--pp-subtle); }
+.pp-sh-stats  {
+  display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px;
+}
+.pp-sh-stat     { text-align: center; }
+.pp-sh-stat-val { font-size: 12px; font-weight: 700; color: var(--pp-text); }
+.pp-sh-stat-lbl { font-size: 8px; color: var(--pp-subtle); text-transform: uppercase; letter-spacing: .3px; margin-top: 1px; }
+.pp-sh-na     { font-size: 11px; color: var(--pp-subtle); margin-left: auto; }
 
 /* News */
 .pp-news-wrap { padding: 0 16px; }

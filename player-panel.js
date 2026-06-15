@@ -141,12 +141,16 @@ const PlayerPanel = (() => {
     const avg5   = dk5.length  ? dk5.reduce((a,b)=>a+b,0)  / dk5.length  : 0;
     const trend  = avg5 > avg10 * 1.1 ? 'hot' : avg5 < avg10 * 0.9 ? 'cold' : 'flat';
 
+    const teamsThisSeason = data.teams_this_season || [];
+    const wasTraded = teamsThisSeason.length > 1;
+
     document.getElementById('pp-badges').innerHTML = [
       `<span class="pp-badge proj">Proj ${parseFloat(data.proj_dk || 0).toFixed(1)} DK</span>`,
       trend === 'hot'  ? '<span class="pp-badge hot">Hot streak ↑</span>'   : '',
       trend === 'cold' ? '<span class="pp-badge cold">Cold stretch ↓</span>': '',
       trend === 'flat' ? '<span class="pp-badge">On track →</span>'         : '',
       `<span class="pp-badge ${isEl?'el':''}">${isEl ? 'Euroleague' : 'NBA'}</span>`,
+      wasTraded ? `<span class="pp-badge trade" title="Played for: ${teamsThisSeason.join(', ')}">🔁 Traded (${teamsThisSeason.join(' → ')})</span>` : '',
     ].join('');
 
     // ── Stat helpers
@@ -185,6 +189,7 @@ const PlayerPanel = (() => {
     const logRows = games.map(g => `
       <tr>
         <td>${(g.GAME_DATE || '—').slice(0,10)}</td>
+        <td>${g.TEAM  ?? '—'}</td>
         <td>${g.OPP   ?? '—'}</td>
         <td>${g.PTS   ?? '—'}</td>
         <td>${g.REB   ?? '—'}</td>
@@ -195,21 +200,37 @@ const PlayerPanel = (() => {
         <td class="pp-td-g">${g.DK_PTS !== undefined
               ? parseFloat(g.DK_PTS).toFixed(1) : '—'}</td>
       </tr>`).join('')
-      || '<tr><td colspan="9" style="text-align:center;padding:12px;color:#9ca3af">No game data</td></tr>';
+      || '<tr><td colspan="10" style="text-align:center;padding:12px;color:#9ca3af">No game data</td></tr>';
 
-    // ── Projection breakdown — use season averages as proxy
-    const projKeys = ['pts','reb','ast','stl','blk','tov'];
-    const projVals = projKeys.map(k => parseFloat(s[k]) || 0);
-    const maxProj  = Math.max(...projVals, 1);
-    const projBars = projKeys.map((k, i) => `
-      <div class="pp-proj-row">
-        <div class="pp-proj-lbl">${CATS.find(c=>c.k===k)?.l || k}</div>
-        <div class="pp-proj-track">
-          <div class="pp-proj-fill"
-               style="width:${Math.round((projVals[i]/maxProj)*100)}%"></div>
-        </div>
-        <div class="pp-proj-val">${fmt(k, projVals[i])}</div>
-      </div>`).join('');
+    // ── Season history — current + previous 3 seasons, split by team if traded
+    const seasonHistory = data.season_history || [];
+    const SH_CATS = ['pts','reb','ast','stl','blk','tov','fg3m','fg_pct','ft_pct'];
+    const seasonHistoryHtml = seasonHistory.map(sh => {
+      if (!sh.available) {
+        return `
+          <div class="pp-sh-row pp-sh-unavailable">
+            <div class="pp-sh-season">${sh.season}</div>
+            <div class="pp-sh-team">—</div>
+            <div class="pp-sh-na">Data not available</div>
+          </div>`;
+      }
+      const statCells = SH_CATS.map(k => `
+        <div class="pp-sh-stat">
+          <div class="pp-sh-stat-val">${fmt(k, sh[k] ?? 0)}</div>
+          <div class="pp-sh-stat-lbl">${CATS.find(c=>c.k===k)?.l || k.toUpperCase()}</div>
+        </div>`).join('');
+      const rowClass = sh.is_total ? 'pp-sh-row pp-sh-total'
+                     : sh.traded_entry ? 'pp-sh-row pp-sh-traded' : 'pp-sh-row';
+      return `
+        <div class="${rowClass}">
+          <div class="pp-sh-header">
+            <div class="pp-sh-season">${sh.season}</div>
+            <div class="pp-sh-team">${sh.is_total ? 'Total' : (sh.team || '—')}</div>
+            <div class="pp-sh-games">${sh.games} GP</div>
+          </div>
+          <div class="pp-sh-stats">${statCells}</div>
+        </div>`;
+    }).join('');
 
     // ── News (mock)
     const newsItems = NEWS_MOCK[data.name] || NEWS_MOCK.default;
@@ -244,7 +265,7 @@ const PlayerPanel = (() => {
       <div class="pp-log-wrap">
         <table class="pp-log-tbl">
           <thead><tr>
-            <th>Date</th><th>Opp</th>
+            <th>Date</th><th>Team</th><th>Opp</th>
             <th>PTS</th><th>REB</th><th>AST</th>
             <th>STL</th><th>BLK</th><th>TO</th><th>DK</th>
           </tr></thead>
@@ -252,8 +273,8 @@ const PlayerPanel = (() => {
         </table>
       </div>
 
-      <div class="pp-sec-title">Season stat breakdown</div>
-      <div class="pp-proj-wrap">${projBars}</div>
+      <div class="pp-sec-title">Season History</div>
+      <div class="pp-sh-wrap">${seasonHistoryHtml || '<div style="color:#9ca3af;font-size:11px;padding:8px">No season history</div>'}</div>
 
       <div class="pp-sec-title">News & updates</div>
       <div class="pp-news-wrap">${newsHtml}</div>
