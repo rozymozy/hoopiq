@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — Waiver Wire</title>
+  <title>Courtside — Waiver Wire</title>
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --green:#1D9E75;--green-light:#E1F5EE;
-      --orange:#D85A30;--orange-light:#FAECE7;
+      --green:#2C5F8A;--green-light:#E3EEF6;
+      --orange:#F4A35C;--orange-light:#FDF1E4;
       --purple:#7C3AED;--purple-light:#EDE9FE;
       --bg:#f4f4f6;--border:#e8e8ec;
       --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
@@ -79,7 +79,7 @@
     /* STATUS BADGES */
     .sbadge{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;margin-left:4px;vertical-align:middle}
     .sbadge.w{background:var(--orange-light);color:var(--orange)}
-    .sbadge.fa{background:var(--green-light);color:#0F6E56}
+    .sbadge.fa{background:var(--green-light);color:#1E4566}
     .sbadge.mine{background:var(--purple-light);color:var(--purple)}
     .pos-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:#f0f0f0;color:var(--muted);margin-right:3px}
 
@@ -122,7 +122,7 @@
     .pri-row:last-child{border-bottom:none}
     .pri-n{font-size:10px;font-weight:700;color:var(--subtle);min-width:16px}
     .pri-name{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .pri-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700}
+    .pri-you{font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 5px;border-radius:8px;font-weight:700}
     .pri-faab{font-size:12px;font-weight:700;color:var(--purple)}
     .tx-row{font-size:11px;padding:5px 0;border-bottom:1px solid #f4f4f6;line-height:1.4;color:var(--muted)}
     .tx-row:last-child{border-bottom:none}
@@ -305,8 +305,8 @@ function getSlots(rounds) {
   return ROSTER_SLOTS[best];
 }
 const SLOT_COLORS = {
-  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
-  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  PG:'#2C5F8A',SG:'#7C3AED',G:'#6366F1',
+  SF:'#F4A35C',PF:'#B45309',F:'#92400E',
   C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
 };
 const sock = io(API, {transports:['polling','websocket']});
@@ -341,8 +341,8 @@ sock.on('waiver_state', d => {
   renderAll();
   // Save to localStorage so league.html can auto-reconnect
   if (myCode && myTeam) {
-    const saved = JSON.parse(localStorage.getItem('hoopiq_league')||'{}');
-    localStorage.setItem('hoopiq_league', JSON.stringify({...saved, code:myCode, team:myTeam}));
+    const saved = JSON.parse(localStorage.getItem('courtside_league')||'{}');
+    localStorage.setItem('courtside_league', JSON.stringify({...saved, code:myCode, team:myTeam}));
   }
 });
 

@@ -1,5 +1,5 @@
 /**
- * player-panel.js — HoopIQ shared player profile panel
+ * player-panel.js — Courtside shared player profile panel
  * Slide-in panel wired to live API.
  * Include after player-panel.css on any page.
  */
@@ -12,8 +12,8 @@ const PlayerPanel = (() => {
     default: [
       { type:'perf',
         title:'Check latest stats on NBA.com',
-        meta:'HoopIQ · Today',
-        body:'Real-time injury reports and news will be available in a future version of HoopIQ. Check official sources for the latest updates on this player.',
+        meta:'Courtside · Today',
+        body:'Real-time injury reports and news will be available in a future version of Courtside. Check official sources for the latest updates on this player.',
         source:'https://nba.com' },
     ]
   };
@@ -116,7 +116,7 @@ const PlayerPanel = (() => {
       render(data, league);
     } catch(err) {
       document.getElementById('pp-body').innerHTML =
-        `<div class="pp-loading" style="color:#D85A30">
+        `<div class="pp-loading" style="color:#F4A35C">
            Could not load player data.<br>
            <span style="font-size:11px;color:#9ca3af">${err.message}</span>
          </div>`;

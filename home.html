@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — Fantasy Basketball</title>
+  <title>Courtside — Fantasy Basketball</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --green:#1D9E75;--green-light:#E1F5EE;
-      --orange:#D85A30;--orange-light:#FAECE7;
+      --green:#2C5F8A;--green-light:#E3EEF6;
+      --orange:#F4A35C;--orange-light:#FDF1E4;
       --purple:#7C3AED;--purple-light:#EDE9FE;
       --bg:#f4f4f6;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af;
     }
@@ -58,7 +58,7 @@
 <body>
 <div class="wrap">
   <div class="hero">
-    <div class="logo">Hoop<span>IQ</span></div>
+    <div class="logo">Court<span>side</span></div>
     <div class="tagline">AI-powered fantasy basketball — NBA &amp; Euroleague</div>
   </div>
 
@@ -102,7 +102,7 @@
 <script>
 // If signed in, point footer link to dashboard instead of auth
 try {
-  const session = JSON.parse(localStorage.getItem('hoopiq_session') || 'null');
+  const session = JSON.parse(localStorage.getItem('courtside_session') || 'null');
   if (session?.access_token) {
     document.getElementById('dash-link').href = 'dashboard.html';
     document.getElementById('dash-link').textContent = 'Go to your dashboard →';

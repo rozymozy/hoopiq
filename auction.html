@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — Auction Draft</title>
+  <title>Courtside — Auction Draft</title>
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <link rel="stylesheet" href="player-panel.css?v=2">
   <script src="player-panel.js?v=2" defer></script>
@@ -11,8 +11,8 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --green:#1D9E75;--green-light:#E1F5EE;
-      --orange:#D85A30;--orange-light:#FAECE7;
+      --green:#2C5F8A;--green-light:#E3EEF6;
+      --orange:#F4A35C;--orange-light:#FDF1E4;
       --purple:#7C3AED;--purple-light:#EDE9FE;
       --gold:#F59E0B;--gold-light:#FEF3C7;
       --bg:#f4f4f6;--border:#e8e8ec;
@@ -52,7 +52,7 @@
     .pool-tbl th.sorted{color:var(--green)}
     .pool-tbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
     .pool-tbl tbody tr:last-child{border-bottom:none}
-    .pool-tbl tbody tr.can-nom{cursor:pointer}.pool-tbl tbody tr.can-nom:hover{background:#f0faf6}
+    .pool-tbl tbody tr.can-nom{cursor:pointer}.pool-tbl tbody tr.can-nom:hover{background:#eef4f9}
     .pool-tbl tbody tr.drafted{opacity:.2;pointer-events:none}
     .pool-tbl td{font-size:11px;padding:5px 5px;text-align:right;white-space:nowrap}
     .pool-tbl td:first-child{text-align:left;padding-left:8px}
@@ -121,7 +121,7 @@
     .team-block-header:hover{background:#eeeef0}
     .tbh-left{flex:1;min-width:0}
     .tbh-name{font-size:11px;font-weight:700;color:var(--text)}
-    .tbh-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:4px}
+    .tbh-you{font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:4px}
     .tbh-budget{font-size:11px;font-weight:700;color:var(--purple)}
     .tbh-budget-sub{font-size:9px;color:var(--muted)}
     .team-picks{padding:4px 0}
@@ -215,7 +215,7 @@
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px">
       <button class="close-btn" style="background:var(--green)"  onclick="window.location.href='index.html'">Projections</button>
       <button class="close-btn" style="background:var(--purple)" onclick="goToWaivers()">Waivers</button>
-      <button class="close-btn" style="background:#2563EB"       onclick="goToMatchup()">Matchup</button>
+      <button class="close-btn" style="background:#2C5F8A"       onclick="goToMatchup()">Matchup</button>
     </div>
   </div>
 </div>
@@ -233,12 +233,12 @@ const BID_TIMER  = parseInt(params.get('bid_timer') || '30');
 // Fallback to localStorage if URL params missing
 if (!MY_TEAM || !MY_MANAGER) {
   try {
-    const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
+    const saved = JSON.parse(localStorage.getItem('courtside_league') || '{}');
     if (!MY_TEAM && saved.team)       MY_TEAM    = saved.team;
     if (!MY_MANAGER && saved.manager) MY_MANAGER = saved.manager;
   } catch(e) {}
 }
-console.log('[HoopIQ Auction] CODE:', CODE, 'MY_TEAM:', MY_TEAM, 'MY_MANAGER:', MY_MANAGER);
+console.log('[Courtside Auction] CODE:', CODE, 'MY_TEAM:', MY_TEAM, 'MY_MANAGER:', MY_MANAGER);
 
 let mySid         = null;
 let allPlayers    = [];
@@ -267,8 +267,8 @@ function getSlots(rounds) {
   return ROSTER_SLOTS[best];
 }
 const SLOT_COLORS = {
-  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
-  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  PG:'#2C5F8A',SG:'#7C3AED',G:'#6366F1',
+  SF:'#F4A35C',PF:'#B45309',F:'#92400E',
   C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
 };
 
@@ -289,7 +289,7 @@ socket.on('joined_ok', d => {
     return;
   }
   // Save to localStorage
-  localStorage.setItem('hoopiq_league', JSON.stringify({
+  localStorage.setItem('courtside_league', JSON.stringify({
     code: CODE, team: MY_TEAM, manager: MY_MANAGER
   }));
   draftedIds = new Set((room.log||[]).map(e => e.player.id));
@@ -320,7 +320,7 @@ socket.on('auction_uncontested', d => {
   // Update the timer bar to show "awarded" state
   const fill   = document.getElementById('timer-fill');
   const secsEl = document.getElementById('timer-secs');
-  if (fill)   { fill.style.width = '100%'; fill.style.background = '#1D9E75'; }
+  if (fill)   { fill.style.width = '100%'; fill.style.background = '#2C5F8A'; }
   if (secsEl) secsEl.textContent = '✓ Uncontested';
   showToast(`${d.message}`);
   // Update banner
@@ -638,7 +638,7 @@ function renderPool() {
   const myTurnNow = isMyNomTurn();
   const canNom  = auctionState?.status === 'nominating' && myTurnNow;
   if (auctionState?.status === 'nominating') {
-    console.log('[HoopIQ] Nom turn check — nom_team:', auctionState.nom_team, '| MY_TEAM:', MY_TEAM, '| nom_sid:', auctionState.nom_sid, '| mySid:', mySid, '| isMyTurn:', myTurnNow);
+    console.log('[Courtside] Nom turn check — nom_team:', auctionState.nom_team, '| MY_TEAM:', MY_TEAM, '| nom_sid:', auctionState.nom_sid, '| mySid:', mySid, '| isMyTurn:', myTurnNow);
   }
   let list = allPlayers.filter(p => p.name.toLowerCase().includes(q));
   if (posFilter !== 'ALL') list = list.filter(p => p.pos === posFilter);

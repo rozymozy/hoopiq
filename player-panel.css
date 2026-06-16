@@ -1,13 +1,13 @@
 /* player-panel.css — shared slide-in player profile panel */
 
 :root {
-  --pp-green: #1D9E75;
-  --pp-green-light: #E1F5EE;
-  --pp-orange: #D85A30;
-  --pp-orange-light: #FAECE7;
+  --pp-green: #2C5F8A;
+  --pp-green-light: #E3EEF6;
+  --pp-orange: #F4A35C;
+  --pp-orange-light: #FDF1E4;
   --pp-purple: #7C3AED;
   --pp-purple-light: #EDE9FE;
-  --pp-blue-light: #EFF6FF;
+  --pp-blue-light: #E3EEF6;
   --pp-border: #e8e8ec;
   --pp-bg: #f4f4f6;
   --pp-text: #111827;
@@ -77,7 +77,7 @@
   justify-content: center;
   font-size: 16px;
   font-weight: 600;
-  color: #0F6E56;
+  color: #1E4566;
   flex-shrink: 0;
 }
 .pp-info { flex: 1; min-width: 0; }
@@ -92,10 +92,10 @@
   color: var(--pp-muted);
   border: 1px solid var(--pp-border);
 }
-.pp-badge.proj  { background: var(--pp-green-light); color: #0F6E56; border-color: #9FE1CB; }
-.pp-badge.hot   { background: var(--pp-orange-light); color: #993C1D; border-color: #F5C4B3; }
-.pp-badge.cold  { background: var(--pp-blue-light); color: #185FA5; border-color: #B5D4F4; }
-.pp-badge.el    { background: var(--pp-orange-light); color: #993C1D; border-color: #F5C4B3; }
+.pp-badge.proj  { background: var(--pp-green-light); color: #1E4566; border-color: #A9C7DD; }
+.pp-badge.hot   { background: var(--pp-orange-light); color: #7A4A1F; border-color: #F7D9B5; }
+.pp-badge.cold  { background: var(--pp-blue-light); color: #2C5F8A; border-color: #C2D9E8; }
+.pp-badge.el    { background: var(--pp-orange-light); color: #7A4A1F; border-color: #F7D9B5; }
 .pp-badge.trade { background: var(--pp-purple-light); color: #5B21B6; border-color: #DDD6FE; }
 .pp-close {
   width: 28px; height: 28px;
@@ -154,7 +154,7 @@
 }
 .pp-tbar { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; }
 .pp-tbar.hi { background: var(--pp-green); }
-.pp-tbar.md { background: #9FE1CB; }
+.pp-tbar.md { background: #A9C7DD; }
 .pp-tbar.lo { background: #D3D1C7; }
 .pp-trend-foot {
   display: flex;
@@ -205,7 +205,7 @@
 /* Season History */
 .pp-sh-wrap   { padding: 0 16px 8px; display: flex; flex-direction: column; gap: 8px; }
 .pp-sh-row    { background: var(--pp-bg); border-radius: 8px; padding: 8px 10px; }
-.pp-sh-row.pp-sh-total   { background: var(--pp-green-light); border: 1px solid #BFE6D8; }
+.pp-sh-row.pp-sh-total   { background: var(--pp-green-light); border: 1px solid #C2D9E8; }
 .pp-sh-row.pp-sh-traded  { border-left: 3px solid var(--pp-purple); }
 .pp-sh-row.pp-sh-unavailable {
   display: flex; align-items: center; gap: 8px;
@@ -217,7 +217,7 @@
 }
 .pp-sh-season { font-size: 11px; font-weight: 700; color: var(--pp-text); }
 .pp-sh-team   { font-size: 11px; font-weight: 600; color: var(--pp-muted); }
-.pp-sh-row.pp-sh-total .pp-sh-team { color: #0F6E56; }
+.pp-sh-row.pp-sh-total .pp-sh-team { color: #1E4566; }
 .pp-sh-games  { font-size: 10px; color: var(--pp-subtle); }
 .pp-sh-stats  {
   display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px;
@@ -265,8 +265,8 @@
   margin-left: 5px;
   vertical-align: middle;
 }
-.pp-news-tag.perf  { background: var(--pp-green-light);  color: #0F6E56; }
-.pp-news-tag.inj   { background: var(--pp-orange-light); color: #993C1D; }
+.pp-news-tag.perf  { background: var(--pp-green-light);  color: #1E4566; }
+.pp-news-tag.inj   { background: var(--pp-orange-light); color: #7A4A1F; }
 .pp-news-tag.trade { background: var(--pp-purple-light); color: #5B21B6; }
 .pp-news-tag.rest  { background: var(--pp-bg); color: var(--pp-muted); }
 

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — Matchup</title>
+  <title>Courtside — Matchup</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --green:#1D9E75;--green-light:#E1F5EE;
-      --orange:#D85A30;--orange-light:#FAECE7;
+      --green:#2C5F8A;--green-light:#E3EEF6;
+      --orange:#F4A35C;--orange-light:#FDF1E4;
       --purple:#7C3AED;--purple-light:#EDE9FE;
-      --blue:#2563EB;--blue-light:#EFF6FF;
+      --blue:#2C5F8A;--blue-light:#E3EEF6;
       --bg:#f4f4f6;--border:#e8e8ec;
       --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
     }
@@ -56,14 +56,14 @@
     .team-side{display:flex;flex-direction:column}
     .team-side.right{align-items:flex-end;text-align:right}
     .team-name-h{font-size:15px;font-weight:700}
-    .team-you-tag{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 6px;border-radius:8px;font-weight:700;display:inline-block;margin-left:4px;vertical-align:middle}
+    .team-you-tag{font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 6px;border-radius:8px;font-weight:700;display:inline-block;margin-left:4px;vertical-align:middle}
     .team-score{font-size:28px;font-weight:800;line-height:1.1}
     .team-score.winning{color:var(--green)}
     .team-score.losing{color:var(--muted)}
     .vs-block{text-align:center}
     .vs-text{font-size:11px;font-weight:700;color:var(--subtle)}
     .winner-label{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;margin-top:4px;display:inline-block}
-    .winner-label.home{background:var(--green-light);color:#0F6E56}
+    .winner-label.home{background:var(--green-light);color:#1E4566}
     .winner-label.away{background:var(--orange-light);color:var(--orange)}
     .winner-label.tie{background:var(--bg);color:var(--muted)}
 
@@ -86,7 +86,7 @@
     .cat-lose{color:var(--muted)}
     .cat-tie{color:var(--subtle)}
     .cat-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px}
-    .cat-badge.w{background:var(--green-light);color:#0F6E56}
+    .cat-badge.w{background:var(--green-light);color:#1E4566}
     .cat-badge.l{background:var(--orange-light);color:var(--orange)}
     .cat-badge.t{background:var(--bg);color:var(--muted)}
     .score-banner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg);font-size:13px;font-weight:600}
@@ -226,8 +226,8 @@ const urlP = new URLSearchParams(window.location.search);
 let myCode   = urlP.get('code')?.toUpperCase() || '';
 let myTeam   = urlP.get('team') || '';
 const SLOT_COLORS = {
-  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
-  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  PG:'#2C5F8A',SG:'#7C3AED',G:'#6366F1',
+  SF:'#F4A35C',PF:'#B45309',F:'#92400E',
   C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
 };
 let roomInfo = null;
@@ -536,7 +536,7 @@ function renderStandings(standings, format) {
     const ptsAg  = isCats ? (t.cats_lost||0) : t.pts_against.toFixed(1);
     return `<tr class="${isMe?'you-row':''}">
       <td>${t.rank}</td>
-      <td>${t.name}${isMe?' <span style="font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700">YOU</span>':''}</td>
+      <td>${t.name}${isMe?' <span style="font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 5px;border-radius:8px;font-weight:700">YOU</span>':''}</td>
       <td class="td-green">${t.wins}</td>
       <td class="td-m">${t.losses}</td>
       <td class="td-m">${t.ties}</td>

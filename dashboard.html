@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — Dashboard</title>
+  <title>Courtside — Dashboard</title>
   <script src="nav.js?v=2" defer></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    :root{--green:#1D9E75;--green-light:#E1F5EE;--orange:#D85A30;--purple:#7C3AED;--purple-light:#EDE9FE;--bg:#f4f4f6;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af}
+    :root{--green:#2C5F8A;--green-light:#E3EEF6;--orange:#F4A35C;--purple:#7C3AED;--purple-light:#EDE9FE;--bg:#f4f4f6;--border:#e8e8ec;--text:#111827;--muted:#6b7280;--subtle:#9ca3af}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     .container{max-width:800px;margin:0 auto;padding:24px 16px}
     .welcome{margin-bottom:28px}
@@ -21,7 +21,7 @@
     .lc-team{font-size:12px;color:var(--muted);margin-bottom:10px}
     .lc-pills{display:flex;gap:5px;flex-wrap:wrap}
     .lc-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--bg);color:var(--muted)}
-    .lc-pill.active{background:var(--green-light);color:#0F6E56}
+    .lc-pill.active{background:var(--green-light);color:#1E4566}
     .lc-pill.draft{background:var(--purple-light);color:var(--purple)}
     .new-league-card{background:#fff;border-radius:10px;border:2px dashed var(--border);padding:16px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:14px;font-weight:600;min-height:90px;text-decoration:none}
     .new-league-card:hover{border-color:var(--green);color:var(--green)}
@@ -33,7 +33,7 @@
     .empty-state-title{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text)}
     .empty-state-sub{font-size:13px;margin-bottom:20px}
     .user-pill{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff;border-radius:10px;border:1px solid var(--border);margin-bottom:20px;width:fit-content}
-    .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0}
+    .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#1E4566;flex-shrink:0}
     .user-email{font-size:13px;color:var(--muted)}
     .signout-btn{font-size:12px;color:var(--orange);cursor:pointer;background:none;border:none;margin-left:8px}
     .signout-btn:hover{text-decoration:underline}
@@ -68,8 +68,8 @@
 const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
 
 // Auth check
-const session = JSON.parse(localStorage.getItem('hoopiq_session') || 'null');
-const user    = JSON.parse(localStorage.getItem('hoopiq_user')    || 'null');
+const session = JSON.parse(localStorage.getItem('courtside_session') || 'null');
+const user    = JSON.parse(localStorage.getItem('courtside_user')    || 'null');
 
 if (!session?.access_token) {
   window.location.href = 'auth.html';
@@ -154,7 +154,7 @@ async function refreshToken() {
     });
     const data = await res.json();
     if (res.ok && data.session) {
-      localStorage.setItem('hoopiq_session', JSON.stringify(data.session));
+      localStorage.setItem('courtside_session', JSON.stringify(data.session));
       session.access_token  = data.session.access_token;
       session.refresh_token = data.session.refresh_token;
     } else {
@@ -164,8 +164,8 @@ async function refreshToken() {
 }
 
 function signOut() {
-  localStorage.removeItem('hoopiq_session');
-  localStorage.removeItem('hoopiq_user');
+  localStorage.removeItem('courtside_session');
+  localStorage.removeItem('courtside_user');
   window.location.href = 'auth.html';
 }
 

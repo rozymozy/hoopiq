@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — My League</title>
+  <title>Courtside — My League</title>
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <link rel="stylesheet" href="player-panel.css?v=2">
   <script src="player-panel.js?v=2" defer></script>
@@ -11,8 +11,8 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --green:#1D9E75;--green-light:#E1F5EE;
-      --orange:#D85A30;--orange-light:#FAECE7;
+      --green:#2C5F8A;--green-light:#E3EEF6;
+      --orange:#F4A35C;--orange-light:#FDF1E4;
       --purple:#7C3AED;--purple-light:#EDE9FE;
       --gold:#F59E0B;--gold-light:#FEF3C7;
       --bg:#f4f4f6;--border:#e8e8ec;
@@ -64,7 +64,7 @@
     .standings-card tr:last-child td{border-bottom:none}
     .standings-card tr:hover td{background:#f9fafb}
     .you-row td{background:var(--green-light)!important}
-    .you-badge{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:5px;vertical-align:middle}
+    .you-badge{font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:5px;vertical-align:middle}
     .td-g{color:var(--green);font-weight:700}
     .td-m{color:var(--muted)}
     .budget-badge{font-size:11px;font-weight:700;color:var(--purple);margin-left:6px}
@@ -93,7 +93,7 @@
     .pl-meta{font-size:10px;color:var(--muted);margin-top:1px}
     .pl-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;margin-left:4px;vertical-align:middle}
     .pl-badge.owned{background:var(--orange-light);color:var(--orange)}
-    .pl-badge.you{background:var(--green-light);color:#0F6E56}
+    .pl-badge.you{background:var(--green-light);color:#1E4566}
     .pos-b{display:inline-block;font-size:8px;font-weight:700;padding:1px 4px;border-radius:3px;background:#f0f0f0;color:var(--muted);margin-right:3px}
 
     /* DRAFT TAB */
@@ -105,7 +105,7 @@
     .di-val{font-weight:600}
     .draft-status-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700}
     .draft-status-pill.waiting{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
-    .draft-status-pill.drafting{background:var(--green-light);color:#0F6E56}
+    .draft-status-pill.drafting{background:var(--green-light);color:#1E4566}
     .draft-status-pill.complete{background:#f0f0f0;color:var(--muted)}
     .go-draft-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px}
     .go-draft-btn:hover{opacity:.9}
@@ -115,7 +115,7 @@
     .to-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-radius:8px;font-size:13px}
     .to-num{font-size:11px;font-weight:700;color:var(--subtle);min-width:20px}
     .to-name{flex:1;font-weight:500}
-    .to-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 6px;border-radius:8px;font-weight:700}
+    .to-you{font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 6px;border-radius:8px;font-weight:700}
     .to-budget{font-size:12px;font-weight:700;color:var(--purple)}
 
     /* SETTINGS TAB */
@@ -136,7 +136,7 @@
     .comm-input:focus{border-color:var(--green)}
     .comm-opt{flex:1;padding:8px 12px;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:all .15s}
     .comm-opt:hover{border-color:var(--green)}
-    .comm-opt.selected{border-color:var(--green);background:var(--green-light);color:#0F6E56}
+    .comm-opt.selected{border-color:var(--green);background:var(--green-light);color:#1E4566}
     .comm-save-btn{flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
     .comm-save-btn:hover{opacity:.9}
     .comm-start-btn{flex:1;padding:10px;background:#374151;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
@@ -149,7 +149,7 @@
 <div id="connect-screen">
   <div class="connect-wrap">
     <div class="connect-card">
-      <div class="connect-logo">Hoop<span>IQ</span></div>
+      <div class="connect-logo">Court<span>side</span></div>
       <div class="connect-sub">Enter your league code to join</div>
       <span class="connect-label">League code</span>
       <input class="connect-input" type="text" id="inp-code"
@@ -368,7 +368,7 @@ const ROSTER_SLOTS = {
   15: ['PG','SG','G','SF','PF','F','C','C','UTIL','UTIL','BN','BN','BN','BN','BN'],
 };
 const SLOT_COLORS = {
-  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',SF:'#D85A30',
+  PG:'#2C5F8A',SG:'#7C3AED',G:'#6366F1',SF:'#F4A35C',
   PF:'#B45309',F:'#92400E',C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
 };
 function getSlots(rounds) {
@@ -539,7 +539,7 @@ function rerenderCurrentTab() {
 
 // Try to restore from localStorage + URL
 const urlP = new URLSearchParams(window.location.search);
-const saved = JSON.parse(localStorage.getItem('hoopiq_league') || '{}');
+const saved = JSON.parse(localStorage.getItem('courtside_league') || '{}');
 
 if (urlP.get('code')) myCode    = urlP.get('code').toUpperCase();
 if (urlP.get('team')) myTeam    = urlP.get('team');
@@ -609,7 +609,7 @@ async function loadLeague() {
     }
 
     // Save to localStorage
-    localStorage.setItem('hoopiq_league', JSON.stringify({
+    localStorage.setItem('courtside_league', JSON.stringify({
       code: myCode, team: myTeam, manager: myManager
     }));
 
@@ -1045,7 +1045,7 @@ function copyCode() {
 }
 
 function signOut() {
-  localStorage.removeItem('hoopiq_league');
+  localStorage.removeItem('courtside_league');
   window.location.href = 'league.html';
 }
 

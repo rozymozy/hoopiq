@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HoopIQ — Live Draft</title>
+  <title>Courtside — Live Draft</title>
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --green:#1D9E75;--green-light:#E1F5EE;
-      --orange:#D85A30;--orange-light:#FAECE7;
+      --green:#2C5F8A;--green-light:#E3EEF6;
+      --orange:#F4A35C;--orange-light:#FDF1E4;
       --purple:#7C3AED;
       --bg:#f4f4f6;--border:#e8e8ec;
       --text:#111827;--muted:#6b7280;--subtle:#9ca3af;
@@ -26,7 +26,7 @@
     .round-banner.your-turn{border-bottom-color:var(--green);background:var(--green-light)}
     .rb-round{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
     .rb-pick{font-size:13px;font-weight:700;color:var(--text);flex:1}
-    .rb-pick.yours{color:#0F6E56}
+    .rb-pick.yours{color:#1E4566}
     .rb-timer{font-size:18px;font-weight:800;min-width:50px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
     .rb-timer.urgent{color:var(--orange);animation:pulse .6s ease-in-out infinite alternate}
     @keyframes pulse{from{opacity:1}to{opacity:.5}}
@@ -60,7 +60,7 @@
     .pool-tbl tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
     .pool-tbl tbody tr:last-child{border-bottom:none}
     .pool-tbl tbody tr.can-pick{cursor:pointer}
-    .pool-tbl tbody tr.can-pick:hover{background:#f0faf6}
+    .pool-tbl tbody tr.can-pick:hover{background:#eef4f9}
     .pool-tbl tbody tr.drafted{opacity:.2;pointer-events:none}
     .pool-tbl td{font-size:11px;padding:5px 5px;text-align:right;white-space:nowrap}
     .pool-tbl td:first-child{text-align:left;padding-left:8px}
@@ -101,7 +101,7 @@
     .team-block-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg);cursor:pointer;user-select:none}
     .team-block-header:hover{background:#eeeef0}
     .tbh-name{font-size:11px;font-weight:700;color:var(--text)}
-    .tbh-you{font-size:9px;background:var(--green-light);color:#0F6E56;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:4px}
+    .tbh-you{font-size:9px;background:var(--green-light);color:#1E4566;padding:1px 5px;border-radius:8px;font-weight:700;margin-left:4px}
     .tbh-count{font-size:10px;color:var(--muted)}
     .team-block-picks{padding:4px 0}
     .team-block-picks.hidden{display:none}
@@ -257,8 +257,8 @@ function getSlots(rounds) {
 }
 
 const SLOT_COLORS = {
-  PG:'#2563EB',SG:'#7C3AED',G:'#6366F1',
-  SF:'#D85A30',PF:'#B45309',F:'#92400E',
+  PG:'#2C5F8A',SG:'#7C3AED',G:'#6366F1',
+  SF:'#F4A35C',PF:'#B45309',F:'#92400E',
   C:'#065F46',UTIL:'#374151',BN:'#9CA3AF'
 };
 let myRoster       = [];
@@ -314,7 +314,7 @@ socket.on('connected', d => {
 socket.on('joined_ok', d => {
   mySid = d.your_sid; sidConfirmed = true;
   // Save to localStorage
-  localStorage.setItem('hoopiq_league', JSON.stringify({
+  localStorage.setItem('courtside_league', JSON.stringify({
     code: CODE, team: MY_TEAM, manager: MY_MANAGER,
     rounds: ROUNDS, league: LEAGUE,
   }));
