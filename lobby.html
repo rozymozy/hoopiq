@@ -88,11 +88,11 @@
       <div class="league-picker">
         <div class="league-opt selected" data-league="nba" onclick="selectLeague(this)">
           <span class="league-opt-label">🏀 NBA</span>
-          <span class="league-opt-sub">160 players</span>
+          <span class="league-opt-sub" id="nba-pool-count">— players</span>
         </div>
         <div class="league-opt" data-league="el" onclick="selectLeague(this)">
           <span class="league-opt-label">🌍 Euroleague</span>
-          <span class="league-opt-sub">587 players</span>
+          <span class="league-opt-sub" id="el-pool-count">— players</span>
         </div>
       </div>
       <div class="info-note">
@@ -175,6 +175,22 @@ if (defaultManager) {
 
 socket.on('connect',   ()  => { mySid = socket.id; });
 socket.on('connected', d   => { mySid = d.sid; });
+
+// ── Live player pool counts ──────────────────────────────────────────────
+async function loadPoolCounts() {
+  try {
+    const res    = await fetch(`${API}/health`);
+    const health = await res.json();
+    const nbaN = health?.nba?.players;
+    const elN  = health?.euroleague?.players;
+    if (nbaN) document.getElementById('nba-pool-count').textContent = `${nbaN} players`;
+    if (elN)  document.getElementById('el-pool-count').textContent  = `${elN} players`;
+  } catch(e) {
+    document.getElementById('nba-pool-count').textContent = 'players';
+    document.getElementById('el-pool-count').textContent  = 'players';
+  }
+}
+loadPoolCounts();
 
 socket.on('room_created', d => {
   myCode = d.code;
