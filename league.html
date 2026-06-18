@@ -52,6 +52,10 @@
     .tabs::-webkit-scrollbar{display:none}
     .tab{font-size:14px;font-weight:600;padding:10px 20px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
     .tab.active{color:var(--green);border-bottom-color:var(--green)}
+    @media (max-width: 480px) {
+      .tabs{flex-wrap:wrap;overflow-x:visible;row-gap:2px}
+      .tab{flex:1 1 auto;padding:8px 6px;font-size:11px;text-align:center}
+    }
 
     /* STANDINGS */
     .standings-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
