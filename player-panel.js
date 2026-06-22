@@ -145,7 +145,7 @@ const PlayerPanel = (() => {
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
   function render(data, league) {
-    const s    = data.season || {};
+    const s    = data.avgs || {};
     const isEl = league === 'el';
 
     // ── Header sub-line
@@ -165,7 +165,7 @@ const PlayerPanel = (() => {
     const wasTraded = teamsThisSeason.length > 1;
 
     document.getElementById('pp-badges').innerHTML = [
-      `<span class="pp-badge proj">Proj ${parseFloat(data.proj_dk || 0).toFixed(1)} DK</span>`,
+      `<span class="pp-badge proj">Proj ${parseFloat(data.projection?.proj_dk || 0).toFixed(1)} DK</span>`,
       trend === 'hot'  ? '<span class="pp-badge hot">Hot streak ↑</span>'   : '',
       trend === 'cold' ? '<span class="pp-badge cold">Cold stretch ↓</span>': '',
       trend === 'flat' ? '<span class="pp-badge">On track →</span>'         : '',
@@ -225,7 +225,7 @@ const PlayerPanel = (() => {
     const seasonHistory = data.season_history || [];
     const SH_CATS = ['pts','reb','ast','stl','blk','tov','fg3m','fg_pct','ft_pct'];
     const seasonHistoryHtml = seasonHistory.map(sh => {
-      if (!sh.available) {
+      if (!sh.games) {
         return `
           <div class="pp-sh-row pp-sh-unavailable">
             <div class="pp-sh-season">${sh.season}</div>
