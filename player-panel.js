@@ -176,8 +176,8 @@ const PlayerPanel = (() => {
     // ── Stat helpers
     const CATS = [
       {k:'fg_pct',l:'FG%'},{k:'ft_pct',l:'FT%'},{k:'pts',l:'PTS'},
-      {k:'reb',l:'REB'},{k:'ast',l:'AST'},{k:'stl',l:'STL'},
-      {k:'blk',l:'BLK'},{k:'tov',l:'TO'},
+      {k:'fg3m',l:'3PM'},{k:'reb',l:'REB'},{k:'ast',l:'AST'},
+      {k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'tov',l:'TO'},
     ];
     const fmt = (k, v) => {
       if (v === undefined || v === null || isNaN(parseFloat(v))) return '—';
@@ -223,7 +223,7 @@ const PlayerPanel = (() => {
 
     // ── Season history
     const seasonHistory = data.season_history || [];
-    const SH_CATS = ['pts','reb','ast','stl','blk','tov','fg3m','fg_pct','ft_pct'];
+    const SH_CATS = ['fg_pct','ft_pct','pts','fg3m','reb','ast','stl','blk','tov'];
     const seasonHistoryHtml = seasonHistory.map(sh => {
       if (!sh.games) {
         return `

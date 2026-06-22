@@ -346,10 +346,10 @@ function renderCard(p, globalIdx, isEL, maxDk) {
       <div class="bar-track"><div class="bar-fill${isEL ? ' el' : ''}" style="width:${barWidth}%"></div></div>
     </div>
     <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val">${pct(p.fg_pct)}</div><div class="stat-label">FG%</div></div>
+      <div class="stat-box"><div class="stat-val">${pct(p.ft_pct)}</div><div class="stat-label">FT%</div></div>
       <div class="stat-box"><div class="stat-val">${fmt(p.pts)}</div><div class="stat-label">PTS</div></div>
-      <div class="stat-box"><div class="stat-val">${fmt(p.reb)}</div><div class="stat-label">REB</div></div>
-      <div class="stat-box"><div class="stat-val">${fmt(p.ast)}</div><div class="stat-label">AST</div></div>
-      <div class="stat-box"><div class="stat-val">${fmt(p.stl)}</div><div class="stat-label">STL</div></div>
+      <div class="stat-box"><div class="stat-val">${fmt(p.fg3m)}</div><div class="stat-label">3PM</div></div>
     </div>
     <div class="detail" id="detail-${globalIdx}">
       ${hasProjStats ? `
@@ -368,10 +368,16 @@ function renderCard(p, globalIdx, isEL, maxDk) {
       </div>` : ''}
       <div class="detail-heading" style="margin-top:${hasProjStats?'10px':'0'}">Season averages</div>
       <div class="detail-row">
-        <div class="detail-box"><div class="detail-val">${fmt(p.blk)}</div><div class="detail-label">BLK</div></div>
         <div class="detail-box"><div class="detail-val">${pct(p.fg_pct)}</div><div class="detail-label">FG%</div></div>
         <div class="detail-box"><div class="detail-val">${pct(p.ft_pct)}</div><div class="detail-label">FT%</div></div>
+        <div class="detail-box"><div class="detail-val">${fmt(p.pts)}</div><div class="detail-label">PTS</div></div>
         <div class="detail-box"><div class="detail-val">${fmt(p.fg3m)}</div><div class="detail-label">3PM</div></div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-box"><div class="detail-val">${fmt(p.reb)}</div><div class="detail-label">REB</div></div>
+        <div class="detail-box"><div class="detail-val">${fmt(p.ast)}</div><div class="detail-label">AST</div></div>
+        <div class="detail-box"><div class="detail-val">${fmt(p.stl)}</div><div class="detail-label">STL</div></div>
+        <div class="detail-box"><div class="detail-val">${fmt(p.blk)}</div><div class="detail-label">BLK</div></div>
       </div>
       <div class="detail-row">
         <div class="detail-box"><div class="detail-val">${fmt(p.tov)}</div><div class="detail-label">TOV</div></div>
