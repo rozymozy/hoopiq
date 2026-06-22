@@ -37,8 +37,8 @@ const PlayerPanel = (() => {
       <div class="pp-overlay" id="pp-overlay"></div>
       <div class="pp-panel" id="pp-panel">
         <div class="pp-header">
-          <img class="pp-photo" id="pp-photo" src="" alt=""
-               onerror="this.style.display='none';document.getElementById('pp-photo-fb').style.display='flex'">
+          <img class="pp-photo" id="pp-photo" src="player-placeholder.svg" alt=""
+               onerror="this.src='player-placeholder.svg'">
           <div class="pp-photo-fb" id="pp-photo-fb"></div>
           <div class="pp-info">
             <div class="pp-name"    id="pp-name">—</div>
@@ -106,16 +106,15 @@ const PlayerPanel = (() => {
     document.getElementById('pp-body').innerHTML      =
       '<div class="pp-loading"><div class="pp-spinner"></div>Loading...</div>';
 
-    // ── Photo: show initials immediately as fallback ──────────────────────
+    // ── Photo: show placeholder immediately, then try to load real headshot ─
     const photoEl = document.getElementById('pp-photo');
     const fbEl    = document.getElementById('pp-photo-fb');
 
-    fbEl.textContent = name.split(/[\s,]+/).filter(Boolean)
-                           .map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    photoEl.style.display = 'none';
-    fbEl.style.display    = 'flex';
+    photoEl.src           = 'player-placeholder.svg';
+    photoEl.style.display = '';
+    fbEl.style.display    = 'none';
 
-    // Then try headshot immediately (no need to wait for API call)
+    // Try real headshot — onerror falls back to placeholder
     let photoUrl = null;
     if (league === 'el') {
       photoUrl = _elPhotos[name] || null;
@@ -124,10 +123,7 @@ const PlayerPanel = (() => {
       if (pid) photoUrl = `https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png`;
     }
     if (photoUrl) {
-      photoEl.src           = photoUrl;
-      photoEl.style.display = '';
-      fbEl.style.display    = 'none';
-      // onerror handler on the img tag will revert to initials if image fails
+      photoEl.src = photoUrl;
     }
 
     try {
@@ -309,8 +305,9 @@ const PlayerPanel = (() => {
 
     try {
       const r    = await fetch(`${API}/news/${encodeURIComponent(name)}`);
-      if (myToken !== openToken) return; // panel was closed/reopened
-      const items = await r.json();
+      if (myToken !== openToken) return;
+      const resp  = await r.json();
+      const items = resp.news || [];  // API returns {name, source, count, news: [...]}
 
       if (!items.length) {
         wrap.innerHTML = '<div style="color:#9ca3af;font-size:11px;padding:8px 0">No recent news found.</div>';
