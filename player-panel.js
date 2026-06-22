@@ -7,19 +7,18 @@
 const PlayerPanel = (() => {
   const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
 
-  // Mock news — replace with real API later
-  const NEWS_MOCK = {
-    default: [
-      { type:'perf',
-        title:'Check latest stats on NBA.com',
-        meta:'Courtside · Today',
-        body:'Real-time injury reports and news will be available in a future version of Courtside. Check official sources for the latest updates on this player.',
-        source:'https://nba.com' },
-    ]
-  };
   const TAG_LABELS = { perf:'Performance', inj:'Injury', trade:'Trade', rest:'Rest' };
 
   let panelEl, overlayEl, newsPopupBg, currentSource = '#';
+
+  // ── PLAYER ID MAP — loaded once for NBA headshots ──────────────────────────
+  let _playerIds = {};
+  (async () => {
+    try {
+      const r = await fetch('nba_player_ids.json');
+      _playerIds = await r.json();
+    } catch(e) { /* photos fall back to initials */ }
+  })();
 
   // ── INIT — inject DOM once ─────────────────────────────────────────────────
   function init() {
@@ -98,13 +97,25 @@ const PlayerPanel = (() => {
     document.getElementById('pp-body').innerHTML      =
       '<div class="pp-loading"><div class="pp-spinner"></div>Loading...</div>';
 
-    // Photo — show initials immediately, try NBA CDN headshot
+    // ── Photo: show initials immediately as fallback ──────────────────────
     const photoEl = document.getElementById('pp-photo');
     const fbEl    = document.getElementById('pp-photo-fb');
+
     fbEl.textContent = name.split(/[\s,]+/).filter(Boolean)
                            .map(w => w[0]).join('').toUpperCase().slice(0, 2);
     photoEl.style.display = 'none';
     fbEl.style.display    = 'flex';
+
+    // Then try NBA CDN headshot immediately (no need to wait for API call)
+    if (league !== 'el') {
+      const pid = _playerIds[name];
+      if (pid) {
+        photoEl.src           = `https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png`;
+        photoEl.style.display = '';
+        fbEl.style.display    = 'none';
+        // onerror handler on the img tag will revert to initials if 404
+      }
+    }
 
     try {
       const endpoint = league === 'el'
@@ -183,8 +194,7 @@ const PlayerPanel = (() => {
                    title="${v.toFixed(1)} DK"></div>`;
     }).join('');
 
-    // ── Game log — only columns the API actually returns
-    // API last10 keys: GAME_DATE, OPP, PTS, REB, AST, STL, BLK, TOV, DK_PTS, MIN
+    // ── Game log
     const games   = last10.slice().reverse();  // most recent first
     const logRows = games.map(g => `
       <tr>
@@ -202,7 +212,7 @@ const PlayerPanel = (() => {
       </tr>`).join('')
       || '<tr><td colspan="10" style="text-align:center;padding:12px;color:#9ca3af">No game data</td></tr>';
 
-    // ── Season history — current + previous 3 seasons, split by team if traded
+    // ── Season history
     const seasonHistory = data.season_history || [];
     const SH_CATS = ['pts','reb','ast','stl','blk','tov','fg3m','fg_pct','ft_pct'];
     const seasonHistoryHtml = seasonHistory.map(sh => {
@@ -232,20 +242,10 @@ const PlayerPanel = (() => {
         </div>`;
     }).join('');
 
-    // ── News (mock)
-    const newsItems = NEWS_MOCK[data.name] || NEWS_MOCK.default;
-    const newsHtml  = newsItems.map(n => `
-      <div class="pp-news-item"
-           onclick="PlayerPanel.openNews(${JSON.stringify(n).replace(/'/g,'&#39;')})">
-        <div class="pp-news-dot ${n.type}"></div>
-        <div class="pp-news-content">
-          <div class="pp-news-title">
-            ${n.title}
-            <span class="pp-news-tag ${n.type}">${TAG_LABELS[n.type]}</span>
-          </div>
-          <div class="pp-news-meta">${n.meta}</div>
-        </div>
-      </div>`).join('');
+    // ── News (live via /news/<name> route)
+    const newsWrap = document.createElement('div');
+    newsWrap.className = 'pp-news-wrap';
+    newsWrap.innerHTML = '<div style="color:#9ca3af;font-size:11px;padding:8px">Loading news...</div>';
 
     // ── Inject everything
     document.getElementById('pp-body').innerHTML = `
@@ -277,8 +277,69 @@ const PlayerPanel = (() => {
       <div class="pp-sh-wrap">${seasonHistoryHtml || '<div style="color:#9ca3af;font-size:11px;padding:8px">No season history</div>'}</div>
 
       <div class="pp-sec-title">News & updates</div>
-      <div class="pp-news-wrap">${newsHtml}</div>
+      <div class="pp-news-wrap" id="pp-news-wrap-inner">
+        <div style="color:#9ca3af;font-size:11px;padding:8px">Loading news...</div>
+      </div>
     `;
+
+    // ── Load news async
+    loadNews(data.name);
+  }
+
+  // ── LIVE NEWS ──────────────────────────────────────────────────────────────
+  let openToken = 0;
+
+  async function loadNews(name) {
+    const myToken = ++openToken;
+    const wrap = document.getElementById('pp-news-wrap-inner');
+    if (!wrap) return;
+
+    try {
+      const r    = await fetch(`${API}/news/${encodeURIComponent(name)}`);
+      if (myToken !== openToken) return; // panel was closed/reopened
+      const items = await r.json();
+
+      if (!items.length) {
+        wrap.innerHTML = '<div style="color:#9ca3af;font-size:11px;padding:8px 0">No recent news found.</div>';
+        return;
+      }
+
+      wrap.innerHTML = items.map(n => {
+        const tag   = n.tag   || 'perf';
+        const label = TAG_LABELS[tag] || tag;
+        const ago   = timeAgo(n.pub_date);
+        const safeN = JSON.stringify({ title: n.title, body: n.description, source: n.link, meta: ago, type: tag });
+        return `
+          <div class="pp-news-item" onclick="PlayerPanel.openNews(${safeN.replace(/'/g,'&#39;')})">
+            <div class="pp-news-dot ${tag}"></div>
+            <div class="pp-news-content">
+              <div class="pp-news-title">
+                ${n.title}
+                <span class="pp-news-tag ${tag}">${label}</span>
+              </div>
+              <div class="pp-news-meta">${ago}</div>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      if (myToken !== openToken) return;
+      const wrap2 = document.getElementById('pp-news-wrap-inner');
+      if (wrap2) wrap2.innerHTML = '<div style="color:#9ca3af;font-size:11px;padding:8px 0">No recent news found.</div>';
+    }
+  }
+
+  function timeAgo(pubDate) {
+    if (!pubDate) return '';
+    const d = new Date(pubDate);
+    if (isNaN(d)) return pubDate;
+    const diff = Date.now() - d.getTime();
+    const mins  = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days  = Math.floor(diff / 86400000);
+    if (mins  < 60)  return `${mins}m ago`;
+    if (hours < 24)  return `${hours}h ago`;
+    if (days  < 7)   return `${days}d ago`;
+    return d.toLocaleDateString();
   }
 
   // ── CLOSE ──────────────────────────────────────────────────────────────────

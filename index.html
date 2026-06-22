@@ -43,6 +43,17 @@
     .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
     .card-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
     .rank { font-size: 11px; font-weight: 700; color: var(--subtle); min-width: 22px; }
+    /* ── Player headshot thumbnail ── */
+    .card-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: top center;
+      flex-shrink: 0;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+    }
     .player-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .player-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .trend { font-size: 11px; margin-top: 3px; font-weight: 500; }
@@ -87,10 +98,11 @@
       .container { padding: 12px; }
       .proj-val { font-size: 19px; }
       .stats-grid, .detail-row { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+      .card-thumb { width: 34px; height: 34px; }
     }
   </style>
   <link rel="stylesheet" href="player-panel.css?v=4">
-  <script src="player-panel.js?v=4" defer></script>
+  <script src="player-panel.js?v=5" defer></script>
   <script src="nav.js?v=4" defer></script>
 </head>
 <body>
@@ -128,8 +140,15 @@
 <script>
 const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
 let allPlayers = [], currentLeague = 'nba', sortField = 'proj_dk';
+let nbaPlayerIds = {};
 
 async function init() {
+  // Load player ID map for headshot thumbnails (served from GitHub Pages)
+  try {
+    const r = await fetch('nba_player_ids.json');
+    nbaPlayerIds = await r.json();
+  } catch(e) { nbaPlayerIds = {}; }
+
   try {
     const h = await fetch(`${API}/health`);
     const health = await h.json();
@@ -216,11 +235,19 @@ function renderPlayers(players) {
     const barWidth   = Math.round((dkAvg / maxDk) * 100);
     const teamOpp    = isEL ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}` : `vs ${p.opp ?? '—'}`;
     const hasProjStats = p.proj_pts !== undefined;
+
+    // Headshot thumbnail — NBA only, falls back silently if image 404s
+    const pid = !isEL ? nbaPlayerIds[p.name] : null;
+    const thumbHtml = pid
+      ? `<img class="card-thumb" src="https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png" alt="" onerror="this.style.display='none'">`
+      : '';
+
     return `
     <div class="player-card${isEL ? ' el-card' : ''}" id="card-${i}" onclick="toggleDetail(${i})">
       <div class="card-top">
         <div class="card-left">
           <div class="rank">#${i+1}</div>
+          ${thumbHtml}
           <div style="min-width:0">
             <div class="player-name pp-trigger" data-player="${p.name}" data-league="${isEL?'el':'nba'}" onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${isEL?'el':'nba'}')">${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span></div>
             <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min_avg ?? '—'} min</div>
