@@ -11,13 +11,22 @@ const PlayerPanel = (() => {
 
   let panelEl, overlayEl, newsPopupBg, currentSource = '#';
 
-  // ── PLAYER ID MAP — loaded once for NBA headshots ──────────────────────────
-  let _playerIds = {};
+  // ── PLAYER PHOTO MAPS — loaded once at startup ────────────────────────────
+  let _playerIds = {};   // NBA: name -> nba_player_id (for CDN URL)
+  let _elPhotos  = {};   // EL:  name -> direct photo URL (TheSportsDB)
+
   (async () => {
     try {
       const r = await fetch('nba_player_ids.json');
       _playerIds = await r.json();
-    } catch(e) { /* photos fall back to initials */ }
+    } catch(e) { /* fall back to initials */ }
+  })();
+
+  (async () => {
+    try {
+      const r = await fetch('el_player_photos.json');
+      _elPhotos = await r.json();
+    } catch(e) { /* fall back to initials */ }
   })();
 
   // ── INIT — inject DOM once ─────────────────────────────────────────────────
@@ -106,15 +115,19 @@ const PlayerPanel = (() => {
     photoEl.style.display = 'none';
     fbEl.style.display    = 'flex';
 
-    // Then try NBA CDN headshot immediately (no need to wait for API call)
-    if (league !== 'el') {
+    // Then try headshot immediately (no need to wait for API call)
+    let photoUrl = null;
+    if (league === 'el') {
+      photoUrl = _elPhotos[name] || null;
+    } else {
       const pid = _playerIds[name];
-      if (pid) {
-        photoEl.src           = `https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png`;
-        photoEl.style.display = '';
-        fbEl.style.display    = 'none';
-        // onerror handler on the img tag will revert to initials if 404
-      }
+      if (pid) photoUrl = `https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png`;
+    }
+    if (photoUrl) {
+      photoEl.src           = photoUrl;
+      photoEl.style.display = '';
+      fbEl.style.display    = 'none';
+      // onerror handler on the img tag will revert to initials if image fails
     }
 
     try {

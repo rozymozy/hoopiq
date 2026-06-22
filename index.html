@@ -141,13 +141,19 @@
 const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
 let allPlayers = [], currentLeague = 'nba', sortField = 'proj_dk';
 let nbaPlayerIds = {};
+let elPlayerPhotos = {};
 
 async function init() {
-  // Load player ID map for headshot thumbnails (served from GitHub Pages)
+  // Load player photo maps for headshot thumbnails
   try {
     const r = await fetch('nba_player_ids.json');
     nbaPlayerIds = await r.json();
   } catch(e) { nbaPlayerIds = {}; }
+
+  try {
+    const r = await fetch('el_player_photos.json');
+    elPlayerPhotos = await r.json();
+  } catch(e) { elPlayerPhotos = {}; }
 
   try {
     const h = await fetch(`${API}/health`);
@@ -236,11 +242,15 @@ function renderPlayers(players) {
     const teamOpp    = isEL ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}` : `vs ${p.opp ?? '—'}`;
     const hasProjStats = p.proj_pts !== undefined;
 
-    // Headshot thumbnail — NBA only, falls back silently if image 404s
-    const pid = !isEL ? nbaPlayerIds[p.name] : null;
-    const thumbHtml = pid
-      ? `<img class="card-thumb" src="https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png" alt="" onerror="this.style.display='none'">`
-      : '';
+    // Headshot thumbnail — NBA CDN or EL TheSportsDB photo, falls back silently on error
+    let thumbHtml = '';
+    if (!isEL) {
+      const pid = nbaPlayerIds[p.name];
+      if (pid) thumbHtml = `<img class="card-thumb" src="https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png" alt="" onerror="this.style.display='none'">`;
+    } else {
+      const url = elPlayerPhotos[p.name];
+      if (url) thumbHtml = `<img class="card-thumb" src="${url}" alt="" onerror="this.style.display='none'">`;
+    }
 
     return `
     <div class="player-card${isEL ? ' el-card' : ''}" id="card-${i}" onclick="toggleDetail(${i})">
