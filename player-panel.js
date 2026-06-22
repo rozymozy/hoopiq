@@ -245,7 +245,7 @@ const PlayerPanel = (() => {
           <div class="pp-sh-header">
             <div class="pp-sh-season">${sh.season}</div>
             <div class="pp-sh-team">${sh.is_total ? 'Total' : (sh.team || '—')}</div>
-            <div class="pp-sh-games">${sh.games}/${sh.season_max_games ?? '—'} GP</div>
+            <div class="pp-sh-games">${sh.games} GP</div>
           </div>
           <div class="pp-sh-stats">${statCells}</div>
         </div>`;
