@@ -89,9 +89,9 @@
       .stats-grid, .detail-row { grid-template-columns: repeat(4, 1fr); gap: 4px; }
     }
   </style>
-  <link rel="stylesheet" href="player-panel.css?v=3">
-  <script src="player-panel.js?v=3" defer></script>
-  <script src="nav.js?v=3" defer></script>
+  <link rel="stylesheet" href="player-panel.css?v=4">
+  <script src="player-panel.js?v=4" defer></script>
+  <script src="nav.js?v=4" defer></script>
 </head>
 <body>
 
@@ -161,6 +161,7 @@ async function loadLeague(league) {
     renderPlayers(allPlayers);
     document.getElementById('count').textContent = `${allPlayers.length} players · sorted by projected DK pts`;
   } catch(e) {
+    console.error('loadLeague error:', e);
     document.getElementById('player-list').innerHTML = `<div class="error-msg">Failed to load data.</div>`;
   }
 }
