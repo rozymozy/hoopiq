@@ -175,9 +175,9 @@ const PlayerPanel = (() => {
 
     // ── Stat helpers
     const CATS = [
-      {k:'pts',l:'PTS'},{k:'reb',l:'REB'},{k:'ast',l:'AST'},
-      {k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'fg3m',l:'3PM'},
-      {k:'fg_pct',l:'FG%'},{k:'ft_pct',l:'FT%'},{k:'tov',l:'TO'},
+      {k:'fg_pct',l:'FG%'},{k:'ft_pct',l:'FT%'},{k:'pts',l:'PTS'},
+      {k:'reb',l:'REB'},{k:'ast',l:'AST'},{k:'stl',l:'STL'},
+      {k:'blk',l:'BLK'},{k:'tov',l:'TO'},
     ];
     const fmt = (k, v) => {
       if (v === undefined || v === null || isNaN(parseFloat(v))) return '—';
@@ -245,7 +245,7 @@ const PlayerPanel = (() => {
           <div class="pp-sh-header">
             <div class="pp-sh-season">${sh.season}</div>
             <div class="pp-sh-team">${sh.is_total ? 'Total' : (sh.team || '—')}</div>
-            <div class="pp-sh-games">${sh.games} GP</div>
+            <div class="pp-sh-games">${sh.games}/${sh.season_max_games ?? '—'} GP</div>
           </div>
           <div class="pp-sh-stats">${statCells}</div>
         </div>`;

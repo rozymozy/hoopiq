@@ -204,7 +204,7 @@ async function switchLeague(league, btn) {
 
 async function loadLeague(league) {
   try {
-    const r = await fetch(league === 'el' ? `${API}/euroleague/top?limit=500` : `${API}/top?limit=600`);
+    const r = await fetch(league === 'el' ? `${API}/euroleague/top?limit=600` : `${API}/top?limit=600`);
     allPlayers = await r.json();
     computeDerivedStats(allPlayers);
     currentPage = 1;
