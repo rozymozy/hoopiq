@@ -305,7 +305,7 @@ function renderCard(p, globalIdx, isEL, maxDk) {
     : '— on track';
   const trendClass = diff > 2 ? 'up' : diff < -2 ? 'down' : 'flat';
   const barWidth   = Math.round((dkAvg / maxDk) * 100);
-  const teamOpp    = isEL ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}` : `vs ${p.opp ?? '—'}`;
+  const teamOpp    = `${p.team ?? '—'} · vs ${p.opp ?? '—'}`;
   const hasProjStats = p.proj_pts !== undefined;
 
   let thumbSrc = 'player-placeholder.svg';
@@ -328,7 +328,7 @@ function renderCard(p, globalIdx, isEL, maxDk) {
                onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${isEL?'el':'nba'}')">
             ${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span>
           </div>
-          <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min_avg ?? '—'} min</div>
+          <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min != null ? p.min.toFixed(1) : '—'} min</div>
           <div class="trend ${trendClass}">${trendText}</div>
         </div>
       </div>
