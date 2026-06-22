@@ -43,17 +43,7 @@
     .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
     .card-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
     .rank { font-size: 11px; font-weight: 700; color: var(--subtle); min-width: 22px; }
-    /* ── Player headshot thumbnail ── */
-    .card-thumb {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      object-position: top center;
-      flex-shrink: 0;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-    }
+    .card-thumb { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: top center; flex-shrink: 0; background: var(--bg); border: 1.5px solid var(--border); }
     .player-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .player-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .trend { font-size: 11px; margin-top: 3px; font-weight: 500; }
@@ -62,7 +52,7 @@
     .proj-val { font-size: 22px; font-weight: 700; color: var(--green); line-height: 1; }
     .proj-val.el { color: var(--orange); }
     .proj-label { font-size: 10px; color: var(--subtle); margin-top: 2px; }
-        .extra-ranks { display:flex; gap:6px; margin-top:6px; justify-content:flex-end; }
+    .extra-ranks { display:flex; gap:6px; margin-top:6px; justify-content:flex-end; }
     .extra-ranks span { font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; background:var(--bg); color:var(--muted); }
     .extra-ranks .auction-val { background:var(--green-light); color:#1E4566; }
     .avg-bar { margin-top: 10px; }
@@ -93,12 +83,46 @@
     .league-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 4px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.3px; }
     .league-badge.nba { background: var(--green-light); color: var(--green); }
     .league-badge.el  { background: #fdf1e4; color: var(--orange); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 20px 0 56px;
+      flex-wrap: wrap;
+    }
+    .pg-btn {
+      min-width: 34px;
+      height: 34px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      background: white;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
+      white-space: nowrap;
+    }
+    .pg-btn:hover:not(.active):not([disabled]) { border-color: var(--green); color: var(--green); }
+    .pg-btn.active { background: var(--green); color: white; border-color: var(--green); }
+    .pg-btn[disabled] { opacity: 0.35; cursor: not-allowed; }
+    .pg-btn.skip { font-size: 11px; color: var(--muted); }
+    .pg-ellipsis { color: var(--subtle); font-size: 13px; padding: 0 2px; line-height: 34px; }
+
     @media (max-width: 480px) {
       .nav-inner { height: 48px; }
       .container { padding: 12px; }
       .proj-val { font-size: 19px; }
       .stats-grid, .detail-row { grid-template-columns: repeat(4, 1fr); gap: 4px; }
       .card-thumb { width: 34px; height: 34px; }
+      .pg-btn { min-width: 30px; height: 30px; font-size: 11px; padding: 0 6px; }
     }
   </style>
   <link rel="stylesheet" href="player-panel.css?v=4">
@@ -121,11 +145,11 @@
 <div class="container">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input class="search" type="text" placeholder="Search players..." id="search" oninput="filterPlayers()">
+    <input class="search" type="text" placeholder="Search players..." id="search" oninput="onSearch()">
   </div>
   <div class="meta-row">
     <div class="count" id="count"></div>
-    <select class="sort-select" id="sort" onchange="sortPlayers()">
+    <select class="sort-select" id="sort" onchange="onSort()">
       <option value="proj_dk">Sort: Proj Rank (DK)</option>
       <option value="dk_avg">Sort: Last Year Rank (DK)</option>
       <option value="auction_value">Sort: Auction Value</option>
@@ -138,22 +162,21 @@
 </div>
 
 <script>
-const API = 'https://hoopiq-api-production-d3a4.up.railway.app';
-let allPlayers = [], currentLeague = 'nba', sortField = 'proj_dk';
-let nbaPlayerIds = {};
+const API      = 'https://hoopiq-api-production-d3a4.up.railway.app';
+const PAGE_SIZE = 20;
+
+let allPlayers     = [];
+let displayPlayers = [];  // filtered + sorted
+let currentLeague  = 'nba';
+let sortField      = 'proj_dk';
+let currentPage    = 1;
+let nbaPlayerIds   = {};
 let elPlayerPhotos = {};
 
 async function init() {
-  // Load player photo maps for headshot thumbnails
-  try {
-    const r = await fetch('nba_player_ids.json');
-    nbaPlayerIds = await r.json();
-  } catch(e) { nbaPlayerIds = {}; }
-
-  try {
-    const r = await fetch('el_player_photos.json');
-    elPlayerPhotos = await r.json();
-  } catch(e) { elPlayerPhotos = {}; }
+  // Load photo maps
+  try { const r = await fetch('nba_player_ids.json');   nbaPlayerIds   = await r.json(); } catch(e) { nbaPlayerIds   = {}; }
+  try { const r = await fetch('el_player_photos.json'); elPlayerPhotos = await r.json(); } catch(e) { elPlayerPhotos = {}; }
 
   try {
     const h = await fetch(`${API}/health`);
@@ -174,6 +197,7 @@ async function switchLeague(league, btn) {
   document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('search').value = '';
+  document.getElementById('count').textContent = '';
   document.getElementById('player-list').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
   loadLeague(league);
 }
@@ -183,159 +207,239 @@ async function loadLeague(league) {
     const r = await fetch(league === 'el' ? `${API}/euroleague/top?limit=500` : `${API}/top?limit=600`);
     allPlayers = await r.json();
     computeDerivedStats(allPlayers);
-    renderPlayers(allPlayers);
-    document.getElementById('count').textContent = `${allPlayers.length} players · sorted by projected DK pts`;
+    currentPage = 1;
+    document.getElementById('status').textContent = `✓ ${allPlayers.length} players`;
+    document.getElementById('status').className = 'status ok';
+    applyAndRender();
   } catch(e) {
     console.error('loadLeague error:', e);
     document.getElementById('player-list').innerHTML = `<div class="error-msg">Failed to load data.</div>`;
   }
 }
 
-/**
- * Compute "last year rank" (by season DK avg) and a dummy auction value
- * (proportional share of a $2400 league budget pool above replacement level).
- * These are estimates until real draft data is collected from users.
- */
 function computeDerivedStats(players) {
-  // Last year rank — by season dk_avg, descending
   const byDkAvg = [...players].sort((a,b) => (b.dk_avg ?? 0) - (a.dk_avg ?? 0));
   byDkAvg.forEach((p, i) => { p.last_year_rank = i + 1; });
 
-  // Auction value — dummy estimate based on proj_dk above replacement level.
-  // Assumes a 12-team league, 13 roster spots => 156 rostered players.
-  // Budget pool = 12 teams x $200 = $2400.
   const ROSTER_SPOTS = 156;
   const BUDGET_POOL  = 2400;
   const byProj = [...players].sort((a,b) => (b.proj_dk ?? 0) - (a.proj_dk ?? 0));
-  const replacementIdx = Math.min(ROSTER_SPOTS, byProj.length - 1);
-  const replacementVal = byProj[replacementIdx]?.proj_dk ?? 0;
+  const replacementVal = byProj[Math.min(ROSTER_SPOTS, byProj.length - 1)]?.proj_dk ?? 0;
 
-  // Sum of positive value above replacement across rostered players
   let totalAboveRepl = 0;
   byProj.forEach((p, i) => {
     const above = Math.max(0, (p.proj_dk ?? 0) - replacementVal);
     p._above_repl = (i < ROSTER_SPOTS) ? above : 0;
     totalAboveRepl += p._above_repl;
   });
-
   players.forEach(p => {
-    if (p._above_repl > 0 && totalAboveRepl > 0) {
-      const raw = (p._above_repl / totalAboveRepl) * BUDGET_POOL;
-      p.auction_value = Math.max(1, Math.round(raw));
-    } else {
-      p.auction_value = 1;
-    }
+    p.auction_value = (p._above_repl > 0 && totalAboveRepl > 0)
+      ? Math.max(1, Math.round((p._above_repl / totalAboveRepl) * BUDGET_POOL))
+      : 1;
   });
 }
 
-function renderPlayers(players) {
-  const isEL  = currentLeague === 'el';
-  const maxDk = Math.max(...players.map(p => p.dk_avg || 0), 1);
-  if (!players.length) { document.getElementById('player-list').innerHTML = '<div class="loading">No players found.</div>'; return; }
-  document.getElementById('player-list').innerHTML = players.map((p, i) => {
-    const projDk = p.proj_dk ?? p.PREDICTED ?? 0;
-    const dkAvg  = p.dk_avg ?? 0;
-    const diff   = projDk - dkAvg;
-    const trendText  = Math.abs(diff) > 2 ? `${diff > 0 ? '↑' : '↓'} ${diff > 0 ? '+' : ''}${diff.toFixed(1)} vs season avg` : '— on track';
-    const trendClass = diff > 2 ? 'up' : diff < -2 ? 'down' : 'flat';
-    const barWidth   = Math.round((dkAvg / maxDk) * 100);
-    const teamOpp    = isEL ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}` : `vs ${p.opp ?? '—'}`;
-    const hasProjStats = p.proj_pts !== undefined;
+// ── Filtering / sorting ────────────────────────────────────────────────────
 
-    // Headshot thumbnail — NBA CDN or EL TheSportsDB photo, falls back silently on error
-    let thumbHtml = '';
-    if (!isEL) {
-      const pid = nbaPlayerIds[p.name];
-      if (pid) thumbHtml = `<img class="card-thumb" src="https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png" alt="" onerror="this.style.display='none'">`;
-    } else {
-      const url = elPlayerPhotos[p.name];
-      if (url) thumbHtml = `<img class="card-thumb" src="${url}" alt="" onerror="this.style.display='none'">`;
-    }
+function onSearch() { currentPage = 1; applyAndRender(); }
+function onSort()   { sortField = document.getElementById('sort').value; currentPage = 1; applyAndRender(); }
 
-    return `
-    <div class="player-card${isEL ? ' el-card' : ''}" id="card-${i}" onclick="toggleDetail(${i})">
-      <div class="card-top">
-        <div class="card-left">
-          <div class="rank">#${i+1}</div>
-          ${thumbHtml}
-          <div style="min-width:0">
-            <div class="player-name pp-trigger" data-player="${p.name}" data-league="${isEL?'el':'nba'}" onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${isEL?'el':'nba'}')">${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span></div>
-            <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min_avg ?? '—'} min</div>
-            <div class="trend ${trendClass}">${trendText}</div>
-          </div>
-        </div>
-        <div class="proj-block">
-          <div class="proj-val${isEL ? ' el' : ''}">${projDk.toFixed(1)}</div>
-          <div class="proj-label">proj DK · #${p.proj_rank ?? '—'}</div>
-          <div class="extra-ranks">
-            <span title="Last year rank (by season DK avg)">LY #${p.last_year_rank ?? '—'}</span>
-            <span class="auction-val" title="Estimated auction value">$${p.auction_value ?? 1}</span>
-          </div>
-        </div>
-      </div>
-      <div class="avg-bar">
-        <div class="avg-label"><span>Season DK avg: ${dkAvg.toFixed(1)}</span><span>Best: ${maxDk.toFixed(1)}</span></div>
-        <div class="bar-track"><div class="bar-fill${isEL ? ' el' : ''}" style="width:${barWidth}%"></div></div>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-box"><div class="stat-val">${fmt(p.pts)}</div><div class="stat-label">PTS</div></div>
-        <div class="stat-box"><div class="stat-val">${fmt(p.reb)}</div><div class="stat-label">REB</div></div>
-        <div class="stat-box"><div class="stat-val">${fmt(p.ast)}</div><div class="stat-label">AST</div></div>
-        <div class="stat-box"><div class="stat-val">${fmt(p.stl)}</div><div class="stat-label">STL</div></div>
-      </div>
-      <div class="detail" id="detail-${i}">
-        ${hasProjStats ? `
-        <div class="detail-heading">Projected stats</div>
-        <div class="detail-row">
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_pts)}</div><div class="proj-detail-label">PTS</div></div>
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_reb)}</div><div class="proj-detail-label">REB</div></div>
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_ast)}</div><div class="proj-detail-label">AST</div></div>
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_stl)}</div><div class="proj-detail-label">STL</div></div>
-        </div>
-        <div class="detail-row">
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_blk)}</div><div class="proj-detail-label">BLK</div></div>
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_tov)}</div><div class="proj-detail-label">TOV</div></div>
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_fg3m)}</div><div class="proj-detail-label">3PM</div></div>
-          <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmtPct(p.proj_fgm,p.proj_fga)}</div><div class="proj-detail-label">FG%</div></div>
-        </div>` : ''}
-        <div class="detail-heading" style="margin-top:${hasProjStats?'10px':'0'}">Season averages</div>
-        <div class="detail-row">
-          <div class="detail-box"><div class="detail-val">${fmt(p.blk)}</div><div class="detail-label">BLK</div></div>
-          <div class="detail-box"><div class="detail-val">${pct(p.fg_pct)}</div><div class="detail-label">FG%</div></div>
-          <div class="detail-box"><div class="detail-val">${pct(p.ft_pct)}</div><div class="detail-label">FT%</div></div>
-          <div class="detail-box"><div class="detail-val">${fmt(p.fg3m)}</div><div class="detail-label">3PM</div></div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-box"><div class="detail-val">${fmt(p.tov)}</div><div class="detail-label">TOV</div></div>
-          <div class="detail-box"><div class="detail-val">${dkAvg.toFixed(1)}</div><div class="detail-label">DK avg</div></div>
-          <div class="detail-box"><div class="detail-val">${fmt(p.dk_std)}</div><div class="detail-label">DK std</div></div>
-          <div class="detail-box"><div class="detail-val">${p.opp ?? '—'}</div><div class="detail-label">Opp</div></div>
-        </div>
-        ${isEL && p.pir_avg ? `<div class="detail-row"><div class="detail-box"><div class="detail-val">${fmt(p.pir_avg)}</div><div class="detail-label">PIR avg</div></div></div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+function applyAndRender() {
+  const q = document.getElementById('search').value.toLowerCase();
+  let filtered = q ? allPlayers.filter(p => p.name.toLowerCase().includes(q)) : [...allPlayers];
+
+  const asc = ['last_year_rank'].includes(sortField);
+  filtered.sort((a,b) => asc
+    ? (a[sortField]??9999) - (b[sortField]??9999)
+    : (b[sortField]??0)   - (a[sortField]??0)
+  );
+
+  displayPlayers = filtered;
+  renderPage(currentPage);
 }
+
+// ── Pagination ─────────────────────────────────────────────────────────────
+
+function goToPage(page) {
+  const totalPages = Math.ceil(displayPlayers.length / PAGE_SIZE);
+  page = Math.max(1, Math.min(page, totalPages));
+  currentPage = page;
+  renderPage(page);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderPage(page) {
+  const isEL      = currentLeague === 'el';
+  const total     = displayPlayers.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  page = Math.max(1, Math.min(page, totalPages || 1));
+  currentPage = page;
+
+  const start = (page - 1) * PAGE_SIZE;
+  const end   = Math.min(start + PAGE_SIZE, total);
+  const slice = displayPlayers.slice(start, end);
+  const maxDk = Math.max(...displayPlayers.map(p => p.dk_avg || 0), 1);
+
+  // Update count label
+  document.getElementById('count').textContent =
+    `${total} players · page ${page} of ${totalPages || 1}`;
+
+  if (!slice.length) {
+    document.getElementById('player-list').innerHTML = '<div class="loading">No players found.</div>';
+    return;
+  }
+
+  document.getElementById('player-list').innerHTML =
+    slice.map((p, i) => renderCard(p, start + i, isEL, maxDk)).join('') +
+    buildPagination(totalPages, page);
+}
+
+// ── Card rendering ─────────────────────────────────────────────────────────
+
+function renderCard(p, globalIdx, isEL, maxDk) {
+  const projDk = p.proj_dk ?? p.PREDICTED ?? 0;
+  const dkAvg  = p.dk_avg ?? 0;
+  const diff   = projDk - dkAvg;
+  const trendText  = Math.abs(diff) > 2
+    ? `${diff > 0 ? '↑' : '↓'} ${diff > 0 ? '+' : ''}${diff.toFixed(1)} vs season avg`
+    : '— on track';
+  const trendClass = diff > 2 ? 'up' : diff < -2 ? 'down' : 'flat';
+  const barWidth   = Math.round((dkAvg / maxDk) * 100);
+  const teamOpp    = isEL ? `${p.team ?? '—'} · vs ${p.opp ?? '—'}` : `vs ${p.opp ?? '—'}`;
+  const hasProjStats = p.proj_pts !== undefined;
+
+  let thumbSrc = 'player-placeholder.svg';
+  if (!isEL) {
+    const pid = nbaPlayerIds[p.name];
+    if (pid) thumbSrc = `https://cdn.nba.com/headshots/nba/latest/260x190/${pid}.png`;
+  } else {
+    const url = elPlayerPhotos[p.name];
+    if (url) thumbSrc = url;
+  }
+
+  return `
+  <div class="player-card${isEL ? ' el-card' : ''}" id="card-${globalIdx}" onclick="toggleDetail(${globalIdx})">
+    <div class="card-top">
+      <div class="card-left">
+        <div class="rank">#${globalIdx + 1}</div>
+        <img class="card-thumb" src="${thumbSrc}" alt="" onerror="this.src='player-placeholder.svg'">
+        <div style="min-width:0">
+          <div class="player-name pp-trigger" data-player="${p.name}" data-league="${isEL?'el':'nba'}"
+               onclick="event.stopPropagation();PlayerPanel.open('${p.name}','${isEL?'el':'nba'}')">
+            ${p.name}<span class="league-badge ${isEL ? 'el' : 'nba'}">${isEL ? 'EL' : 'NBA'}</span>
+          </div>
+          <div class="player-meta">${teamOpp} · ${p.games ?? '—'} games · ${p.min_avg ?? '—'} min</div>
+          <div class="trend ${trendClass}">${trendText}</div>
+        </div>
+      </div>
+      <div class="proj-block">
+        <div class="proj-val${isEL ? ' el' : ''}">${projDk.toFixed(1)}</div>
+        <div class="proj-label">proj DK · #${p.proj_rank ?? '—'}</div>
+        <div class="extra-ranks">
+          <span title="Last year rank">LY #${p.last_year_rank ?? '—'}</span>
+          <span class="auction-val" title="Auction value">$${p.auction_value ?? 1}</span>
+        </div>
+      </div>
+    </div>
+    <div class="avg-bar">
+      <div class="avg-label"><span>Season DK avg: ${dkAvg.toFixed(1)}</span><span>Best: ${Math.max(...[dkAvg]).toFixed(1)}</span></div>
+      <div class="bar-track"><div class="bar-fill${isEL ? ' el' : ''}" style="width:${barWidth}%"></div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val">${fmt(p.pts)}</div><div class="stat-label">PTS</div></div>
+      <div class="stat-box"><div class="stat-val">${fmt(p.reb)}</div><div class="stat-label">REB</div></div>
+      <div class="stat-box"><div class="stat-val">${fmt(p.ast)}</div><div class="stat-label">AST</div></div>
+      <div class="stat-box"><div class="stat-val">${fmt(p.stl)}</div><div class="stat-label">STL</div></div>
+    </div>
+    <div class="detail" id="detail-${globalIdx}">
+      ${hasProjStats ? `
+      <div class="detail-heading">Projected stats</div>
+      <div class="detail-row">
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_pts)}</div><div class="proj-detail-label">PTS</div></div>
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_reb)}</div><div class="proj-detail-label">REB</div></div>
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_ast)}</div><div class="proj-detail-label">AST</div></div>
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_stl)}</div><div class="proj-detail-label">STL</div></div>
+      </div>
+      <div class="detail-row">
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_blk)}</div><div class="proj-detail-label">BLK</div></div>
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_tov)}</div><div class="proj-detail-label">TOV</div></div>
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmt(p.proj_fg3m)}</div><div class="proj-detail-label">3PM</div></div>
+        <div class="proj-detail-box${isEL ? ' el' : ''}"><div class="proj-detail-val${isEL ? ' el' : ''}">${fmtPct(p.proj_fgm,p.proj_fga)}</div><div class="proj-detail-label">FG%</div></div>
+      </div>` : ''}
+      <div class="detail-heading" style="margin-top:${hasProjStats?'10px':'0'}">Season averages</div>
+      <div class="detail-row">
+        <div class="detail-box"><div class="detail-val">${fmt(p.blk)}</div><div class="detail-label">BLK</div></div>
+        <div class="detail-box"><div class="detail-val">${pct(p.fg_pct)}</div><div class="detail-label">FG%</div></div>
+        <div class="detail-box"><div class="detail-val">${pct(p.ft_pct)}</div><div class="detail-label">FT%</div></div>
+        <div class="detail-box"><div class="detail-val">${fmt(p.fg3m)}</div><div class="detail-label">3PM</div></div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-box"><div class="detail-val">${fmt(p.tov)}</div><div class="detail-label">TOV</div></div>
+        <div class="detail-box"><div class="detail-val">${dkAvg.toFixed(1)}</div><div class="detail-label">DK avg</div></div>
+        <div class="detail-box"><div class="detail-val">${fmt(p.dk_std)}</div><div class="detail-label">DK std</div></div>
+        <div class="detail-box"><div class="detail-val">${p.opp ?? '—'}</div><div class="detail-label">Opp</div></div>
+      </div>
+      ${isEL && p.pir_avg ? `<div class="detail-row"><div class="detail-box"><div class="detail-val">${fmt(p.pir_avg)}</div><div class="detail-label">PIR avg</div></div></div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Pagination HTML ────────────────────────────────────────────────────────
+
+function buildPagination(totalPages, page) {
+  if (totalPages <= 1) return '';
+
+  const btn = (label, targetPage, extra = '') => {
+    const disabled = (targetPage < 1 || targetPage > totalPages) ? 'disabled' : '';
+    const active   = (targetPage === page && !isNaN(targetPage)) ? 'active' : '';
+    const cls      = ['pg-btn', extra, active].filter(Boolean).join(' ');
+    return `<button class="${cls}" onclick="goToPage(${targetPage})" ${disabled}>${label}</button>`;
+  };
+
+  // Which page numbers to show
+  const nums = pageNumbers(totalPages, page);
+  const numBtns = nums.map(n =>
+    n === '...' ? `<span class="pg-ellipsis">…</span>` : btn(n, n)
+  ).join('');
+
+  return `
+    <div class="pagination">
+      ${btn('‹ Prev', page - 1)}
+      ${btn('−5', page - 5, 'skip')}
+      ${numBtns}
+      ${btn('+5', page + 5, 'skip')}
+      ${btn('Next ›', page + 1)}
+    </div>`;
+}
+
+function pageNumbers(total, current) {
+  if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+
+  const show = new Set([1, total]);
+  for (let i = Math.max(1, current - 2); i <= Math.min(total, current + 2); i++) show.add(i);
+
+  const sorted = [...show].sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) result.push('...');
+    result.push(p);
+    prev = p;
+  }
+  return result;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 const fmt    = v => v != null ? Number(v).toFixed(1) : '—';
 const pct    = v => v != null ? `${(v*100).toFixed(1)}%` : '—';
 const fmtPct = (m,a) => a && a > 0 ? `${((m/a)*100).toFixed(1)}%` : '—';
 
 function toggleDetail(i) {
-  document.getElementById(`card-${i}`).classList.toggle('expanded');
-  document.getElementById(`detail-${i}`).classList.toggle('open');
-}
-function filterPlayers() {
-  const q = document.getElementById('search').value.toLowerCase();
-  renderPlayers(allPlayers.filter(p => p.name.toLowerCase().includes(q)));
-}
-function sortPlayers() {
-  sortField = document.getElementById('sort').value;
-  const ascFields = ['last_year_rank']; // lower rank number = better, sort ascending
-  const asc = ascFields.includes(sortField);
-  renderPlayers([...allPlayers].sort((a,b) =>
-    asc ? (a[sortField]??9999)-(b[sortField]??9999) : (b[sortField]??0)-(a[sortField]??0)
-  ));
+  const card   = document.getElementById(`card-${i}`);
+  const detail = document.getElementById(`detail-${i}`);
+  if (card)   card.classList.toggle('expanded');
+  if (detail) detail.classList.toggle('open');
 }
 
 init();
